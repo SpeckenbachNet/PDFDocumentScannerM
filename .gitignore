@@ -31,7 +31,6 @@ Makefile*
 *build-*
 build/
 build/*
-.qtcreator/
 *.qm
 *.prl
 *.qmlls.ini
@@ -40,6 +39,7 @@ build/*
 target_wrapper.*
 
 # QtCreator
+.qtcreator/
 *.autosave
 
 # QtCreator Qml
@@ -54,6 +54,9 @@ compile_commands.json
 
 # QtCreator local machine specific files for imported projects
 *creator.user*
+
+# Claude
+.claude/
 
 *_qmlcache.qrc
 
