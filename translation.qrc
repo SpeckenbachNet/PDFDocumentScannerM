@@ -1,0 +1,6 @@
+<RCC>
+    	<qresource prefix="/i18n">
+   		<file alias="PDFDocumentScannerM_en.qm">i18n/PDFDocumentScannerM_en.qm</file> 
+   		<file alias="PDFDocumentScannerM_de.qm">i18n/PDFDocumentScannerM_de.qm</file> 
+	</qresource>
+</RCC>
