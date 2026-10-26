@@ -17,84 +17,105 @@
    <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="centralLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
     <item>
-     <widget class="ToolbarM" name="toolBarFrame">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>40</height>
-       </size>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout"/>
-     </widget>
-    </item>
-    <item>
-     <widget class="QWidget" name="contentLayout" native="true">
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QSplitter" name="splitter">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
-         </property>
-         <widget class="PageListWidget" name="pagesListWidget">
+     <widget class="QStackedWidget" name="stackedWidget">
+      <widget class="QWidget" name="mainPage">
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="ToolbarM" name="toolBarFrame">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
           <property name="minimumSize">
            <size>
-            <width>180</width>
-            <height>0</height>
+            <width>0</width>
+            <height>40</height>
            </size>
           </property>
+          <layout class="QHBoxLayout" name="horizontalLayout"/>
          </widget>
-         <widget class="PreviewView" name="previewGraphicsView">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>200</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="frameShape">
-           <enum>QFrame::Shape::NoFrame</enum>
-          </property>
+        </item>
+        <item>
+         <widget class="QWidget" name="contentLayout" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QSplitter" name="splitter">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <widget class="PageListWidget" name="pagesListWidget">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>180</width>
+                <height>0</height>
+               </size>
+              </property>
+             </widget>
+             <widget class="PreviewView" name="previewGraphicsView">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>200</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::Shape::NoFrame</enum>
+              </property>
+             </widget>
+            </widget>
+           </item>
+          </layout>
          </widget>
-        </widget>
-       </item>
-      </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="HelpPage" name="helpPage"/>
      </widget>
     </item>
    </layout>
@@ -116,6 +137,12 @@
    <class>PreviewView</class>
    <extends>QGraphicsView</extends>
    <header>previewview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>HelpPage</class>
+   <extends>QWidget</extends>
+   <header>helppage.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

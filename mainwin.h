@@ -58,6 +58,9 @@ private:
     void getScannerCapabilities(const QString &deviceID);
     void saveScanners(const QString &saneOutput);
     void addPageToList(const QString &filePath);
+    void showPage(QWidget *page);
+    void setBusy(bool busy);
+    void updateButtons();
 
     QString getPageFormat();
     QStringList m_processedFiles;
@@ -72,9 +75,13 @@ private:
     QToolButton *m_fakeDplxBtn = nullptr;
     QToolButton *m_saveSelBtn = nullptr;
     QToolButton *m_saveAllBtn = nullptr;
+    QToolButton *m_coffeeBtn = nullptr;
+    QToolButton *m_helpBtn = nullptr;
 
     QString m_cachedScannerOutput;
     QString m_scanErrorOutput;           // Last stderr message of scanimage
+    bool m_busy = false;                 // search, loading the options or scan running
+    bool m_scannerReady = false;         // options of the chosen scanner are loaded
 
 private slots:
     void showSettingsOverlay();

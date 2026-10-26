@@ -8,5 +8,9 @@
         <file alias="document_landscape">ressources/icons/document_landscape.svg</file>
         <file alias="rotate">ressources/icons/rotate.svg</file>
         <file alias="refresh">ressources/icons/refresh.svg</file>
+        <file alias="coffee">ressources/icons/coffee.svg</file>
+        <file alias="help">ressources/icons/help.svg</file>
+        <file alias="back">ressources/icons/back.svg</file>
+        <file alias="info">ressources/icons/info.svg</file>
     </qresource>
 </RCC>

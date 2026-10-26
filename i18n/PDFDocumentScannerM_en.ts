@@ -2,6 +2,69 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="en_US">
 <context>
+    <name>HelpPage</name>
+    <message>
+        <location filename="../helppage.cpp" line="106"/>
+        <source>Back</source>
+        <translation type="unfinished">Back</translation>
+    </message>
+    <message>
+        <location filename="../helppage.cpp" line="107"/>
+        <source>Help</source>
+        <translation type="unfinished">Help</translation>
+    </message>
+    <message>
+        <location filename="../helppage.cpp" line="142"/>
+        <source>Scanning</source>
+        <translation type="unfinished">Scanning</translation>
+    </message>
+    <message>
+        <location filename="../helppage.cpp" line="142"/>
+        <source>Scanner, flatbed, feeder</source>
+        <translation type="unfinished">Scanner, flatbed, feeder</translation>
+    </message>
+    <message>
+        <location filename="../helppage.cpp" line="143"/>
+        <source>Pages</source>
+        <translation type="unfinished">Pages</translation>
+    </message>
+    <message>
+        <location filename="../helppage.cpp" line="143"/>
+        <source>Preview, rotate, clear</source>
+        <translation type="unfinished">Preview, rotate, clear</translation>
+    </message>
+    <message>
+        <location filename="../helppage.cpp" line="144"/>
+        <source>Settings</source>
+        <translation type="unfinished">Settings</translation>
+    </message>
+    <message>
+        <location filename="../helppage.cpp" line="144"/>
+        <source>Color, resolution, format, OCR</source>
+        <translation type="unfinished">Color, resolution, format, OCR</translation>
+    </message>
+    <message>
+        <location filename="../helppage.cpp" line="145"/>
+        <source>Saving</source>
+        <translation type="unfinished">Saving</translation>
+    </message>
+    <message>
+        <location filename="../helppage.cpp" line="145"/>
+        <source>PDF of selected or all pages</source>
+        <translation type="unfinished">PDF of selected or all pages</translation>
+    </message>
+    <message>
+        <location filename="../helppage.cpp" line="146"/>
+        <source>About %1</source>
+        <translation type="unfinished">About %1</translation>
+    </message>
+    <message>
+        <location filename="../helppage.cpp" line="147"/>
+        <source>Version, license, support</source>
+        <translation type="unfinished">Version, license, support</translation>
+    </message>
+</context>
+<context>
     <name>MainWin</name>
     <message>
         <location filename="../mainwin.ui" line="14"/>
@@ -9,19 +72,29 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="48"/>
+        <location filename="../initialize.cpp" line="51"/>
         <source>SCAN</source>
         <translation type="unfinished">Scan</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="66"/>
+        <location filename="../initialize.cpp" line="69"/>
         <source>FAKE_DUPLEX</source>
         <translation type="unfinished">Fake Duplex</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="78"/>
+        <location filename="../initialize.cpp" line="81"/>
         <source>CLEAR</source>
         <translation type="unfinished">Clear</translation>
+    </message>
+    <message>
+        <location filename="../initialize.cpp" line="88"/>
+        <source>Buy me a coffee – support PDFDocumentScanner via PayPal</source>
+        <translation type="unfinished">Buy me a coffee – support PDFDocumentScanner via PayPal</translation>
+    </message>
+    <message>
+        <location filename="../initialize.cpp" line="92"/>
+        <source>Help</source>
+        <translation type="unfinished">Help</translation>
     </message>
     <message>
         <source>EROOR_STARTING_SEARCH</source>
@@ -36,65 +109,65 @@
         <translation type="obsolete">No scanners detected</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="70"/>
+        <location filename="../initialize.cpp" line="73"/>
         <source>SAVE_SELECTED</source>
         <translation type="unfinished">Save selected</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="74"/>
+        <location filename="../initialize.cpp" line="77"/>
         <source>SAVE_ALL</source>
         <translation type="unfinished">Save all</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="95"/>
+        <location filename="../mainwin.cpp" line="115"/>
         <source>SEARCH_SCANNERS...</source>
         <translation type="unfinished">Searching for scanners...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="102"/>
-        <location filename="../mainwin.cpp" line="110"/>
+        <location filename="../mainwin.cpp" line="122"/>
+        <location filename="../mainwin.cpp" line="130"/>
         <source>EROOR_STARTING_SEARCH.</source>
         <translation type="unfinished">Error starting search.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="120"/>
+        <location filename="../mainwin.cpp" line="140"/>
         <source>NO_SCANNER_HARDWARE_FOUND.</source>
         <translation type="unfinished">No scanner hardware found.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="140"/>
+        <location filename="../mainwin.cpp" line="160"/>
         <source>NO_SCANNERS_DETECTED.</source>
         <translation type="unfinished">No scanners detected.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="149"/>
-        <location filename="../mainwin.cpp" line="220"/>
+        <location filename="../mainwin.cpp" line="169"/>
+        <location filename="../mainwin.cpp" line="253"/>
         <source>LOAD_SCANNER_CAPABILITIES...</source>
         <translation type="unfinished">Load scanner capabilities...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="233"/>
-        <location filename="../mainwin.cpp" line="309"/>
+        <location filename="../mainwin.cpp" line="263"/>
+        <location filename="../mainwin.cpp" line="341"/>
         <source>Scanner capabilities could not be loaded</source>
         <translation type="unfinished">Scanner capabilities could not be loaded.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="325"/>
+        <location filename="../mainwin.cpp" line="355"/>
         <source>SCANNING...</source>
         <translation type="unfinished">Scanning...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="372"/>
+        <location filename="../mainwin.cpp" line="402"/>
         <source>ERROR_CREATING_TEMP_DIR.</source>
         <translation type="unfinished">Could not create temporary directory.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="444"/>
+        <location filename="../mainwin.cpp" line="472"/>
         <source>ERROR:</source>
         <translation type="unfinished">Error:</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="490"/>
+        <location filename="../mainwin.cpp" line="514"/>
         <source>SCAN_FAILED.</source>
         <translation type="unfinished">Scan failed.</translation>
     </message>
@@ -110,7 +183,8 @@
 <context>
     <name>PageListWidget</name>
     <message>
-        <location filename="../pagelistwidget.cpp" line="18"/>
+        <location filename="../pagelistwidget.cpp" line="41"/>
+        <location filename="../pagelistwidget.cpp" line="135"/>
         <source>PAGE %1</source>
         <translation type="unfinished">Page %1</translation>
     </message>

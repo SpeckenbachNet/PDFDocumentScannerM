@@ -2,6 +2,8 @@
 #include "./ui_mainwin.h"
 #include "toolbarm.h"
 #include "uicolors.h"
+#include "helppage.h"
+#include <QDesktopServices>
 
 namespace {
 
@@ -43,6 +45,7 @@ void applyToolbarStyle(ToolbarM *toolbar) {
 
 void MainWin::initializeToolBars() {
     applyToolbarStyle(ui->toolBarFrame);
+    applyToolbarStyle(ui->helpPage->toolbar());   // the help page brings its own toolbar
 
     // --- Create Buttons and objects ---
     ui->toolBarFrame->addButton("scanBtn",tr("SCAN"),"");
@@ -57,7 +60,7 @@ void MainWin::initializeToolBars() {
     m_refreshBtn = ui->toolBarFrame->findChild<QToolButton*>("refreshBtn");
     m_refreshBtn->setEnabled(false);
 
-    ui->toolBarFrame->addSpacer();  // Spacer for align buttons right
+    ui->toolBarFrame->addSpacer();  // Spacer
 
     ui->toolBarFrame->addButton("rotateBtn","",":icons/rotate");
     m_rotateBtn = ui->toolBarFrame->findChild<QToolButton*>("rotateBtn");
@@ -78,6 +81,17 @@ void MainWin::initializeToolBars() {
     ui->toolBarFrame->addButton("clearBtn",tr("CLEAR"),"");
     m_clearBtn = ui->toolBarFrame->findChild<QToolButton*>("clearBtn");
     m_clearBtn->setEnabled(false);
+
+    ui->toolBarFrame->addSpacer();  // Spacer
+
+    m_coffeeBtn = ui->toolBarFrame->addButton("coffeeBtn", "", ":icons/coffee");
+    m_coffeeBtn->setToolTip(tr("Buy me a coffee – support PDFDocumentScanner via PayPal"));
+    ui->toolBarFrame->setButtonColor(m_coffeeBtn, QColor(), QColor(245, 166, 35));
+    m_coffeeBtn->setEnabled(false);
+    m_helpBtn = ui->toolBarFrame->addButton("helpBtn", "", ":icons/help");
+    m_helpBtn->setToolTip(tr("Help"));
+    m_helpBtn->setEnabled(false);
+
 }
 
 // ====== Form ======
@@ -131,4 +145,9 @@ void MainWin::initializeConnects() {
     connect(ui->pagesListWidget, &QListView::clicked, this, &::MainWin::onFilelistTableViewClicked);
     connect(m_settingsOverlay, &SettingsOverlay::scannerChanged,
             this, &MainWin::getScannerCapabilities);
+    connect(m_coffeeBtn, &QToolButton::clicked, this, [] {
+        QDesktopServices::openUrl(QUrl(QStringLiteral("https://paypal.me/michaelspeckenbach")));
+    });
+    connect(m_helpBtn, &QToolButton::clicked, this, [this] { showPage(ui->helpPage); });
+    connect(ui->helpPage, &HelpPage::backRequested, this, [this] { showPage(ui->mainPage); });
 }

@@ -92,6 +92,11 @@ void MainWin::showSettingsOverlay() {
     }
 }
 
+// Every page brings its own toolbar, so switching the page is all there is to do
+void MainWin::showPage(QWidget *page) {
+    ui->stackedWidget->setCurrentWidget(page);
+}
+
 void MainWin::onFilelistTableViewClicked(const QModelIndex &index) {
     // Show the clicked page in the large preview
     QString filePath = index.data(Qt::UserRole).toString();
@@ -102,6 +107,8 @@ void MainWin::onFilelistTableViewClicked(const QModelIndex &index) {
 // ====== Scanner functions ======
 
 void MainWin::searchForScanners() {
+    m_scannerReady = false;   // the scanner may be gone after the search
+    setBusy(true);
     m_statusOverlay->showMessage(tr("SEARCH_SCANNERS..."));
 
     QProcess *process = new QProcess(this);
@@ -110,7 +117,7 @@ void MainWin::searchForScanners() {
     connect(process, &QProcess::errorOccurred, this, [this, process](QProcess::ProcessError error) {
         if (error != QProcess::FailedToStart) return;
         m_statusOverlay->showMessage(tr("EROOR_STARTING_SEARCH."), true, 3000);
-        m_refreshBtn->setEnabled(true);
+        setBusy(false);
         process->deleteLater();
     });
 
@@ -118,7 +125,7 @@ void MainWin::searchForScanners() {
         // A) Wurde der Prozess überhaupt korrekt beendet?
         if (process->exitStatus() != QProcess::NormalExit) {
             m_statusOverlay->showMessage(tr("EROOR_STARTING_SEARCH."), true, 3000);
-            m_refreshBtn->setEnabled(true);
+            setBusy(false);
             process->deleteLater();
             return;
         }
@@ -128,7 +135,7 @@ void MainWin::searchForScanners() {
         // B) Ist der Output technisch leer?
         if (output.trimmed().isEmpty()) {
             m_statusOverlay->showMessage(tr("NO_SCANNER_HARDWARE_FOUND."), true, 3000);
-            m_refreshBtn->setEnabled(true);
+            setBusy(false);
             process->deleteLater();
             return;
         }
@@ -148,7 +155,7 @@ void MainWin::searchForScanners() {
 
         if (!echterScannerGefunden) {
             m_statusOverlay->showMessage(tr("NO_SCANNERS_DETECTED."), true, 3000);
-            m_refreshBtn->setEnabled(true);
+            setBusy(false);
             process->deleteLater();
             return;
         }
@@ -230,12 +237,16 @@ void MainWin::saveScanners(const QString &saneOutput) {
 }
 
 void MainWin::getScannerCapabilities(const QString &deviceID) {
-if(deviceID.isEmpty()) return;
+    m_scannerReady = false;
+    if (deviceID.isEmpty()) {
+        // e.g. only unusable devices were found: refresh must stay possible
+        m_statusOverlay->hideOverlay();
+        setBusy(false);
+        return;
+    }
 
     qDebug() << "Get scanner capabilities...";
-    m_scanBtn->setEnabled(false);
-    m_settingsBtn->setEnabled(false);
-    m_refreshBtn->setEnabled(false);
+    setBusy(true);
     m_statusOverlay->showMessage(tr("LOAD_SCANNER_CAPABILITIES..."));
     m_statusOverlay->raise();
     // QProcess auf dem Heap, damit er weiterläuft, wenn die Funktion endet
@@ -244,12 +255,10 @@ if(deviceID.isEmpty()) return;
     // Wir verbinden das finished-Signal DES NEUEN Prozesses
     connect(process, &QProcess::finished, this, [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
         process->deleteLater();
-        // Allow refresh and choosing another scanner even if loading fails
-        m_settingsBtn->setEnabled(true);
-        m_refreshBtn->setEnabled(true);
 
         if (exitStatus != QProcess::NormalExit || exitCode != 0) {
             m_statusOverlay->showMessage(tr("Scanner capabilities could not be loaded"), true, 3000);
+            setBusy(false);   // refresh and choosing another scanner stay possible
             return;
         }
 
@@ -316,7 +325,8 @@ if(deviceID.isEmpty()) return;
             }
         }
         m_statusOverlay->hideOverlay();
-        m_scanBtn->setEnabled(true);
+        m_scannerReady = true;
+        setBusy(false);
 #ifdef QT_DEBUG
         SettingsManager::instance().dump();
 #endif
@@ -326,7 +336,7 @@ if(deviceID.isEmpty()) return;
     connect(process, &QProcess::errorOccurred, this, [this, process](QProcess::ProcessError error) {
         if (error != QProcess::FailedToStart) return;
         m_statusOverlay->showMessage(tr("Scanner capabilities could not be loaded"), true, 3000);
-        m_refreshBtn->setEnabled(true);
+        setBusy(false);
         process->deleteLater();
     });
 
@@ -337,9 +347,7 @@ void MainWin::startScan() {
     qDebug() << "Enter startScan...";
 
     // -- Lock UI elements
-    m_scanBtn->setEnabled(false);
-    m_settingsBtn->setEnabled(false);
-    m_refreshBtn->setEnabled(false);
+    setBusy(true);
 
     m_statusOverlay->showMessage(tr("SCANNING..."));
 
@@ -389,9 +397,7 @@ void MainWin::startScan() {
     if (!tempDir.mkpath(batchDirName)) {
         qDebug() << "Fehler: Konnte Verzeichnis nicht erstellen";
         m_statusOverlay->showMessage(tr("ERROR_CREATING_TEMP_DIR."), true, 3000);
-        m_scanBtn->setEnabled(true);
-        m_settingsBtn->setEnabled(true);
-        m_refreshBtn->setEnabled(true);
+        setBusy(false);
         return;
     }
     QString batchPath = tempDir.absoluteFilePath(batchDirName);
@@ -466,9 +472,7 @@ void MainWin::startScan() {
         if (error == QProcess::FailedToStart) {
             progressTimer->stop();
             progressTimer->deleteLater();
-            m_scanBtn->setEnabled(true);
-            m_settingsBtn->setEnabled(true);
-            m_refreshBtn->setEnabled(true);
+            setBusy(false);
             scanProcess->deleteLater();
         }
     });
@@ -497,9 +501,7 @@ void MainWin::startScan() {
         }
 
         // UI aufräumen
-        m_scanBtn->setEnabled(true);
-        m_settingsBtn->setEnabled(true);
-        m_refreshBtn->setEnabled(true);
+        setBusy(false);
         m_statusOverlay->hideOverlay();
 
         // Falls es ein echter Fehler war (nicht EOF = 5 / ADF leer = 7 nach gescannten Seiten)
@@ -525,10 +527,25 @@ void MainWin::addPageToList(const QString &filePath) {
 }
 
 void MainWin::refreshScanners() {
-    m_scanBtn->setEnabled(false);
-    m_settingsBtn->setEnabled(false);
-    m_refreshBtn->setEnabled(false);
     searchForScanners();
+}
+
+// ====== Button states ======
+
+// Search, loading the scanner options and scanning lock the toolbar
+void MainWin::setBusy(bool busy) {
+    m_busy = busy;
+    updateButtons();
+}
+
+// The one place that decides which buttons are usable (page buttons follow with the pages)
+void MainWin::updateButtons() {
+    const bool hasScanners = !SettingsManager::instance().scannerValues.isEmpty();
+    m_refreshBtn->setEnabled(!m_busy);
+    m_coffeeBtn->setEnabled(!m_busy);
+    m_helpBtn->setEnabled(!m_busy);
+    m_settingsBtn->setEnabled(!m_busy && hasScanners);
+    m_scanBtn->setEnabled(!m_busy && m_scannerReady);
 }
 
 // ====== Events ======
