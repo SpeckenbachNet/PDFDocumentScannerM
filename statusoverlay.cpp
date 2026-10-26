@@ -45,7 +45,7 @@ void StatusOverlay::showMessage(const QString &text, bool isError, int timeoutMs
     // Positioning
     this->resize(parentWidget()->size());
     m_label->adjustSize();
-    m_label->move((width() - m_label->width()) / 2, (height() - m_label->height()) / 2);
+    centerLabel();
 
     show();
 
@@ -59,6 +59,17 @@ void StatusOverlay::showMessage(const QString &text, bool isError, int timeoutMs
     if (timeoutMs > 0) {
         m_autoHideTimer->start(timeoutMs);
     }
+}
+
+void StatusOverlay::centerLabel() {
+    m_label->move((width() - m_label->width()) / 2, (height() - m_label->height()) / 2);
+}
+
+// The first message is shown before the main window has its final size,
+// so the label has to follow every resize of the overlay
+void StatusOverlay::resizeEvent(QResizeEvent *event) {
+    QWidget::resizeEvent(event);
+    centerLabel();
 }
 
 void StatusOverlay::paintEvent(QPaintEvent *) {

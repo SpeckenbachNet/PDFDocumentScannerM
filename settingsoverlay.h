@@ -28,7 +28,7 @@ protected:
     void paintEvent(QPaintEvent *event) override;
     void showEvent(QShowEvent *event) override;
     void extracted(QEvent *&event);
-    //void changeEvent(QEvent *event) override;
+    void changeEvent(QEvent *event) override;
 
 private:
     MainWindow  *m_mainWindow; // Save Pointer

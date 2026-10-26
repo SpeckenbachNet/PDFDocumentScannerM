@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2026 Michael Speckenbach
- * This file is part of PDFDocumentScanner.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +14,57 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+// ToolbarM 1.7.0 – master copy: ~/Development/QT/libraries/toolbarm (see CHANGELOG.md there)
 #include "toolbarm.h"
+
+#include <QApplication>
+#include <QEvent>
+#include <QLabel>
+#include <QPainter>
+#include <QPainterPath>
+#include <QVariant>
+
+#include <cmath>
+
+namespace {
+
+// Relative luminance (WCAG): 0 = black ... 1 = white
+qreal luminance(const QColor &c)
+{
+    auto channel = [](qreal v) {
+        return v <= 0.03928 ? v / 12.92 : std::pow((v + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * channel(c.redF()) + 0.7152 * channel(c.greenF()) + 0.0722 * channel(c.blueF());
+}
+
+// Black or white, whichever has more contrast on the given color
+QColor readableTextColor(const QColor &fill)
+{
+    const qreal l = luminance(fill);
+    const qreal onBlack = (l + 0.05) / 0.05;
+    const qreal onWhite = 1.05 / (l + 0.05);
+    return onBlack >= onWhite ? QColor(Qt::black) : QColor(Qt::white);
+}
+
+} // namespace
+
+// Button of the toolbar: its size comes from the toolbar, so the width follows text and font
+// (setText() and font changes call updateGeometry(), then the layout asks sizeHint() again)
+class ToolbarButton : public QToolButton {
+public:
+    explicit ToolbarButton(ToolbarM *toolbar) : QToolButton(toolbar), m_toolbar(toolbar) {}
+
+    QSize sizeHint() const override { return m_toolbar->buttonSizeHint(this); }
+    QSize minimumSizeHint() const override { return sizeHint(); }
+
+private:
+    ToolbarM *m_toolbar;
+};
 
 ToolbarM::ToolbarM(QWidget *parent)
     : QFrame(parent)
 {
     mainLayout = qobject_cast<QHBoxLayout*>(layout());
-
     if (!mainLayout) {
         mainLayout = new QHBoxLayout(this);
     }
@@ -29,277 +72,404 @@ ToolbarM::ToolbarM(QWidget *parent)
     mainLayout->setContentsMargins(10, 7, 10, 7);
     mainLayout->setSpacing(8);
     mainLayout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+
+    updateColors();
 }
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
 
 void ToolbarM::addSpacer()
 {
     mainLayout->addStretch(1);
 }
 
-QToolButton* ToolbarM::addButton(const QString &objName, const QString &text, const QString &iconPath, bool useSeparator, bool iconRight)
+QToolButton* ToolbarM::addButton(const QString &objName, const QString &text,
+                                 const QString &iconPath, bool useSeparator, bool iconRight)
 {
-    //getSystemColors();
-
-    QToolButton *btn = new QToolButton(this);
+    QToolButton *btn = new ToolbarButton(this);
     btn->setObjectName(objName);
-    btn->setAttribute(Qt::WA_NoSystemBackground); //Prevents the button drawing standard
-    btn->setIconSize(QSize(20, 20));
-    btn->setFixedHeight(buttonHeight);
+    btn->setAttribute(Qt::WA_NoSystemBackground); // we paint everything ourselves
+    btn->setIconSize(iconSize);
+    btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);   // size from buttonSizeHint()
 
     if (!text.isEmpty()) {
         btn->setText(text);
     }
 
-    // --- NEU: Größenlogik für reine Icon-Buttons ---
-    if (!iconPath.isEmpty() && text.isEmpty()) {
-        // --- CASE: Only Icon
-        btn->setFixedSize(buttonHeight * 1.8, buttonHeight);
-    } else {
-        // Adjust button size to text size.
-        int textW = btn->fontMetrics().horizontalAdvance(text);
-        if(useSeparator) {
-            btn->setFixedWidth(iconSize.width() + 10 + textW + 30); // Icon(22) + Spacing(10) + Text + Padding+Sperator(20+10)
-        } else {
-            btn->setFixedWidth(iconSize.width() + 10 + textW + 20); // Icon(22) + Spacing(10) + Text + Padding(20)
-        }
-    }
+    // Load the icon once and keep it on the button (instead of loading it on every paint)
+    const QIcon icon = iconPath.isEmpty() ? QIcon() : QIcon(iconPath);
 
-    // Set non-standard variables as properties
-    btn->setProperty("useSeparator", useSeparator);
+    btn->setProperty("tbIcon", QVariant::fromValue(icon));
     btn->setProperty("iconPath", iconPath);
+    btn->setProperty("useSeparator", useSeparator);
     btn->setProperty("iconRight", iconRight);
 
-    // Bind to eventFilter and add to layout
     btn->installEventFilter(this);
     mainLayout->addWidget(btn);
 
     return btn;
 }
 
+void ToolbarM::setButtonColor(QToolButton *btn, const QColor &fill, const QColor &text)
+{
+    if (!btn) {
+        return;
+    }
+    if (fill.isValid()) {
+        btn->setProperty("tbFill", QVariant::fromValue(fill));
+        btn->setProperty("tbText", QVariant::fromValue(text.isValid() ? text : readableTextColor(fill)));
+    } else {
+        // Only text color (icon and text colored, button as the others) or both invalid:
+        // back to the palette colors
+        btn->setProperty("tbFill", QVariant());
+        btn->setProperty("tbText", text.isValid() ? QVariant::fromValue(text) : QVariant());
+    }
+    btn->update();
+}
+
+void ToolbarM::setTitle(const QString &title)
+{
+    if (!titleLabel) {
+        titleLabel = new QLabel(this);
+        titleLabel->setAttribute(Qt::WA_TransparentForMouseEvents);   // clicks go to the toolbar
+        QFont font = titleLabel->font();
+        font.setBold(true);
+        if (font.pointSizeF() > 0) {
+            font.setPointSizeF(font.pointSizeF() * 1.15);
+        }
+        titleLabel->setFont(font);
+    }
+    titleLabel->setText(title);
+    titleLabel->setVisible(!title.isEmpty());
+    placeTitle();
+}
+
+void ToolbarM::placeTitle()
+{
+    if (!titleLabel) {
+        return;
+    }
+    titleLabel->adjustSize();
+    titleLabel->move((width() - titleLabel->width()) / 2, (height() - titleLabel->height()) / 2);
+}
+
+void ToolbarM::resizeEvent(QResizeEvent *event)
+{
+    QFrame::resizeEvent(event);
+    placeTitle();
+}
+
+// Width calculation uses the SAME values as paintButton(), so padding stays even
+QSize ToolbarM::buttonSizeHint(const QToolButton *btn) const
+{
+    const bool hasIcon = !btn->property("tbIcon").value<QIcon>().isNull();
+    const bool hasText = !btn->text().isEmpty();
+
+    if (hasIcon && !hasText) {
+        // Icon only
+        return QSize(qRound(buttonHeight * 1.8), buttonHeight);
+    }
+
+    int contentW = btn->fontMetrics().horizontalAdvance(btn->text());
+    if (hasIcon) {
+        contentW += iconSize.width() + iconSpacing;
+        if (btn->property("useSeparator").toBool()) {
+            contentW += separatorSpace;
+        }
+    }
+    return QSize(contentW + 2 * horizontalPadding, buttonHeight);
+}
+
+// ---------------------------------------------------------------------------
+// Colors
+// ---------------------------------------------------------------------------
+
+QColor ToolbarM::mix(const QColor &a, const QColor &b, qreal t)
+{
+    // t < 0 moves away from b (same formula, the result is kept inside 0..1)
+    t = qBound<qreal>(-1.0, t, 1.0);
+    auto channel = [t](qreal x, qreal y) { return qBound<qreal>(0.0, x * (1.0 - t) + y * t, 1.0); };
+    return QColor::fromRgbF(channel(a.redF(),   b.redF()),
+                            channel(a.greenF(), b.greenF()),
+                            channel(a.blueF(),  b.blueF()),
+                            a.alphaF());
+}
+
+void ToolbarM::updateColors()
+{
+    // Application palette, not the widget's: on macOS (Qt 6.12) the widget palette keeps the
+    // black ButtonText when the system switches from light to dark mode (icons and texts of the
+    // buttons black on dark grey), the application palette has the right colors
+    const QPalette pal = QApplication::palette();
+
+    windowColor       = pal.color(QPalette::Window);
+    textColor         = pal.color(QPalette::WindowText);
+    buttonColor       = pal.color(QPalette::Button);
+    buttonTextColor   = pal.color(QPalette::ButtonText);
+    disabledColor     = pal.color(QPalette::Disabled, QPalette::Button);
+    disabledTextColor = pal.color(QPalette::Disabled, QPalette::ButtonText);
+
+    // Dark theme: the window is darker than its text (works with every palette, also when
+    // the platform does not report a color scheme)
+    shade = windowColor.lightnessF() < textColor.lightnessF() ? shadeDark : shadeLight;
+}
+
+void ToolbarM::setShadeFactors(const ShadeFactors &factors)
+{
+    setShadeFactors(factors, factors);
+}
+
+void ToolbarM::setShadeFactors(const ShadeFactors &dark, const ShadeFactors &light)
+{
+    shadeDark  = dark;
+    shadeLight = light;
+    updateColors();
+    update();
+    for (QToolButton *btn : findChildren<QToolButton*>()) {
+        btn->update();
+    }
+}
+
+void ToolbarM::setButtonRadius(qreal radius)
+{
+    buttonRadius = radius;
+    for (QToolButton *btn : findChildren<QToolButton*>()) {
+        btn->update();
+    }
+}
+
+void ToolbarM::setToolbarRadius(qreal radius)
+{
+    toolbarRadius = radius;
+    update();
+}
+
+void ToolbarM::changeEvent(QEvent *event)
+{
+    switch (event->type()) {
+    case QEvent::PaletteChange:
+    case QEvent::ApplicationPaletteChange:
+    case QEvent::StyleChange:
+        updateColors();
+        update();
+        // Buttons use our cached colors, so repaint them as well
+        for (QToolButton *btn : findChildren<QToolButton*>()) {
+            btn->update();
+        }
+        break;
+    default:
+        break;
+    }
+
+    QFrame::changeEvent(event); // important: never swallow the base implementation
+}
+
+// ---------------------------------------------------------------------------
+// Button painting
+// ---------------------------------------------------------------------------
+
 bool ToolbarM::eventFilter(QObject *obj, QEvent *event)
 {
-    getSystemColors();
-
-    QToolButton *btn = qobject_cast<QToolButton*>(obj);
-    if (!btn) return QFrame::eventFilter(obj, event);
-
-    if (event->type() == QEvent::Paint) {
-
-        QPainter p(btn);
-        p.setRenderHint(QPainter::Antialiasing);
-        p.setRenderHint(QPainter::SmoothPixmapTransform); // Wichtig für Pixmaps!
-
-        QString iconPath = btn->property("iconPath").toString();
-        QIcon icon(iconPath);
-
-        bool hasText = !btn->text().isEmpty();
-        bool hasIcon = !icon.isNull();
-        bool useSeparator = btn->property("useSeparator").toBool();
-        bool isHovered = btn->underMouse();
-        bool isPressed = btn->isDown();
-        bool isEnabled = btn->isEnabled();
-
-        // 1. Hintergrundfarbe
-        QColor currentBtnColor = buttonColor;
-        QColor currentTxtColor = buttonTextColor;
-        QColor currentBorderColor = buttonColor;
-
-        // 1. Berechne die Differenz der Helligkeit (0-255)
-        int diff = qAbs(currentBtnColor.lightness() - baseColor.lightness());
-
-        if (!isEnabled) {
-            currentBtnColor = disabledColor; // Eine feste Farbe für "Aus"
-            currentTxtColor = disabledTextColor;
-        } else if (isPressed) {
-            currentBtnColor = pressColor;
-        } else if (isHovered) {
-            currentBtnColor = hoverColor;
+    if (QToolButton *btn = qobject_cast<QToolButton*>(obj)) {
+        switch (event->type()) {
+        case QEvent::Paint:
+            paintButton(btn);
+            return true;
+        case QEvent::Enter:
+        case QEvent::Leave:
+            // QToolButton repaints on hover only in autoRaise mode: without this the hover
+            // never shows, or stays visible after the mouse has left (e.g. after a click)
+            btn->update();
+            break;
+        default:
+            break;
         }
-
-        if (diff < 15) {
-            if (baseColor.lightness() > 128) {
-                // Helles Theme: Rahmen deutlich abdunkeln
-                currentBorderColor = currentBtnColor.darker(120);
-            } else {
-                // Dunkles Theme: Rahmen leicht aufhellen (für subtile Kante)
-                currentBorderColor = currentBtnColor.lighter(115);
-            }
-        }
-
-        // 2. Den Button-Körper zeichnen
-        p.setPen(QPen(currentBorderColor, 1));
-        p.setBrush(currentBtnColor);
-
-        QRectF r = QRectF(btn->rect()).adjusted(0.5, 0.5, -0.5, -0.5);
-
-        int cornerRadius = 15;
-        p.drawRoundedRect(r, cornerRadius, cornerRadius);
-
-        //p.setPen(textColor);
-        p.setFont(btn->font());
-
-        if (hasIcon) {
-            // get icon in system color
-            QPixmap iconPixmap = getTintedPixmap(icon, iconSize, currentTxtColor);
-            QRect iconRect(0, 0, iconPixmap.width(), iconPixmap.height());
-            int iconW = iconSize.width();
-            int iconH = iconSize.height();
-
-            if (hasIcon && hasText) {
-                // --- CASE: TEXT AND ICON ---
-                // 1. Wir nutzen strikt die vorgegebene iconSize
-                // 1. Maße strikt aus der Variablen iconSize nehme
-                int textW = p.fontMetrics().horizontalAdvance(btn->text());
-                int spacing = 5;
-
-                //bool useSep = btn->property("useSeparator").toBool();
-                int sepSpace = useSeparator ? 14 : 0;
-
-                int totalW = iconW + spacing + textW + sepSpace;
-
-                int startX = (btn->width() - totalW) / 2;
-                int iconY = (btn->height() - iconH) / 2;
-
-                bool iconRight = btn->property("iconRight").toBool();
-
-                int iconX, textX, sepX;
-
-                if (iconRight) {
-                    textX = startX;
-                    sepX  = startX + textW + (sepSpace / 2);
-                    iconX = startX + textW + sepSpace + spacing;
-                } else {
-                    iconX = startX;
-                    sepX  = startX + iconW + (sepSpace / 2);
-                    textX = startX + iconW + sepSpace + spacing ;
-                }
-
-                // --- DRAW ---
-                // Icon
-                QRect targetIconRect(iconX, iconY, iconW, iconH);
-                p.drawPixmap(targetIconRect, iconPixmap);
-
-                // Text
-                QRect textRect(textX, 0, textW, btn->height());
-                p.setPen(currentTxtColor);
-                p.drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, btn->text());
-
-                // Separator
-                if (useSeparator) {
-                    p.setPen(QPen(lightColor, 1));
-                    p.drawLine(sepX, 7, sepX, btn->height() - 7);
-                }
-            } else {
-
-                // --- CASE ONLY ICON ---
-                // Wir berechnen die Mitte basierend auf der logischen iconSize (22px)
-                int iconX = (btn->width() - iconW) / 2;
-                int iconY = (btn->height() - iconH) / 2;
-
-                QRect targetIconRect(iconX, iconY, iconW, iconH);
-                p.drawPixmap(targetIconRect, iconPixmap);
-            }
-        } else if (hasText) {
-            // --- CASE: ONLY TEXT ---
-            p.setPen(currentTxtColor);
-            p.drawText(btn->rect(), Qt::AlignCenter, btn->text());
-        }
-        return true;
     }
     return QFrame::eventFilter(obj, event);
 }
 
-QPixmap ToolbarM::getTintedPixmap(const QIcon &icon, const QSize &size, const QColor &color)
+void ToolbarM::paintButton(QToolButton *btn)
 {
-    if (icon.isNull()) return QPixmap();
+    QPainter p(btn);
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setRenderHint(QPainter::SmoothPixmapTransform);
 
-    // WICHTIG: Berücksichtige den Skalierungsfaktor des Bildschirms (z.B. 2.0 für 4K)
-    qreal dpr = this->devicePixelRatioF();
+    const QIcon icon        = btn->property("tbIcon").value<QIcon>();
+    const bool hasText      = !btn->text().isEmpty();
+    const bool hasIcon      = !icon.isNull();
+    const bool useSeparator = btn->property("useSeparator").toBool();
+    const bool iconRight    = btn->property("iconRight").toBool();
+    const bool isEnabled    = btn->isEnabled();
+    const bool isPressed    = btn->isDown() || btn->isChecked();  // checkable buttons stay "pressed"
+    const bool isHovered    = btn->underMouse();
 
-    // Wir laden das Bild in der physisch benötigten Auflösung (z.B. 44x44 statt 22x22)
-    QPixmap pixmap = icon.pixmap(size * dpr);
+    // --- 1. Colors: everything derived from button + text color -> visible in every theme
+    // (own colors of the button from setButtonColor(), else the palette)
+    // Only an own text color (no own fill): just icon and text in it, the rest like the others
+    const QVariant ownFill = btn->property("tbFill");
+    const QVariant ownText = btn->property("tbText");
+    const QColor themeFill = shade.buttonFromWindow
+                                 ? mix(windowColor, textColor, shade.buttonBackground)
+                                 : buttonColor;
+    const QColor baseFill  = ownFill.isValid() ? ownFill.value<QColor>() : themeFill;
+    const QColor baseText  = ownFill.isValid() ? ownText.value<QColor>() : buttonTextColor;   // for the mixes
 
-    // Wir sagen dem Pixmap, dass es sich wie ein 'size' großes Bild verhalten soll
-    pixmap.setDevicePixelRatio(dpr);
+    QColor fill  = baseFill;
+    QColor lines = baseText;                                                   // border, separator
+    QColor fg    = ownText.isValid() ? ownText.value<QColor>() : baseText;   // icon, text
 
-    QPainter pixPainter(&pixmap);
-    pixPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
-    pixPainter.fillRect(pixmap.rect(), color);
-    pixPainter.end();
+    if (!isEnabled) {
+        // Fill from the window color: disabled buttons keep it (dimmed text shows the state),
+        // the palette's disabled Button color may not fit the derived toolbar colors
+        fill  = shade.buttonFromWindow ? themeFill : disabledColor;
+        lines = disabledTextColor;
+        fg    = disabledTextColor;
+    } else if (isPressed) {
+        fill = mix(baseFill, baseText, shade.buttonPressed);
+    } else if (isHovered) {
+        fill = mix(baseFill, baseText, shade.buttonHover);
+    }
 
+    const QColor border    = mix(fill, lines, isEnabled ? shade.buttonBorder : shade.buttonBorderOff);
+    const QColor separator = mix(fill, lines, shade.separator);
+
+    // --- 2. Button body
+    const QRectF r = QRectF(btn->rect()).adjusted(0.5, 0.5, -0.5, -0.5);
+    const qreal radius = qMin(buttonRadius, r.height() / 2.0);
+
+    p.setPen(QPen(border, 1));
+    p.setBrush(fill);
+    p.drawRoundedRect(r, radius, radius);
+
+    p.setFont(btn->font());
+
+    const int iconW = iconSize.width();
+    const int iconH = iconSize.height();
+
+    // --- 3. Content
+    if (hasIcon && hasText) {
+        // TEXT AND ICON
+        const QPixmap iconPixmap = tintedPixmap(btn, fg);
+        const int textW    = p.fontMetrics().horizontalAdvance(btn->text());
+        const int sepSpace = useSeparator ? separatorSpace : 0;
+        const int totalW   = iconW + iconSpacing + textW + sepSpace;
+
+        const int startX = (btn->width() - totalW) / 2;
+        const int iconY  = (btn->height() - iconH) / 2;
+
+        int iconX, textX, sepX;
+        if (iconRight) {
+            textX = startX;
+            sepX  = startX + textW + iconSpacing / 2 + sepSpace / 2;
+            iconX = startX + textW + iconSpacing + sepSpace;
+        } else {
+            iconX = startX;
+            sepX  = startX + iconW + iconSpacing / 2 + sepSpace / 2;
+            textX = startX + iconW + iconSpacing + sepSpace;
+        }
+
+        p.drawPixmap(QRect(iconX, iconY, iconW, iconH), iconPixmap);
+
+        p.setPen(fg);
+        p.drawText(QRect(textX, 0, textW, btn->height()),
+                   Qt::AlignVCenter | Qt::AlignLeft, btn->text());
+
+        if (useSeparator) {
+            p.setPen(QPen(separator, 1));
+            // +0.5 keeps the 1px line crisp with antialiasing
+            p.drawLine(QPointF(sepX + 0.5, 7), QPointF(sepX + 0.5, btn->height() - 7));
+        }
+    } else if (hasIcon) {
+        // ONLY ICON
+        const QPixmap iconPixmap = tintedPixmap(btn, fg);
+        const int iconX = (btn->width() - iconW) / 2;
+        const int iconY = (btn->height() - iconH) / 2;
+        p.drawPixmap(QRect(iconX, iconY, iconW, iconH), iconPixmap);
+    } else if (hasText) {
+        // ONLY TEXT
+        p.setPen(fg);
+        p.drawText(btn->rect(), Qt::AlignCenter, btn->text());
+    }
+}
+
+QPixmap ToolbarM::tintedPixmap(QToolButton *btn, const QColor &color) const
+{
+    // Tinted once per color (normal, disabled, theme switch) and screen, not on every paint
+    const qreal dpr = devicePixelRatioF();
+    if (btn->property("tbTintColor").value<QColor>() == color
+        && btn->property("tbTintDpr").toReal() == dpr) {
+        return btn->property("tbTintPixmap").value<QPixmap>();
+    }
+
+    const QIcon icon = btn->property("tbIcon").value<QIcon>();
+    if (icon.isNull()) {
+        return QPixmap();
+    }
+
+    // Qt 6: request the pixmap directly for the screen's device pixel ratio
+    QPixmap pixmap = icon.pixmap(iconSize, dpr);
+    if (!pixmap.isNull()) {
+        QPainter pixPainter(&pixmap);
+        pixPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        pixPainter.fillRect(pixmap.rect(), color);
+        pixPainter.end();
+    }
+
+    btn->setProperty("tbTintColor", color);
+    btn->setProperty("tbTintDpr", dpr);
+    btn->setProperty("tbTintPixmap", pixmap);
     return pixmap;
 }
 
-void ToolbarM::getSystemColors() {
-
-    baseColor         = palette().color(QPalette::Base);
-    buttonColor       = palette().color(QPalette::Button);
-    buttonTextColor   = palette().color(QPalette::ButtonText);
-    darkColor         = palette().color(QPalette::Dark);
-    disabledColor     = palette().color(QPalette::Disabled, QPalette::Button);
-    disabledTextColor = palette().color(QPalette::Disabled, QPalette::ButtonText);
-    hoverColor        = palette().color(QPalette::Light);
-    lightColor        = palette().color(QPalette::Light);
-    midColor          = palette().color(QPalette::Mid);
-    midLightColor     = palette().color(QPalette::Midlight);
-    pressColor        = palette().color(QPalette::Dark);
-    shadowColor       = palette().color(QPalette::Shadow);
-    textColor         = palette().color(QPalette::Text);
-    windowColor       = palette().color(QPalette::Window);
-
-}
-
-
-void ToolbarM::changeEvent(QEvent *event) {
-    // qDebug() << "ENTER changeEvent";
-    // if (event->type() == QEvent::ApplicationPaletteChange) {
-    //     qDebug() << "Pallete changed";
-    //     updateThemeColors();
-    // }
-    // QFrame::changeEvent(event);
-}
+// ---------------------------------------------------------------------------
+// Toolbar painting
+// ---------------------------------------------------------------------------
 
 void ToolbarM::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event);
+
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
 
-    QRectF r = QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5);
-    const qreal radius = 18.0;
+    const QRectF r = QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5);
+    const qreal radius   = qMin(toolbarRadius, r.height() / 2.0);
     const qreal diameter = radius * 2.0;
 
-    getSystemColors();
+    // Colors derived from Window + WindowText -> contrast in light AND dark themes
+    const QColor bgColor   = mix(windowColor, textColor, shade.toolbarBackground);
+    const QColor darkEdge  = mix(bgColor, textColor, shade.toolbarDarkEdge);
+    const QColor lightEdge = mix(bgColor, textColor, shade.toolbarLightEdge);
 
-    // 1. Hintergrund
+    // 1. Background
     QPainterPath bg;
     bg.addRoundedRect(r, radius, radius);
-    p.fillPath(bg, baseColor);
+    p.fillPath(bg, bgColor);
 
-    // --- Dunkle Kante (Oben + Links + 10% Ecke oben-rechts) ---
+    // 2. Dark edge (top + left + part of the top-right and bottom-left corners)
+    // Qt angles: 0 = right, 90 = top, 180 = left, 270 = bottom
     QPainterPath darkPath;
-    // Startet in der Kurve oben-rechts bei ca. 45 Grad (oder 10% = 9 Grad)
-    // Winkel bei Qt: 0 = rechts, 90 = oben, 180 = links, 270 = unten
     darkPath.arcMoveTo(r.right() - diameter, r.top(), diameter, diameter, 45);
-    darkPath.arcTo(r.right() - diameter, r.top(), diameter, diameter, 45, 45); // Rest oben-rechts
-    darkPath.lineTo(r.left() + radius, r.top());                              // Oben gerade
-    darkPath.arcTo(r.left(), r.top(), diameter, diameter, 90, 90);            // Oben-links voll
-    darkPath.lineTo(r.left(), r.bottom() - radius);                          // Links gerade
-    darkPath.arcTo(r.left(), r.bottom() - diameter, diameter, diameter, 180, 45); // 10% unten-links
+    darkPath.arcTo(r.right() - diameter, r.top(), diameter, diameter, 45, 45);
+    darkPath.lineTo(r.left() + radius, r.top());
+    darkPath.arcTo(r.left(), r.top(), diameter, diameter, 90, 90);
+    darkPath.lineTo(r.left(), r.bottom() - radius);
+    darkPath.arcTo(r.left(), r.bottom() - diameter, diameter, diameter, 180, 45);
 
-    p.setPen(QPen(midColor));
+    p.setPen(QPen(darkEdge, 1));
     p.drawPath(darkPath);
 
-    // --- Helle Kante (Unten + Rechts + 10% Ecke unten-links) ---
+    // 3. Light edge (bottom + right + rest of the corners)
     QPainterPath lightPath;
-    // Startet in der Kurve unten-links (da wo darkPath aufhörte)
     lightPath.arcMoveTo(r.left(), r.bottom() - diameter, diameter, diameter, 225);
-    lightPath.arcTo(r.left(), r.bottom() - diameter, diameter, diameter, 225, 45); // Rest unten-links
-    lightPath.lineTo(r.right() - radius, r.bottom());                             // Unten gerade
-    lightPath.arcTo(r.right() - diameter, r.bottom() - diameter, diameter, diameter, 270, 90); // Unten-rechts voll
-    lightPath.lineTo(r.right(), r.top() + radius);                                // Rechts gerade
-    lightPath.arcTo(r.right() - diameter, r.top(), diameter, diameter, 0, 45);    // 10% oben-rechts
+    lightPath.arcTo(r.left(), r.bottom() - diameter, diameter, diameter, 225, 45);
+    lightPath.lineTo(r.right() - radius, r.bottom());
+    lightPath.arcTo(r.right() - diameter, r.bottom() - diameter, diameter, diameter, 270, 90);
+    lightPath.lineTo(r.right(), r.top() + radius);
+    lightPath.arcTo(r.right() - diameter, r.top(), diameter, diameter, 0, 45);
 
-    p.setPen(QPen(midLightColor));
+    p.setPen(QPen(lightEdge, 1));
     p.drawPath(lightPath);
 }

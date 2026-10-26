@@ -1,6 +1,7 @@
-//#include <qapplication.h>
 #include "settingsoverlay.h"
 #include "settingsmanager.h"
+#include "uicolors.h"
+#include <QApplication>
 
 SettingsOverlay::SettingsOverlay(QWidget *parent) : QWidget(parent) {
     setAttribute(Qt::WA_TranslucentBackground);
@@ -286,9 +287,14 @@ void SettingsOverlay::paintEvent(QPaintEvent *event) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    QColor bgColor = palette().color(QPalette::Window);
+    // Derived from Window/WindowText: QPalette::Light is nearly equal to Window under gtk3,
+    // the frame vanished there. Application palette like in MainWin/ToolbarM.
+    const QPalette appPal = QApplication::palette();
+    QColor bgColor = appPal.color(QPalette::Window);
     bgColor.setAlpha(240);
-    QColor frameColor = palette().color(QPalette::Light);
+    QColor frameColor = UiColors::mix(appPal.color(QPalette::Window),
+                                      appPal.color(QPalette::WindowText),
+                                      UiColors::overlayFrameShade);
 
     int noseX = 20; // The nose starts 20px from the left
     int borderRadius = 12;
@@ -322,6 +328,12 @@ void SettingsOverlay::paintEvent(QPaintEvent *event) {
     painter.fillPath(path, bgColor);
     painter.setPen(QPen(frameColor, 1.2));
     painter.drawPath(path);
+}
+
+// paintEvent reads the application palette, so repaint when it changes (light/dark switch)
+void SettingsOverlay::changeEvent(QEvent *event) {
+    if (event->type() == QEvent::ApplicationPaletteChange) update();
+    QWidget::changeEvent(event);
 }
 
 // void SettingsOverlay::changeEvent(QEvent *event) {

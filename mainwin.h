@@ -33,6 +33,7 @@ class MainWin : public QMainWindow
 
 protected:
     void resizeEvent(QResizeEvent *event);
+    void changeEvent(QEvent *event) override;
 
 public:
     MainWin(QWidget *parent = nullptr);
@@ -47,6 +48,7 @@ private:
     void initializeConnections();
     void initializeSettings();
     void updateListIconSize();
+    void applySurfaceColors();
     void refreshSettings();
     void searchForScanners();
     void refreshScanners();

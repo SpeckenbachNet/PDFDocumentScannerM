@@ -2,6 +2,7 @@
 #include "./ui_mainwin.h"
 #include "toolbarm.h"
 #include "settingsmanager.h"
+#include "uicolors.h"
 #include <QDir>
 #include <QThread>
 
@@ -39,6 +40,38 @@ QStringList expandResolutionValues(const QStringList &values, const QString &def
     return result;
 }
 
+// Toolbar look: a toolbar that lies deeper than the window, filled buttons without border
+// (dark values measured on Breeze Dark). Derived from Window/WindowText only, so it looks
+// the same with every palette (KDE, gtk3, Fusion, ...)
+void applyToolbarStyle(ToolbarM *toolbar) {
+    ToolbarM::ShadeFactors dark;
+    dark.toolbarBackground = UiColors::surfaceShade;
+    dark.toolbarDarkEdge   = 0.035;
+    dark.toolbarLightEdge  = 0.12;
+    dark.buttonFromWindow  = true;
+    dark.buttonBackground  = 0.043;
+    dark.buttonHover       = 0.085;
+    dark.buttonPressed     = -0.115;
+    dark.buttonBorder      = 0.0;
+    dark.buttonBorderOff   = 0.0;
+    dark.separator         = 0.085;
+
+    // Light: the buttons need a border, otherwise they vanish on the bright toolbar
+    ToolbarM::ShadeFactors light;
+    light.toolbarBackground = UiColors::surfaceShade;
+    light.toolbarDarkEdge   = 0.15;
+    light.toolbarLightEdge  = 0.06;
+    light.buttonFromWindow  = true;
+    light.buttonBackground  = -0.05;
+    light.buttonHover       = 0.06;
+    light.buttonPressed     = 0.12;
+    light.buttonBorder      = 0.18;
+    light.buttonBorderOff   = 0.10;
+    light.separator         = 0.25;
+
+    toolbar->setShadeFactors(dark, light);
+}
+
 }
 
 MainWin::MainWin(QWidget *parent)
@@ -65,6 +98,8 @@ MainWin::MainWin(QWidget *parent)
 // ====== Initializing / Settings  ======
 
 void MainWin::initializeForm() {
+    applyToolbarStyle(ui->toolBarFrame);
+
     // --- Create Buttons and objects ---
     ui->toolBarFrame->addButton("scanBtn",tr("SCAN"),"");
     m_scanBtn = ui->toolBarFrame->findChild<QToolButton*>("scanBtn");
@@ -113,6 +148,31 @@ void MainWin::initializeForm() {
 
     m_previewScene = new QGraphicsScene(this);
     ui->previewGraphicsView->setScene(m_previewScene);
+
+    applySurfaceColors();
+}
+
+// Page list and preview lie deeper than the window, like the toolbar. Only the viewports get
+// the color (Base for the views, Window for the scroll area around the preview).
+// Application palette for the same reason as in ToolbarM (macOS keeps stale widget palettes).
+// Called again in changeEvent, so light/dark switches apply live.
+void MainWin::applySurfaceColors() {
+    const QPalette appPal = QApplication::palette();
+    const QColor surface = UiColors::mix(appPal.color(QPalette::Window),
+                                         appPal.color(QPalette::WindowText),
+                                         UiColors::surfaceShade);
+
+    const QList<QWidget*> viewports = {
+        ui->pagesListWidget->viewport(),
+        ui->scrollArea->viewport(),
+        ui->previewGraphicsView->viewport()
+    };
+    for (QWidget *viewport : viewports) {
+        QPalette pal = viewport->palette();
+        pal.setColor(QPalette::Base, surface);
+        pal.setColor(QPalette::Window, surface);
+        viewport->setPalette(pal);
+    }
 }
 
 void MainWin::updateListIconSize() {
@@ -680,6 +740,18 @@ void MainWin::resizeEvent(QResizeEvent *event) {
     QMainWindow::resizeEvent(event);
     QTimer::singleShot(0, this, &MainWin::updateListIconSize);  // Calculate Icon Size
     if (m_statusOverlay) m_statusOverlay->resize(this->size());
+}
+
+void MainWin::changeEvent(QEvent *event) {
+    switch (event->type()) {
+    case QEvent::PaletteChange:
+    case QEvent::ApplicationPaletteChange:
+        if (m_previewScene) applySurfaceColors();  // not before initializeForm() has run
+        break;
+    default:
+        break;
+    }
+    QMainWindow::changeEvent(event);
 }
 
 MainWin::~MainWin()

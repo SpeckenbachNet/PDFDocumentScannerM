@@ -18,8 +18,11 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
+    void centerLabel();
+
     QLabel *m_label;
     QPropertyAnimation *m_anim;
     QTimer *m_autoHideTimer;
