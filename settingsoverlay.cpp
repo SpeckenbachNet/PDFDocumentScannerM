@@ -209,8 +209,9 @@ void SettingsOverlay::fillComboBoxes() {
     // Orientation
     QColor textColor = this->palette().color(QPalette::WindowText);
     QSize iconSize(16,16);
-    QIcon pIcon(":/icons/document_portrait");
-    QIcon lIcon(":/icons/document_landscape");
+    // Icons are black drawings: tint them in the text color (light and dark theme)
+    QIcon pIcon(getTintedPixmap(QIcon(":/icons/document_portrait"), iconSize, textColor));
+    QIcon lIcon(getTintedPixmap(QIcon(":/icons/document_landscape"), iconSize, textColor));
     m_pageOrientationCombo->blockSignals(true);
     m_pageOrientationCombo->clear();
     m_pageOrientationCombo->addItem(pIcon,tr("PORTRAIT"), "Portrait");

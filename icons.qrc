@@ -2,12 +2,11 @@
     <qresource prefix="/icons">
         <file alias="app_icon">ressources/icons/app_icon.svg</file>
         <file alias="settings">ressources/icons/settings.svg</file>
-        <file alias="upload">ressources/icons/upload.svg</file>
+        <file alias="save">ressources/icons/save.svg</file>
+        <file alias="save_all">ressources/icons/save_all.svg</file>
         <file alias="document_portrait">ressources/icons/document_portrait.svg</file>
         <file alias="document_landscape">ressources/icons/document_landscape.svg</file>
-        <file alias="document_rotate">ressources/icons/document_rotate.svg</file>
-        <file alias="scan_document">ressources/icons/scan_document.svg</file>
+        <file alias="rotate">ressources/icons/rotate.svg</file>
         <file alias="refresh">ressources/icons/refresh.svg</file>
-        <file alias="loader">ressources/icons/loader.gif</file>
     </qresource>
 </RCC>

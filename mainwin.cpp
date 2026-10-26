@@ -80,7 +80,7 @@ void MainWin::initializeForm() {
 
     ui->toolBarFrame->addSpacer();  // Spacer for align buttons right
 
-    ui->toolBarFrame->addButton("rotateBtn","",":icons/document_rotate");
+    ui->toolBarFrame->addButton("rotateBtn","",":icons/rotate");
     m_rotateBtn = ui->toolBarFrame->findChild<QToolButton*>("rotateBtn");
     m_rotateBtn->setEnabled(false);
 
@@ -88,11 +88,11 @@ void MainWin::initializeForm() {
     m_fakeDplxBtn = ui->toolBarFrame->findChild<QToolButton*>("fakeDplxBtn");
     m_fakeDplxBtn->setEnabled(false);
 
-    ui->toolBarFrame->addButton("saveSelBtn",tr("SAVE_SELECTED"),":icons/upload",true,true);
+    ui->toolBarFrame->addButton("saveSelBtn",tr("SAVE_SELECTED"),":icons/save",true,true);
     m_saveSelBtn = ui->toolBarFrame->findChild<QToolButton*>("saveSelBtn");
     m_saveSelBtn->setEnabled(false);
 
-    ui->toolBarFrame->addButton("saveAllBtn",tr("SAVE_ALL"),":icons/upload",true,true);
+    ui->toolBarFrame->addButton("saveAllBtn",tr("SAVE_ALL"),":icons/save_all",true,true);
     m_saveAllBtn = ui->toolBarFrame->findChild<QToolButton*>("saveAllBtn");
     m_saveAllBtn->setEnabled(false);
 
@@ -110,9 +110,6 @@ void MainWin::initializeForm() {
     //ui->pagesListWidget->setMovement(QListView::Static);
     ui->pagesListWidget->setSpacing(10);   // Distance between pages
     ui->pagesListWidget->setResizeMode(QListView::Adjust);  // Align the text nicely in the center
-
-    // Das Item, das wir später mit dem Bild füllen
-    QPixmap newImage(":/icons/scan_document.svg");
 
     m_previewScene = new QGraphicsScene(this);
     ui->previewGraphicsView->setScene(m_previewScene);
