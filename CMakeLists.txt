@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(PROJECT_VERSION "0.2.4")
+set(PROJECT_VERSION "0.2.5")
 
 project(
     PDFDocumentScannerM

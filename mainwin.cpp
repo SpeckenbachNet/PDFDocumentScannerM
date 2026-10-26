@@ -153,7 +153,7 @@ void MainWin::initializeForm() {
 }
 
 // Page list and preview lie deeper than the window, like the toolbar. Only the viewports get
-// the color (Base for the views, Window for the scroll area around the preview).
+// the color (Base and Window, depending on what the style uses for the viewport).
 // Application palette for the same reason as in ToolbarM (macOS keeps stale widget palettes).
 // Called again in changeEvent, so light/dark switches apply live.
 void MainWin::applySurfaceColors() {
@@ -164,7 +164,6 @@ void MainWin::applySurfaceColors() {
 
     const QList<QWidget*> viewports = {
         ui->pagesListWidget->viewport(),
-        ui->scrollArea->viewport(),
         ui->previewGraphicsView->viewport()
     };
     for (QWidget *viewport : viewports) {

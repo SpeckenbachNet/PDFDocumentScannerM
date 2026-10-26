@@ -46,6 +46,8 @@ private:
     bool setComboBoxValue(QComboBox* box, const QVariant& value);
     void updateScannerList();
     void initializeOverlay();
+    void fillScannerCombos();
+    void fillGeneralCombos();
 
     // Konstanten für das Design
     const int m_arrowWidth = 20;

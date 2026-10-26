@@ -155,18 +155,32 @@ void SettingsOverlay::onOcrLanguageChanged(int index) {
 }
 
 void SettingsOverlay::fillComboBoxes() {
+    fillScannerCombos();
+    fillGeneralCombos();
+}
+
+// Scanner and its capabilities: without a scanner these combos are emptied and disabled,
+// so no options of a previously found scanner remain
+void SettingsOverlay::fillScannerCombos() {
+    const QList<QComboBox*> capabilityCombos = {
+        m_scanningUnitCombo, m_colorModeCombo, m_scanIntentCombo, m_resolutionCombo
+    };
+
     // Scanners
-    if (!m_scannerCombo) {
-        qDebug() << "Error: m_scannerCombo is NULL!";
-        return;
-    }
     m_scannerCombo->blockSignals(true);
     m_scannerCombo->clear();
     if (SettingsManager::instance().scannerValues.isEmpty()) {
         m_scannerCombo->addItem(tr("NO_SCANNERS_FOUND"));
         m_scannerCombo->blockSignals(false);
+        for (QComboBox *box : capabilityCombos) {
+            box->blockSignals(true);
+            box->clear();
+            box->blockSignals(false);
+            box->setEnabled(false);
+        }
         return;
     }
+    for (QComboBox *box : capabilityCombos) box->setEnabled(true);
 
     for (auto [deviceId, displayName] : SettingsManager::instance().scannerValues.asKeyValueRange()) {
         //qDebug() << "DeviceID: " << deviceId << " | DisplayName: " << displayName;
@@ -213,7 +227,10 @@ void SettingsOverlay::fillComboBoxes() {
     }
     setComboBoxValue(m_resolutionCombo, SettingsManager::instance().resolution());
     m_resolutionCombo->blockSignals(false);
+}
 
+// Settings that do not depend on the scanner: always filled
+void SettingsOverlay::fillGeneralCombos() {
     // Orientation
     QColor textColor = this->palette().color(QPalette::WindowText);
     QSize iconSize(16,16);

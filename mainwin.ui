@@ -75,7 +75,7 @@
            </size>
           </property>
          </widget>
-         <widget class="QScrollArea" name="scrollArea">
+         <widget class="QGraphicsView" name="previewGraphicsView">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -88,28 +88,9 @@
             <height>0</height>
            </size>
           </property>
-          <property name="widgetResizable">
-           <bool>true</bool>
+          <property name="frameShape">
+           <enum>QFrame::Shape::NoFrame</enum>
           </property>
-          <widget class="QWidget" name="scrollAreaWidgetContents_2">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>0</y>
-             <width>402</width>
-             <height>534</height>
-            </rect>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <item>
-             <widget class="QGraphicsView" name="previewGraphicsView">
-              <property name="frameShape">
-               <enum>QFrame::Shape::NoFrame</enum>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
          </widget>
         </widget>
        </item>
