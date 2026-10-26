@@ -6,6 +6,7 @@ StatusOverlay::StatusOverlay(QWidget *parent) : QWidget(parent) {
 
     m_label = new QLabel(this);
     m_label->setAlignment(Qt::AlignCenter);
+    m_label->setWordWrap(true);  // Long messages (e.g. scanner errors) must fit the window
 
     // Effect for pulsing
     auto *eff = new QGraphicsOpacityEffect(m_label);
@@ -44,8 +45,7 @@ void StatusOverlay::showMessage(const QString &text, bool isError, int timeoutMs
 
     // Positioning
     this->resize(parentWidget()->size());
-    m_label->adjustSize();
-    centerLabel();
+    layoutLabel();
 
     show();
 
@@ -61,6 +61,20 @@ void StatusOverlay::showMessage(const QString &text, bool isError, int timeoutMs
     }
 }
 
+// Label as wide as its text needs, but at most 80 % of the window; longer text wraps
+void StatusOverlay::layoutLabel() {
+    const int maxWidth = qMax(100, width() * 8 / 10);
+
+    // Width of the text in one line (the word wrap heuristic of QLabel would wrap early)
+    m_label->setWordWrap(false);
+    const int naturalWidth = m_label->sizeHint().width();
+    m_label->setWordWrap(true);
+
+    const int w = qMin(naturalWidth, maxWidth);
+    m_label->resize(w, m_label->heightForWidth(w));
+    centerLabel();
+}
+
 void StatusOverlay::centerLabel() {
     m_label->move((width() - m_label->width()) / 2, (height() - m_label->height()) / 2);
 }
@@ -69,7 +83,7 @@ void StatusOverlay::centerLabel() {
 // so the label has to follow every resize of the overlay
 void StatusOverlay::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
-    centerLabel();
+    layoutLabel();
 }
 
 void StatusOverlay::paintEvent(QPaintEvent *) {

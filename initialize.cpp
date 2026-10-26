@@ -83,16 +83,7 @@ void MainWin::initializeToolBars() {
 // ====== Form ======
 
 void MainWin::initializeForm() {
-    // Page List View
-    ui->pagesListWidget->setViewMode(QListView::IconMode);  // Activate gallery mode
-    ui->pagesListWidget->setSpacing(10);   // Distance between pages
-    ui->pagesListWidget->setResizeMode(QListView::Adjust);  // Align the text nicely in the center
-    ui->pagesListWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // Pages are scrolled vertically only
-    ui->pagesListWidget->setMinimumWidth(180);  // Prevent the list from collapsing to 0
-
-    // Preview
-    m_previewScene = new QGraphicsScene(this);
-    ui->previewGraphicsView->setScene(m_previewScene);
+    // Page list (PageListWidget) and preview (PreviewView) set themselves up
 
     // Overlays
     m_statusOverlay = new StatusOverlay(this);
@@ -138,9 +129,6 @@ void MainWin::initializeConnects() {
     connect(m_settingsBtn, &QToolButton::clicked, this, &MainWin::showSettingsOverlay);
     connect(m_refreshBtn, &QToolButton::clicked, this, &MainWin::refreshScanners);
     connect(ui->pagesListWidget, &QListView::clicked, this, &::MainWin::onFilelistTableViewClicked);
-    connect(ui->splitter, &QSplitter::splitterMoved, this, [this](int pos, int index) {
-        updateListIconSize();
-    });
     connect(m_settingsOverlay, &SettingsOverlay::scannerChanged,
             this, &MainWin::getScannerCapabilities);
 }

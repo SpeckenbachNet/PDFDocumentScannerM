@@ -2,10 +2,19 @@
 #include "./ui_mainwin.h"
 #include "settingsmanager.h"
 #include <QDir>
-#include <QScrollBar>
 #include <QThread>
+#include <QUrl>
 
 namespace {
+
+// Plain text (e.g. a scanimage message) as HTML for the status overlay. Device URLs have no
+// spaces, so zero width spaces after '/' and ':' give the word wrap places to break.
+QString breakableHtml(const QString &text) {
+    QString html = text.toHtmlEscaped();
+    html.replace('/', QStringLiteral("/​"));
+    html.replace(':', QStringLiteral(":​"));
+    return html;
+}
 
 // Backends name their feeders differently ("ADF", "ADF Front", "ADF Duplex",
 // "Automatic Document Feeder", ...)
@@ -55,82 +64,6 @@ MainWin::MainWin(QWidget *parent)
     searchForScanners();
 }
 
-// Items fill the list width minus the spacing on both sides. If the pages do not fit at
-// full width, they are shrunk until they fit the height, but at most by the width of the
-// vertical scroll bar. Only if that is not enough the scroll bar appears in the space freed.
-// The calculation uses the viewport size without scroll bars, so it does not depend on
-// whether the bar is currently shown and cannot toggle back and forth.
-void MainWin::updateListIconSize() {
-    QListWidget *list = ui->pagesListWidget;
-    const QSize area = list->maximumViewportSize();
-    const int spacing = list->spacing();
-    const int textHeight = 30;
-    const int count = list->count();
-
-    auto contentHeight = [&](int width) {
-        return spacing + count * (static_cast<int>(width * 1.41) + textHeight + spacing);
-    };
-
-    const int fullWidth = area.width() - 2 * spacing;
-    const int narrowWidth = fullWidth - list->verticalScrollBar()->sizeHint().width();
-    int w = fullWidth;
-    if (count > 0 && contentHeight(fullWidth) > area.height()) {
-        if (contentHeight(narrowWidth) <= area.height()) {
-            // Largest width at which all pages still fit the height
-            int fitWidth = static_cast<int>((area.height() - spacing - count * (textHeight + spacing))
-                                            / (count * 1.41));
-            w = qMax(narrowWidth, fitWidth);
-        } else {
-            w = narrowWidth;
-        }
-    }
-    if (w < 40) return; // List too narrow
-    int h = static_cast<int>(w * 1.41); // A4 Verhältnis
-
-    QSize newSize(w, h);
-    list->setIconSize(newSize);
-
-    // Wir müssen jedes einzelne Item "anstoßen"
-    for (int i = 0; i < list->count(); ++i) {
-        QListWidgetItem *item = list->item(i);
-        // Wir setzen den sizeHint manuell auf die neue Größe + Platz für Text
-        item->setSizeHint(QSize(w, h + textHeight));
-    }
-    ui->pagesListWidget->doItemsLayout(); // Layout-Engine zum Rechnen zwingen
-}
-
-// void MainWin::updateListIconSize() {
-//     // 1. Rekursions-Schutz: Timer kurz stoppen, falls vorhanden,
-//     // oder Signale blockieren, damit wir uns nicht selbst aufrufen.
-//     ui->pagesListWidget->blockSignals(true);
-
-//     int w = ui->pagesListWidget->viewport()->width() - 25;
-//     if (w < 40) return; // Zu klein, abbrechen
-
-//     int h = static_cast<int>(w * 1.41);
-//     QSize newSize(w, h);
-
-//     // Nur updaten, wenn sich die Größe wirklich signifikant geändert hat
-//     if (ui->pagesListWidget->iconSize() == newSize) {
-//         ui->pagesListWidget->blockSignals(false);
-//         return;
-//     }
-
-//     ui->pagesListWidget->setIconSize(newSize);
-
-//     for (int i = 0; i < ui->pagesListWidget->count(); ++i) {
-//         QListWidgetItem *item = ui->pagesListWidget->item(i);
-
-//         // Wir setzen NUR den sizeHint.
-//         // Das Icon lassen wir so, wie es ist (highRes),
-//         // Qt skaliert es intern beim Zeichnen selbst runter!
-//         item->setSizeHint(QSize(w, h + 35));
-//     }
-
-//     ui->pagesListWidget->doItemsLayout();
-//     ui->pagesListWidget->blockSignals(false);
-// }
-
 QString MainWin::getPageFormat() {
     QPageSize defaultSize = QLocale().measurementSystem() == QLocale::MetricSystem
         ? QPageSize(QPageSize::A4)
@@ -159,35 +92,11 @@ void MainWin::showSettingsOverlay() {
     }
 }
 
-void MainWin::updatePreview(const QString &imagePath) {
-    // // 1. Scene initialisieren, falls noch nicht geschehen
-    // if (m_previewScene) {
-    //     m_previewScene = new QGraphicsScene(this);
-    //     ui->graphicsView->setScene(m_previewScene);
-    // }
-
-    // Load Picture
-    QPixmap pixmap(imagePath);
-    if (pixmap.isNull()) {
-        qDebug() << "Fehler: Bild konnte nicht geladen werden!";
-        return;
-    }
-
-    // Clear Scene
-    m_previewScene->clear();
-
-    // Put Pixmap to Scene
-    m_previewItem = m_previewScene->addPixmap(pixmap);
-
-    // 5. Ansicht anpassen (optional, damit das Bild ganz reinpasst)
-    ui->previewGraphicsView->fitInView(m_previewScene->sceneRect(), Qt::KeepAspectRatio);
-}
-
 void MainWin::onFilelistTableViewClicked(const QModelIndex &index) {
     // Show the clicked page in the large preview
     QString filePath = index.data(Qt::UserRole).toString();
     if (!filePath.isEmpty())
-        updatePreview(filePath);
+        ui->previewGraphicsView->setImage(filePath);
 }
 
 // ====== Scanner functions ======
@@ -275,6 +184,12 @@ void MainWin::saveScanners(const QString &saneOutput) {
         }
         QString backend = deviceId.section(':', 0, 0);          // Backend
 
+        // The escl backend (SANE 1.4) cannot open IPv6 URLs ("Invalid argument"); the same
+        // scanner is usually also listed with its IPv4 address
+        if (backend == "escl" && deviceId.contains("://[")) {
+            continue;
+        }
+
         // remove device
         QString remainingText = line.section("is a ", 1, 1).trimmed();
 
@@ -285,6 +200,9 @@ void MainWin::saveScanners(const QString &saneOutput) {
             connectionInfo = remainingText.section("ip=", 1, 1).section(',', 0, 0).trimmed();
         } else if (deviceId.contains("libusb")) {
             connectionInfo = "USB " + deviceId.section("libusb:", 1, 1);
+        } else if (backend == "escl") {
+            // escl:http://192.168.178.31:8080 -> 192.168.178.31
+            connectionInfo = QUrl(deviceId.mid(backend.length() + 1)).host();
         }
         //qDebug() << "Connetion Info: " << connectionInfo;
 
@@ -588,7 +506,7 @@ void MainWin::startScan() {
         bool feederEmpty = (exitCode == 5 || exitCode == 7) && !m_processedFiles.isEmpty();
         if (exitStatus != QProcess::NormalExit || (exitCode != 0 && !feederEmpty)) {
             qDebug() << "Scan abgebrochen mit Code:" << exitCode;
-            m_statusOverlay->showMessage(tr("SCAN_FAILED.") + "<br>" + m_scanErrorOutput.toHtmlEscaped(), true, 6000);
+            m_statusOverlay->showMessage(tr("SCAN_FAILED.") + "<br>" + breakableHtml(m_scanErrorOutput), true, 6000);
         }
 
         scanProcess->deleteLater();
@@ -601,27 +519,9 @@ void MainWin::startScan() {
 }
 
 void MainWin::addPageToList(const QString &filePath) {
-    QImage img(filePath);
-    if (img.isNull()) return;
-
-    // Thumbnail
-    QIcon icon(QPixmap::fromImage(img).scaled(120, 120, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    QString itemName = tr("PAGE %1").arg(ui->pagesListWidget->count() + 1);
-
-    QListWidgetItem *item = new QListWidgetItem(icon, itemName);
-    item->setData(Qt::UserRole, filePath);
-
-    QPixmap highRes(filePath);
-    item->setIcon(QIcon(highRes.scaled(1000, 1414, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
-
-    ui->pagesListWidget->addItem(item);
-    updateListIconSize(); // New item needs the current size hint
-
-    // Sofort in der großen Vorschau anzeigen
-    updatePreview(filePath);
-
-    // Optional: Automatisch zum neuesten Item scrollen
-    ui->pagesListWidget->scrollToBottom();
+    if (!ui->pagesListWidget->addPage(filePath)) return;
+    // Show the new page in the large preview right away
+    ui->previewGraphicsView->setImage(filePath);
 }
 
 void MainWin::refreshScanners() {
@@ -635,7 +535,6 @@ void MainWin::refreshScanners() {
 
 void MainWin::resizeEvent(QResizeEvent *event) {
     QMainWindow::resizeEvent(event);
-    QTimer::singleShot(0, this, &MainWin::updateListIconSize);  // Calculate Icon Size
     if (m_statusOverlay) m_statusOverlay->resize(this->size());
 }
 
@@ -643,7 +542,7 @@ void MainWin::changeEvent(QEvent *event) {
     switch (event->type()) {
     case QEvent::PaletteChange:
     case QEvent::ApplicationPaletteChange:
-        if (m_previewScene) applySurfaceColors();  // not before initializeForm() has run
+        if (m_statusOverlay) applySurfaceColors();  // not before initializeForm() has run
         break;
     default:
         break;

@@ -9,17 +9,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="105"/>
+        <location filename="../initialize.cpp" line="48"/>
         <source>SCAN</source>
         <translation type="unfinished">Scannen</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="123"/>
+        <location filename="../initialize.cpp" line="66"/>
         <source>FAKE_DUPLEX</source>
         <translation type="unfinished">Fake Duplex</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="135"/>
+        <location filename="../initialize.cpp" line="78"/>
         <source>CLEAR</source>
         <translation type="unfinished">Leeren</translation>
     </message>
@@ -36,76 +36,83 @@
         <translation type="obsolete">Keine Scanner erkannt</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="127"/>
+        <location filename="../initialize.cpp" line="70"/>
         <source>SAVE_SELECTED</source>
         <translation type="unfinished">Auswahl speichern</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="131"/>
+        <location filename="../initialize.cpp" line="74"/>
         <source>SAVE_ALL</source>
         <translation type="unfinished">Alles Speichern</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="330"/>
+        <location filename="../mainwin.cpp" line="95"/>
         <source>SEARCH_SCANNERS...</source>
         <translation type="unfinished">Suche nach Scannern...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="337"/>
-        <location filename="../mainwin.cpp" line="345"/>
+        <location filename="../mainwin.cpp" line="102"/>
+        <location filename="../mainwin.cpp" line="110"/>
         <source>EROOR_STARTING_SEARCH.</source>
         <translation type="unfinished">Fehler beim Starten der Suche.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="355"/>
+        <location filename="../mainwin.cpp" line="120"/>
         <source>NO_SCANNER_HARDWARE_FOUND.</source>
         <translation type="unfinished">Keine Scanner-Hardware gefunden.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="375"/>
+        <location filename="../mainwin.cpp" line="140"/>
         <source>NO_SCANNERS_DETECTED.</source>
         <translation type="unfinished">Keine Scanner erkannt.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="384"/>
-        <location filename="../mainwin.cpp" line="455"/>
+        <location filename="../mainwin.cpp" line="149"/>
+        <location filename="../mainwin.cpp" line="220"/>
         <source>LOAD_SCANNER_CAPABILITIES...</source>
         <translation type="unfinished">Lade Scanner Eigenschaften...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="468"/>
-        <location filename="../mainwin.cpp" line="544"/>
+        <location filename="../mainwin.cpp" line="233"/>
+        <location filename="../mainwin.cpp" line="309"/>
         <source>Scanner capabilities could not be loaded</source>
         <translation type="unfinished">Scanner-Eigenschaften konnten nicht geladen werden.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="560"/>
+        <location filename="../mainwin.cpp" line="325"/>
         <source>SCANNING...</source>
         <translation type="unfinished">Scanne...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="607"/>
+        <location filename="../mainwin.cpp" line="372"/>
         <source>ERROR_CREATING_TEMP_DIR.</source>
         <translation type="unfinished">Temporäres Verzeichnis konnte nicht erstellt werden.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="679"/>
+        <location filename="../mainwin.cpp" line="444"/>
         <source>ERROR:</source>
         <translation type="unfinished">Fehler:</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="725"/>
+        <location filename="../mainwin.cpp" line="490"/>
         <source>SCAN_FAILED.</source>
         <translation type="unfinished">Scan fehlgeschlagen.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="743"/>
         <source>PAGE %1</source>
-        <translation type="unfinished">Seite %1</translation>
+        <translation type="obsolete">Seite %1</translation>
     </message>
     <message>
         <source>SEARCH_SCANNERS</source>
         <translation type="obsolete">Suche nach Scannern...</translation>
+    </message>
+</context>
+<context>
+    <name>PageListWidget</name>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="18"/>
+        <source>PAGE %1</source>
+        <translation type="unfinished">Seite %1</translation>
     </message>
 </context>
 <context>
@@ -161,12 +168,12 @@
         <translation type="unfinished">Auflösung</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="242"/>
+        <location filename="../settingsoverlay.cpp" line="244"/>
         <source>PORTRAIT</source>
         <translation type="unfinished">Hochformat</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="243"/>
+        <location filename="../settingsoverlay.cpp" line="245"/>
         <source>LANDSCAPE</source>
         <translation type="unfinished">Querformat</translation>
     </message>
@@ -176,7 +183,7 @@
         <translation type="unfinished">Seitenausrichtung</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="250"/>
+        <location filename="../settingsoverlay.cpp" line="252"/>
         <source>STANDARD</source>
         <translation type="unfinished">Standard</translation>
     </message>
@@ -186,12 +193,12 @@
         <translation type="unfinished">Seitenformat</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="262"/>
+        <location filename="../settingsoverlay.cpp" line="264"/>
         <source>ENGLISH</source>
         <translation type="unfinished">Englisch</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="263"/>
+        <location filename="../settingsoverlay.cpp" line="265"/>
         <source>GERMAN</source>
         <translation type="unfinished">Deutsch</translation>
     </message>

@@ -48,7 +48,6 @@ private:
     void initializeForm();
     void initializeConnects();
     void initializeSettings();
-    void updateListIconSize();
     void applySurfaceColors();
     void refreshSettings();
     void searchForScanners();
@@ -58,7 +57,6 @@ private:
     void startScan();
     void getScannerCapabilities(const QString &deviceID);
     void saveScanners(const QString &saneOutput);
-    void updatePreview(const QString &imagePath);
     void addPageToList(const QString &filePath);
 
     QString getPageFormat();
@@ -77,9 +75,6 @@ private:
 
     QString m_cachedScannerOutput;
     QString m_scanErrorOutput;           // Last stderr message of scanimage
-
-    QGraphicsScene* m_previewScene = nullptr;      // Die "Leinwand"
-    QGraphicsPixmapItem* m_previewItem = nullptr;  // Das eigentliche Bild-Objekt auf der Leinwand
 
 private slots:
     void showSettingsOverlay();

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(PROJECT_VERSION "0.2.8")
+set(PROJECT_VERSION "0.2.9")
 
 project(
     PDFDocumentScannerM
@@ -47,6 +47,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         statusoverlay.h statusoverlay.cpp
         uicolors.h
         initialize.cpp
+        pagelistwidget.h pagelistwidget.cpp
+        previewview.h previewview.cpp
     )
 
 target_include_directories(PDFDocumentScannerM

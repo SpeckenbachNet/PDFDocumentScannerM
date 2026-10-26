@@ -21,6 +21,7 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
+    void layoutLabel();
     void centerLabel();
 
     QLabel *m_label;
