@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(PROJECT_VERSION "0.3.2")
+set(PROJECT_VERSION "0.3.4")
 set(ORGANIZATION_NAME "SpeckenbachNet")
 
 project(
@@ -39,11 +39,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         translation.qrc
         icons.qrc
-        toolbarm.h
-        toolbarm.cpp
-        settingsoverlay.h
-        settingsoverlay.cpp
-
+        toolbarm.h toolbarm.cpp
+        settingsoverlay.h settingsoverlay.cpp
         settingsmanager.h settingsmanager.cpp
         statusoverlay.h statusoverlay.cpp
         uicolors.h
