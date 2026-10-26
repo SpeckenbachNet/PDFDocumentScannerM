@@ -55,7 +55,10 @@ void SettingsManager::readSettingsFromIni() {
     m_scanningUnit = m_settings->value("Scanner/ScanningUnit", m_scanningUnit).toString();
     m_pageOrientation = m_settings->value("Scanner/PageOrientation", m_pageOrientation).toString();
     m_pageFormat = m_settings->value("Scanner/PageFormat", m_pageFormat).toString();
+    // The app's own modes (PageProcessing); older versions stored the scanner's value
     m_colorMode = m_settings->value("Scanner/ColorMode", m_colorMode).toString();
+    if (m_colorMode == "Lineart") m_colorMode = "BlackWhite";
+    if (m_colorMode != "Gray" && m_colorMode != "BlackWhite") m_colorMode = "Color";
     m_resolution = m_settings->value("Scanner/Resolution").toInt();
     m_scanIntent = m_settings->value("Scanner/ScanIntent", m_scanIntent).toString();
     m_ocrLanguage = m_settings->value("Scanner/OcrLanguage", m_ocrLanguage).toString();

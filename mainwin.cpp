@@ -1,6 +1,7 @@
 #include "mainwin.h"
 #include "./ui_mainwin.h"
 #include "settingsmanager.h"
+#include "pageprocessing.h"
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -383,11 +384,9 @@ void MainWin::getScannerCapabilities(const QString &deviceID) {
                     }
                 }
                 else if (optName == "mode") {
+                    // Only decides what to scan with; the app's color mode stays (scannerModeFor)
                     SettingsManager::instance().colorModeValues = values;
                     SettingsManager::instance().colorModeDefault = defaultValue;
-                    if (!values.contains(SettingsManager::instance().colorMode())) {
-                        SettingsManager::instance().setColorMode(defaultValue);
-                    }
                 }
                 else if (optName == "scan-intent") {
                     SettingsManager::instance().intentValues = values;
@@ -438,8 +437,8 @@ void MainWin::startScan() {
     m_processedFiles.clear(); // Reset list for this scan run
     m_scanErrorOutput.clear();
 
-    QString mode = SettingsManager::instance().colorMode();
-    QString realMode = (mode == "Lineart") ? "Gray" : mode;
+    const QString colorMode = SettingsManager::instance().colorMode();
+    const QString scannerMode = PageProcessing::scannerModeFor(colorMode, SettingsManager::instance().colorModeValues);
     QString resolution = QString::number(SettingsManager::instance().resolution());
     QString scanDevice = SettingsManager::instance().deviceId();
     QString source = SettingsManager::instance().scanningUnit();
@@ -493,8 +492,8 @@ void MainWin::startScan() {
     QStringList arguments;
     arguments << "--device-name" << scanDevice;
     // Only pass options the scanner reported, otherwise scanimage aborts
-    if (!SettingsManager::instance().colorModeValues.isEmpty()) {
-        arguments << "--mode" << realMode;
+    if (!scannerMode.isEmpty()) {
+        arguments << "--mode" << scannerMode;
     }
     // Remembered with every page: the PDF page size follows from pixels and resolution
     int scanDpi = 0;
@@ -522,7 +521,7 @@ void MainWin::startScan() {
 
     // 4. Timer für die Live-Anzeige (alle 1,5 Sekunden prüfen)
     QTimer *progressTimer = new QTimer(this);
-    connect(progressTimer, &QTimer::timeout, this, [this, batchPath, scanDpi]() {
+    connect(progressTimer, &QTimer::timeout, this, [this, batchPath, scanDpi, colorMode]() {
         QDir dir(batchPath);
         QStringList currentFiles = dir.entryList(QStringList() << "page_*.png", QDir::Files, QDir::Name);
 
@@ -538,6 +537,7 @@ void MainWin::startScan() {
                     QImage img(tempCopy);
                     // Prüfen, ob das Bild valide und nicht leer ist
                     if (!img.isNull() && img.width() > 0) {
+                        PageProcessing::convertScannedPage(fullPath, colorMode);   // the page is complete now
                         this->addPageToList(fullPath, scanDpi); // Hier wird das Item im UI erstellt
                         m_processedFiles.append(fileName);
                     }
@@ -572,7 +572,7 @@ void MainWin::startScan() {
     });
 
     // 6. Abschluss-Logik
-    connect(scanProcess, &QProcess::finished, this, [this, batchPath, scanDpi, scanProcess, progressTimer](int exitCode, QProcess::ExitStatus exitStatus) {
+    connect(scanProcess, &QProcess::finished, this, [this, batchPath, scanDpi, colorMode, scanProcess, progressTimer](int exitCode, QProcess::ExitStatus exitStatus) {
         progressTimer->stop();
         progressTimer->deleteLater();
 
@@ -581,6 +581,7 @@ void MainWin::startScan() {
         QStringList finalFiles = dir.entryList(QStringList() << "page_*.png", QDir::Files, QDir::Name);
         for (const QString &fileName : std::as_const(finalFiles)) {
             if (!m_processedFiles.contains(fileName)) {
+                PageProcessing::convertScannedPage(dir.absoluteFilePath(fileName), colorMode);
                 this->addPageToList(dir.absoluteFilePath(fileName), scanDpi);
                 m_processedFiles.append(fileName);
             }

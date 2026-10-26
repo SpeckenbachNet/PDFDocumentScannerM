@@ -130,6 +130,7 @@ Hinweise:
 | `statusoverlay.*` | Meldungen über dem Fenster (Suche, Laden, Scannen, Fehler) |
 | `pagelistwidget.*` | Seitenliste: eine Spalte, Seitengröße folgt der Breite; auswählen, entfernen, Drag and Drop |
 | `pagedelegate.*` | zeichnet eine Seite: Bild, Beschriftung „Seite N“, Auswahl, × beim Überfahren |
+| `pageprocessing.*` | Bearbeitung einer gescannten Seite: Farbmodus, Schwarz/Weiß-Schwellwert (später Ausrichten, Beschneiden) |
 | `previewview.*` | große Vorschau (`QGraphicsView`), passt das Bild in die Ansicht ein |
 | `helppage.*`, `twolinedelegate.*` | Hilfeseite (Markdown in `help/<de|en>/`, `Help.qrc`); Kopien aus MovieMetaM, an `UiColors` angepasst |
 | `uicolors.h` | Flächenfarben, nur aus Window/WindowText abgeleitet |
@@ -176,7 +177,8 @@ Hinweise:
 `--mode`, `--source`, `--scan-intent` (Werteliste und Standard in `[...]`). Bereiche wie
 `50..1200` werden zu den üblichen Auflösungen darin (`expandResolutionValues`). Optionen mit
 `[inactive]` werden übersprungen. Ein gespeicherter Wert, den der Scanner nicht anbietet, wird
-durch seinen Standard ersetzt.
+durch seinen Standard ersetzt – außer dem Farbmodus: Der gehört der App (nächster Abschnitt),
+`--mode` entscheidet nur, womit gescannt wird.
 
 ---
 
@@ -193,6 +195,35 @@ durch seinen Standard ersetzt.
   während des Scans ab (erst kopieren, damit nie eine halb geschriebene Datei geladen wird).
 - Exit-Codes 5 und 7 nach mindestens einer Seite heißen „Einzug leer“, kein Fehler.
 - Scheitert der Scan, wird die letzte Zeile von stderr angezeigt.
+
+### Farbmodus (`pageprocessing.*`)
+
+Die App hat drei feste Modi; die Namen des Scanners (`Color`, `Colour`, `24bit Color`, `Gray`,
+`True Gray`, `Lineart`, …) entscheiden nur, womit gescannt wird.
+
+| Combo | INI | gescannt mit | danach in der App |
+|---|---|---|---|
+| Farbe | `Color` | Farbe | nichts |
+| Graustufen | `Gray` | Grau, sonst Farbe | Farbe → Grau |
+| Schwarz/Weiß | `BlackWhite` | Grau, sonst Farbe | Grau → **1 Bit** mit automatischem Schwellwert |
+
+- `scannerModeFor()` wählt den Wert des Scanners: zuerst ein exakter Name, dann einer, der das
+  Wort enthält, aber keine gerasterte Variante (`Gray[Error Diffusion]`). Gar kein `--mode`: der
+  Standard des Scanners.
+- Schwarz/Weiß macht die App bei jedem Scanner selbst, auch bei denen mit `Lineart` (Brother):
+  Das Ergebnis sieht überall gleich aus, Scanner setzen den Schwellwert grob.
+- **Umgewandelt wird sofort, wenn eine Seite eintrifft** (`convertScannedPage()`, bevor sie in
+  die Liste kommt): Liste, Vorschau, Drehen und PDF sehen alle die fertige Seite, später ist
+  nichts mehr zu tun.
+- Schwellwert: **Otsu** pro Seite (`otsuThreshold()`), passt sich an weißes oder graues Papier
+  an. Grenze: ein Schwellwert für die ganze Seite; Schatten (Buchfalz) oder ungleichmäßiges
+  Licht bräuchten ein örtliches Verfahren (Sauvola) – erst, wenn es in der Praxis stört.
+- Das Grau-Original einer Schwarz/Weiß-Seite bleibt als `gray_page_001.png` (`originalPath()`;
+  das Präfix hält es aus dem Filter `page_*.png` heraus) für einen späteren neuen Schwellwert.
+  Drehen dreht es mit, Entfernen einer Seite löscht es.
+- Drehen behält das Bildformat (`rotatedImage()` in `pagelistwidget.cpp`): Qt macht aus einem
+  1-Bit-Bild beim Drehen 32 Bit.
+- Ältere Einstellungen mit `Lineart` werden als `BlackWhite` gelesen.
 
 ### Seitenliste (`PageListWidget`, `PageDelegate`)
 
@@ -260,7 +291,8 @@ Aller Zugriff läuft über `SettingsManager`.
 | Schlüssel | Inhalt |
 |---|---|
 | `Scanner/DeviceId`, `Scanner/DeviceName` | der Scanner des Benutzers (nur bei seiner Wahl geschrieben) |
-| `Scanner/ScanningUnit`, `ColorMode`, `Resolution`, `ScanIntent` | Scanner-Optionen |
+| `Scanner/ScanningUnit`, `Resolution`, `ScanIntent` | Scanner-Optionen |
+| `Scanner/ColorMode` | `Color`, `Gray` oder `BlackWhite` (die Modi der App) |
 | `Scanner/PageOrientation`, `PageFormat` | Seite |
 | `Scanner/OcrLanguage` | tesseract-Code (`deu`, `eng`) |
 | `Window/Geometry`, `Window/Splitter` | `saveGeometry()` / `QSplitter::saveState()`, geschrieben in `closeEvent` |

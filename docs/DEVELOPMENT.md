@@ -128,6 +128,7 @@ Notes:
 | `statusoverlay.*` | messages over the window (search, loading, scanning, errors) |
 | `pagelistwidget.*` | page list: one column, page size follows the width; select, remove, drag and drop |
 | `pagedelegate.*` | draws a page: image, label "Page N", selection, × on hover |
+| `pageprocessing.*` | processing of a scanned page: color mode, black/white threshold (later straighten, crop) |
 | `previewview.*` | large preview (`QGraphicsView`), fits the image into the view |
 | `helppage.*`, `twolinedelegate.*` | help page (Markdown in `help/<de|en>/`, `Help.qrc`); copies from MovieMetaM, adapted to `UiColors` |
 | `uicolors.h` | surface colors, derived from Window/WindowText only |
@@ -172,7 +173,8 @@ Notes:
 `getScannerCapabilities()` runs `scanimage -d <id> --help` and reads `--resolution`, `--mode`,
 `--source`, `--scan-intent` (value list and default in `[...]`). Ranges like `50..1200` become
 the common resolutions within (`expandResolutionValues`). Options marked `[inactive]` are
-skipped. A saved value the scanner does not offer is replaced by its default.
+skipped. A saved value the scanner does not offer is replaced by its default – except the color
+mode: it is the app's own (next section), `--mode` only decides what to scan with.
 
 ---
 
@@ -188,6 +190,33 @@ skipped. A saved value the scanner does not offer is replaced by its default.
   scanning (copy first, so a half written file is never loaded).
 - Exit codes 5 and 7 after at least one page mean "feeder empty", not an error.
 - The last line of stderr is shown if the scan fails.
+
+### Color mode (`pageprocessing.*`)
+
+The app has three fixed modes; the scanner's names (`Color`, `Colour`, `24bit Color`, `Gray`,
+`True Gray`, `Lineart`, ...) only decide what is scanned with.
+
+| Combo | INI | Scanned with | Then in the app |
+|---|---|---|---|
+| Color | `Color` | color | nothing |
+| Grayscale | `Gray` | gray, else color | color → gray |
+| Black/white | `BlackWhite` | gray, else color | gray → **1 bit** with an automatic threshold |
+
+- `scannerModeFor()` picks the scanner value: an exact name first, then one containing the word,
+  but no dithered variant (`Gray[Error Diffusion]`). No `--mode` at all: the scanner's default.
+- Black/white is done by the app for every scanner, also for those with `Lineart` (Brother):
+  the result looks the same everywhere, scanners threshold coarsely.
+- **Converted right after each page arrives** (`convertScannedPage()`, before it enters the
+  list): list, preview, rotating and PDF all see the final page, nothing is left to do later.
+- Threshold: **Otsu** per page (`otsuThreshold()`), adapts to white or gray paper. Limit: one
+  threshold for the whole page; shadows (book fold) or uneven light would need a local method
+  (Sauvola) – only if it disturbs in practice.
+- The gray original of a black/white page stays as `gray_page_001.png` (`originalPath()`; the
+  prefix keeps it out of the `page_*.png` filter) for a later new threshold. Rotating turns it
+  along, removing a page deletes it.
+- Rotating keeps the image format (`rotatedImage()` in `pagelistwidget.cpp`): Qt turns a 1 bit
+  image into 32 bit while rotating.
+- Older settings with `Lineart` are read as `BlackWhite`.
 
 ### Page list (`PageListWidget`, `PageDelegate`)
 
@@ -251,7 +280,8 @@ All access goes through `SettingsManager`.
 | Key | Content |
 |---|---|
 | `Scanner/DeviceId`, `Scanner/DeviceName` | the user's scanner (only written on the user's choice) |
-| `Scanner/ScanningUnit`, `ColorMode`, `Resolution`, `ScanIntent` | scanner options |
+| `Scanner/ScanningUnit`, `Resolution`, `ScanIntent` | scanner options |
+| `Scanner/ColorMode` | `Color`, `Gray` or `BlackWhite` (the app's modes) |
 | `Scanner/PageOrientation`, `PageFormat` | page |
 | `Scanner/OcrLanguage` | tesseract code (`deu`, `eng`) |
 | `Window/Geometry`, `Window/Splitter` | `saveGeometry()` / `QSplitter::saveState()`, written in `closeEvent` |

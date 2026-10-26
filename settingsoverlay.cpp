@@ -200,13 +200,12 @@ void SettingsOverlay::fillScannerCombos() {
     setComboBoxValue(m_scanningUnitCombo, QVariant::fromValue(SettingsManager::instance().scanningUnit()));
     m_scanningUnitCombo->blockSignals(false);
 
-    // Color Mode
+    // Color Mode: the app's own modes, whatever the scanner calls them (PageProcessing)
     m_colorModeCombo->blockSignals(true);
     m_colorModeCombo->clear();
-    //m_colorModeCombo->addItem(tr("TEXT"), "Lineart");
-    for (const QString& colorMode : std::as_const(SettingsManager::instance().colorModeValues)) {
-        m_colorModeCombo->addItem(colorMode, colorMode);
-    }
+    m_colorModeCombo->addItem(tr("Color"), "Color");
+    m_colorModeCombo->addItem(tr("Grayscale"), "Gray");
+    m_colorModeCombo->addItem(tr("Black/white"), "BlackWhite");
     setComboBoxValue(m_colorModeCombo, QVariant::fromValue(SettingsManager::instance().colorMode()));
     m_colorModeCombo->blockSignals(false);
 

@@ -124,46 +124,46 @@
         <translation type="unfinished">Save all</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="155"/>
+        <location filename="../mainwin.cpp" line="156"/>
         <source>SEARCH_SCANNERS...</source>
         <translation type="unfinished">Searching for scanners...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="166"/>
-        <location filename="../mainwin.cpp" line="174"/>
+        <location filename="../mainwin.cpp" line="167"/>
+        <location filename="../mainwin.cpp" line="175"/>
         <source>EROOR_STARTING_SEARCH.</source>
         <translation type="unfinished">Error starting search.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="188"/>
+        <location filename="../mainwin.cpp" line="189"/>
         <source>NO_SCANNER_HARDWARE_FOUND.</source>
         <translation type="unfinished">No scanner hardware found.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="189"/>
-        <location filename="../mainwin.cpp" line="338"/>
+        <location filename="../mainwin.cpp" line="190"/>
+        <location filename="../mainwin.cpp" line="339"/>
         <source>NO_SCANNERS_DETECTED.</source>
         <translation type="unfinished">No scanners detected.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="194"/>
-        <location filename="../mainwin.cpp" line="325"/>
+        <location filename="../mainwin.cpp" line="195"/>
+        <location filename="../mainwin.cpp" line="326"/>
         <source>LOAD_SCANNER_CAPABILITIES...</source>
         <translation type="unfinished">Load scanner capabilities...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="342"/>
-        <location filename="../mainwin.cpp" line="421"/>
+        <location filename="../mainwin.cpp" line="343"/>
+        <location filename="../mainwin.cpp" line="420"/>
         <source>Scanner capabilities could not be loaded</source>
         <translation type="unfinished">Scanner capabilities could not be loaded.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="435"/>
+        <location filename="../mainwin.cpp" line="434"/>
         <source>SCANNING...</source>
         <translation type="unfinished">Scanning...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="482"/>
+        <location filename="../mainwin.cpp" line="481"/>
         <source>ERROR_CREATING_TEMP_DIR.</source>
         <translation type="unfinished">Could not create temporary directory.</translation>
     </message>
@@ -173,52 +173,52 @@
         <translation type="unfinished">Error:</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="597"/>
+        <location filename="../mainwin.cpp" line="598"/>
         <source>SCAN_FAILED.</source>
         <translation type="unfinished">Scan failed.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="628"/>
+        <location filename="../mainwin.cpp" line="629"/>
         <source>Save PDF</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="630"/>
+        <location filename="../mainwin.cpp" line="631"/>
         <source>PDF files (*.pdf)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="636"/>
+        <location filename="../mainwin.cpp" line="637"/>
         <source>Saving PDF...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="643"/>
+        <location filename="../mainwin.cpp" line="644"/>
         <source>PDF saved: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="646"/>
+        <location filename="../mainwin.cpp" line="647"/>
         <source>PDF could not be saved</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="659"/>
+        <location filename="../mainwin.cpp" line="660"/>
         <source>Clear</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="660"/>
+        <location filename="../mainwin.cpp" line="661"/>
         <source>Remove all pages? The scanned images are deleted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="661"/>
+        <location filename="../mainwin.cpp" line="662"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="662"/>
+        <location filename="../mainwin.cpp" line="663"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -234,13 +234,13 @@
 <context>
     <name>PageListWidget</name>
     <message>
-        <location filename="../pagelistwidget.cpp" line="60"/>
-        <location filename="../pagelistwidget.cpp" line="186"/>
+        <location filename="../pagelistwidget.cpp" line="74"/>
+        <location filename="../pagelistwidget.cpp" line="205"/>
         <source>PAGE %1</source>
         <translation type="unfinished">Page %1</translation>
     </message>
     <message numerus="yes">
-        <location filename="../pagelistwidget.cpp" line="270"/>
+        <location filename="../pagelistwidget.cpp" line="289"/>
         <source>REMOVE_PAGES %n</source>
         <translation type="unfinished">
             <numerusform>Remove page</numerusform>
@@ -318,12 +318,12 @@
         <translation type="obsolete">Paper Format</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="244"/>
+        <location filename="../settingsoverlay.cpp" line="243"/>
         <source>PORTRAIT</source>
         <translation type="unfinished">Portrait</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="245"/>
+        <location filename="../settingsoverlay.cpp" line="244"/>
         <source>LANDSCAPE</source>
         <translation type="unfinished">Landscape</translation>
     </message>
@@ -333,7 +333,7 @@
         <translation type="unfinished">Page Orientation</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="252"/>
+        <location filename="../settingsoverlay.cpp" line="251"/>
         <source>STANDARD</source>
         <translation type="unfinished">Standard</translation>
     </message>
@@ -348,12 +348,27 @@
         <translation type="unfinished">Scan intent</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="264"/>
+        <location filename="../settingsoverlay.cpp" line="206"/>
+        <source>Color</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsoverlay.cpp" line="207"/>
+        <source>Grayscale</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsoverlay.cpp" line="208"/>
+        <source>Black/white</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsoverlay.cpp" line="263"/>
         <source>ENGLISH</source>
         <translation type="unfinished">English</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="265"/>
+        <location filename="../settingsoverlay.cpp" line="264"/>
         <source>GERMAN</source>
         <translation type="unfinished">German</translation>
     </message>
