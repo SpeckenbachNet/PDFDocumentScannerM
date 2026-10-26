@@ -24,7 +24,8 @@ Kommandozeilenwerkzeuge `airscan-discover` und `scanimage` auf (`QProcess`).
 | Große Vorschau der aktuellen Seite mit Zoom | fertig |
 | Fenstergröße und Splitter werden gemerkt | fertig |
 | Hilfeseite | Rahmen fertig, Texte meist noch „Folgt.“ |
-| Als PDF speichern (Auswahl / alle Seiten), drehen, leeren, Fake-Duplex | offen (Knöpfe da, nicht verbunden) |
+| Als PDF speichern (Auswahl / alle Seiten, ohne OCR), drehen, leeren | fertig |
+| Fake-Duplex | offen (Knopf da, nicht verbunden) |
 | OCR, Begradigen, Zuschneiden (Häkchen in den Einstellungen) | offen (nicht angebunden) |
 
 **Ablauf**
@@ -207,8 +208,31 @@ durch seinen Standard ersetzt.
   und das bewegt sich unter Wayland während eines Drags nicht. Ein Timer rollt, solange die
   Drag-Position (aus den Drag-Ereignissen) innerhalb von 40 px am oberen oder unteren Rand liegt
   (`kDragScrollZone`, `kDragScrollMaxStep`, `kDragScrollInterval`).
-- Signal `pagesChanged()` nach Hinzufügen, Entfernen und Verschieben. Die Vorschau folgt
-  `currentItemChanged` (`MainWin::showCurrentPage`).
+- Signal `pagesChanged()` nach Hinzufügen, Entfernen, Verschieben und Drehen;
+  `MainWin::updateButtons()` folgt ihm und der Auswahl. Die Vorschau folgt `currentItemChanged`
+  (`MainWin::showCurrentPage`) und `pageImagesChanged()` (eine gedrehte Seite wird neu geladen).
+- Jede Seite merkt sich die Auflösung ihres Scans (`PageListWidget::kDpiRole`): Die Einstellung
+  kann sich zwischen zwei Scans ändern, die Seitengröße der PDF braucht die richtige.
+- Drehen: die ausgewählten Seiten um 90° im Uhrzeigersinn; die PNG-Datei selbst wird neu
+  geschrieben, so brauchen Liste, Vorschau und PDF keinen zusätzlichen Zustand.
+- Leeren: alle Seiten, nach einer Rückfrage (die Bilddateien werden gelöscht).
+
+### Als PDF speichern (`MainWin::savePdf()`)
+
+- Ausgewählte oder alle Seiten in der Reihenfolge der Liste (`PageListWidget::pages()`).
+- Dateidialog: Name `Scan_<yyyy-MM-dd_HHmm>.pdf`, vorgeschlagen im Ordner des letzten Speicherns
+  (INI `Save/LastFolder`; vor dem ersten Speichern der Dokumente-Ordner).
+- `writePdf()` benutzt `QPdfWriter` (Qt GUI, keine zusätzliche Abhängigkeit): eine Seite pro
+  Bild, das Bild füllt die Seite. Die Seitengröße ergibt sich aus Pixeln und Scan-Auflösung
+  (`pageLayoutFor()`, `FuzzyMatch` macht aus 209,97 × 297,01 mm A4); Querformat-Seiten bekommen
+  ein Querformat-Layout, weil `QPageSize` allein immer hochkant ist.
+- **OCR (geplant) läuft beim Speichern** (Entscheidung: Variante A). Dann schreibt tesseract die
+  PDF aus denselben Bildern statt `QPdfWriter` (`tesseract liste.txt ausgabe -l deu pdf`, Bild und
+  unsichtbarer Text in einem Durchgang). Reihenfolge dann: Ausrichten → Beschneiden → OCR → PDF.
+  Vorerst verworfen: OCR gleich nach dem Scan mit markierbarem Text in der Vorschau (Variante B)
+  – Drehen, Ausrichten und Beschneiden müssten dann mit erkanntem Text umgehen.
+- Das Schreiben blockiert das Fenster; ein `processEvents()` lässt die Meldung „PDF wird
+  gespeichert...“ vorher erscheinen.
 
 ### Vorschau (`PreviewView`)
 
@@ -240,6 +264,7 @@ Aller Zugriff läuft über `SettingsManager`.
 | `Scanner/PageOrientation`, `PageFormat` | Seite |
 | `Scanner/OcrLanguage` | tesseract-Code (`deu`, `eng`) |
 | `Window/Geometry`, `Window/Splitter` | `saveGeometry()` / `QSplitter::saveState()`, geschrieben in `closeEvent` |
+| `Save/LastFolder` | Ordner der zuletzt gespeicherten PDF |
 
 Erster Start ohne gespeichertes Fenster: 900 × 600 (`kDefaultSize` in `restoreWindowLayout()`,
 passt auf Laptops mit 150 % Skalierung), Seitenliste 180 px. Braucht die Werkzeugleiste mehr

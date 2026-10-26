@@ -8,7 +8,7 @@ class QTimer;
 // Column of scanned pages. Each page fills the list width (A4 ratio) and the sizes follow
 // every resize of the list itself (window, splitter, scroll bar).
 // Select with click, Ctrl / Shift + click, Ctrl+A; remove with the × over a page, Delete or
-// the context menu (the image file is deleted too); reorder by drag and drop.
+// the context menu (the image file is deleted too); reorder by drag and drop; rotate.
 class PageListWidget : public QListWidget
 {
     Q_OBJECT
@@ -16,11 +16,27 @@ class PageListWidget : public QListWidget
 public:
     explicit PageListWidget(QWidget *parent = nullptr);
 
-    // Adds the image as a new page; the file path is stored in Qt::UserRole
-    bool addPage(const QString &filePath);
+    struct Page {
+        QString filePath;
+        int dpi = 0;   // resolution of the scan, 0: unknown
+    };
+
+    // Adds the image as a new page; the file path is stored in Qt::UserRole, the scan
+    // resolution in kDpiRole
+    bool addPage(const QString &filePath, int dpi);
+
+    // Pages in list order: all or only the selected ones
+    QList<Page> pages(bool selectedOnly) const;
+    bool hasSelection() const { return !selectedItems().isEmpty(); }
+
+    void rotateSelectedPages();   // 90° clockwise, the image file is rewritten
+    void removeAllPages();        // the image files are deleted too
+
+    static constexpr int kDpiRole = Qt::UserRole + 1;
 
 signals:
-    void pagesChanged();   // pages removed or moved (also emitted by addPage)
+    void pagesChanged();       // pages added, removed, moved or rotated
+    void pageImagesChanged();  // image files rewritten (rotated): a shown page must be reloaded
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

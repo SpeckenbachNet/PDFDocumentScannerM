@@ -4,15 +4,22 @@
 #include <QContextMenuEvent>
 #include <QDragMoveEvent>
 #include <QFile>
+#include <QImage>
 #include <QMenu>
 #include <QScrollBar>
 #include <QTimer>
+#include <QTransform>
 #include <algorithm>
 
 namespace {
 constexpr int kDragScrollZone = 40;      // height of the edge zones that scroll while dragging
 constexpr int kDragScrollMaxStep = 20;   // pixels per tick right at the edge
 constexpr int kDragScrollInterval = 20;  // ms between two ticks
+
+// High resolution icon, Qt scales it down when drawing
+QIcon pageIcon(const QImage &img) {
+    return QIcon(QPixmap::fromImage(img.scaled(1000, 1414, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
+}
 }
 
 PageListWidget::PageListWidget(QWidget *parent) : QListWidget(parent) {
@@ -46,14 +53,13 @@ PageListWidget::PageListWidget(QWidget *parent) : QListWidget(parent) {
     setItemDelegate(m_delegate);
 }
 
-bool PageListWidget::addPage(const QString &filePath) {
+bool PageListWidget::addPage(const QString &filePath, int dpi) {
     QImage img(filePath);
     if (img.isNull()) return false;
 
-    // High resolution icon, Qt scales it down when drawing
-    QIcon icon(QPixmap::fromImage(img.scaled(1000, 1414, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
-    QListWidgetItem *item = new QListWidgetItem(icon, tr("PAGE %1").arg(count() + 1));
+    QListWidgetItem *item = new QListWidgetItem(pageIcon(img), tr("PAGE %1").arg(count() + 1));
     item->setData(Qt::UserRole, filePath);
+    item->setData(kDpiRole, dpi);
 
     addItem(item);
     updateItemSizes(); // More pages may need the narrower width
@@ -62,6 +68,37 @@ bool PageListWidget::addPage(const QString &filePath) {
     scrollToBottom();
     emit pagesChanged();
     return true;
+}
+
+QList<PageListWidget::Page> PageListWidget::pages(bool selectedOnly) const {
+    QList<Page> result;
+    for (int row = 0; row < count(); ++row) {
+        const QListWidgetItem *page = item(row);
+        if (selectedOnly && !page->isSelected()) continue;
+        result.append({page->data(Qt::UserRole).toString(), page->data(kDpiRole).toInt()});
+    }
+    return result;
+}
+
+// Rotating the file itself keeps list, preview and PDF the same without extra state
+void PageListWidget::rotateSelectedPages() {
+    const QList<QListWidgetItem *> selected = selectedItems();
+    if (selected.isEmpty()) return;
+    for (QListWidgetItem *page : selected) {
+        const QString filePath = page->data(Qt::UserRole).toString();
+        const QImage rotated = QImage(filePath).transformed(QTransform().rotate(90));
+        if (rotated.isNull() || !rotated.save(filePath, "PNG")) continue;
+        page->setIcon(pageIcon(rotated));
+    }
+    viewport()->update();
+    emit pagesChanged();
+    emit pageImagesChanged();
+}
+
+void PageListWidget::removeAllPages() {
+    QList<int> rows;
+    for (int row = 0; row < count(); ++row) rows.append(row);
+    removeRows(rows);
 }
 
 void PageListWidget::resizeEvent(QResizeEvent *event) {

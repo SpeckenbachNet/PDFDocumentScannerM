@@ -1,4 +1,5 @@
 #include "settingsmanager.h"
+#include <QStandardPaths>
 
 SettingsManager::SettingsManager() {
     // Organization, application name and INI format are set in main()
@@ -129,6 +130,16 @@ QByteArray SettingsManager::splitterState() const {
 void SettingsManager::saveWindowLayout(const QByteArray &geometry, const QByteArray &splitter) {
     m_settings->setValue("Window/Geometry", geometry);
     m_settings->setValue("Window/Splitter", splitter);
+    m_settings->sync();
+}
+
+QString SettingsManager::lastSaveFolder() const {
+    return m_settings->value("Save/LastFolder",
+                             QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
+}
+
+void SettingsManager::setLastSaveFolder(const QString &folder) {
+    m_settings->setValue("Save/LastFolder", folder);
     m_settings->sync();
 }
 

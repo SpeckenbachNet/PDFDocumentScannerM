@@ -2,6 +2,12 @@
 #include "./ui_mainwin.h"
 #include "settingsmanager.h"
 #include <QDir>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QMessageBox>
+#include <QPageLayout>
+#include <QPdfWriter>
+#include <QPushButton>
 #include <QStandardPaths>
 #include <QThread>
 #include <QUrl>
@@ -19,6 +25,39 @@ QString breakableHtml(const QString &text) {
 
 // Backends name their feeders differently ("ADF", "ADF Front", "ADF Duplex",
 // "Automatic Document Feeder", ...)
+// PDF page of the scanned size: pixels and resolution. Without a known scan resolution the one
+// stored in the image is used. Landscape pages stay landscape (QPageSize alone is portrait).
+QPageLayout pageLayoutFor(const QImage &image, int dpi) {
+    if (dpi <= 0) dpi = qRound(image.dotsPerMeterX() * 0.0254);
+    if (dpi <= 0) dpi = 300;
+    const QSizeF mm(image.width() * 25.4 / dpi, image.height() * 25.4 / dpi);
+    const QPageSize size(QSizeF(qMin(mm.width(), mm.height()), qMax(mm.width(), mm.height())),
+                         QPageSize::Millimeter, QString(), QPageSize::FuzzyMatch);
+    const auto orientation = mm.width() > mm.height() ? QPageLayout::Landscape : QPageLayout::Portrait;
+    return QPageLayout(size, orientation, QMarginsF(0, 0, 0, 0));
+}
+
+// One page per image, the image fills the page
+bool writePdf(const QString &filePath, const QList<PageListWidget::Page> &pages) {
+    QPdfWriter writer(filePath);
+    writer.setCreator(QCoreApplication::applicationName());
+    writer.setTitle(QFileInfo(filePath).completeBaseName());
+
+    QPainter painter;
+    for (int i = 0; i < pages.size(); ++i) {
+        const QImage image(pages[i].filePath);
+        if (image.isNull()) return false;
+        writer.setPageLayout(pageLayoutFor(image, pages[i].dpi));   // applies to the next page
+        if (i == 0) {
+            if (!painter.begin(&writer)) return false;
+        } else if (!writer.newPage()) {
+            return false;
+        }
+        painter.drawImage(QRect(0, 0, writer.width(), writer.height()), image);
+    }
+    return painter.end();
+}
+
 bool isAdfSource(const QString &source) {
     return source.contains("ADF", Qt::CaseInsensitive)
         || source.contains("Feeder", Qt::CaseInsensitive)
@@ -457,8 +496,11 @@ void MainWin::startScan() {
     if (!SettingsManager::instance().colorModeValues.isEmpty()) {
         arguments << "--mode" << realMode;
     }
+    // Remembered with every page: the PDF page size follows from pixels and resolution
+    int scanDpi = 0;
     if (!SettingsManager::instance().resolutionValues.isEmpty()) {
         arguments << "--resolution" << resolution;
+        scanDpi = resolution.toInt();
     }
     if (setSource) {
         arguments << "--source" << source;
@@ -480,7 +522,7 @@ void MainWin::startScan() {
 
     // 4. Timer für die Live-Anzeige (alle 1,5 Sekunden prüfen)
     QTimer *progressTimer = new QTimer(this);
-    connect(progressTimer, &QTimer::timeout, this, [this, batchPath]() {
+    connect(progressTimer, &QTimer::timeout, this, [this, batchPath, scanDpi]() {
         QDir dir(batchPath);
         QStringList currentFiles = dir.entryList(QStringList() << "page_*.png", QDir::Files, QDir::Name);
 
@@ -496,7 +538,7 @@ void MainWin::startScan() {
                     QImage img(tempCopy);
                     // Prüfen, ob das Bild valide und nicht leer ist
                     if (!img.isNull() && img.width() > 0) {
-                        this->addPageToList(fullPath); // Hier wird das Item im UI erstellt
+                        this->addPageToList(fullPath, scanDpi); // Hier wird das Item im UI erstellt
                         m_processedFiles.append(fileName);
                     }
                     QFile::remove(tempCopy); // Temporäre Kopie sofort löschen
@@ -530,7 +572,7 @@ void MainWin::startScan() {
     });
 
     // 6. Abschluss-Logik
-    connect(scanProcess, &QProcess::finished, this, [this, batchPath, scanProcess, progressTimer](int exitCode, QProcess::ExitStatus exitStatus) {
+    connect(scanProcess, &QProcess::finished, this, [this, batchPath, scanDpi, scanProcess, progressTimer](int exitCode, QProcess::ExitStatus exitStatus) {
         progressTimer->stop();
         progressTimer->deleteLater();
 
@@ -539,7 +581,7 @@ void MainWin::startScan() {
         QStringList finalFiles = dir.entryList(QStringList() << "page_*.png", QDir::Files, QDir::Name);
         for (const QString &fileName : std::as_const(finalFiles)) {
             if (!m_processedFiles.contains(fileName)) {
-                this->addPageToList(dir.absoluteFilePath(fileName));
+                this->addPageToList(dir.absoluteFilePath(fileName), scanDpi);
                 m_processedFiles.append(fileName);
             }
         }
@@ -564,13 +606,62 @@ void MainWin::startScan() {
     scanProcess->start(program, arguments);
 }
 
-void MainWin::addPageToList(const QString &filePath) {
+void MainWin::addPageToList(const QString &filePath, int dpi) {
     // The new page becomes the current one, the preview shows it (showCurrentPage)
-    ui->pagesListWidget->addPage(filePath);
+    ui->pagesListWidget->addPage(filePath, dpi);
 }
 
 void MainWin::refreshScanners() {
     searchForScanners();
+}
+
+// ====== Pages ======
+
+// Selected or all pages in list order. Without OCR the PDF is written here (QPdfWriter);
+// with OCR (later) tesseract writes it from the same images instead.
+void MainWin::savePdf(bool selectedOnly) {
+    const QList<PageListWidget::Page> pages = ui->pagesListWidget->pages(selectedOnly);
+    if (pages.isEmpty()) return;
+
+    SettingsManager &settings = SettingsManager::instance();
+    const QString name = "Scan_" + QDateTime::currentDateTime().toString("yyyy-MM-dd_HHmm") + ".pdf";
+    QString filePath = QFileDialog::getSaveFileName(this, tr("Save PDF"),
+                                                    QDir(settings.lastSaveFolder()).filePath(name),
+                                                    tr("PDF files (*.pdf)"));
+    if (filePath.isEmpty()) return;
+    if (!filePath.endsWith(".pdf", Qt::CaseInsensitive)) filePath += ".pdf";
+    settings.setLastSaveFolder(QFileInfo(filePath).absolutePath());
+
+    setBusy(true);
+    m_statusOverlay->showMessage(tr("Saving PDF..."));
+    // Writing blocks the window: let the message appear first
+    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    const bool saved = writePdf(filePath, pages);
+    setBusy(false);
+
+    if (saved) {
+        m_statusOverlay->showMessage(tr("PDF saved: %1").arg(QFileInfo(filePath).fileName()), false, 3000);
+    } else {
+        QFile::remove(filePath);   // no half written file
+        m_statusOverlay->showMessage(tr("PDF could not be saved"), true, 3000);
+    }
+}
+
+void MainWin::rotatePages() {
+    QApplication::setOverrideCursor(Qt::WaitCursor);   // large scans take a moment
+    ui->pagesListWidget->rotateSelectedPages();
+    QApplication::restoreOverrideCursor();
+}
+
+// The image files are deleted too, so ask first
+void MainWin::clearPages() {
+    if (ui->pagesListWidget->count() == 0) return;
+    QMessageBox box(QMessageBox::Question, tr("Clear"),
+                    tr("Remove all pages? The scanned images are deleted."), QMessageBox::NoButton, this);
+    QPushButton *remove = box.addButton(tr("Remove"), QMessageBox::DestructiveRole);
+    box.addButton(tr("Cancel"), QMessageBox::RejectRole);
+    box.exec();
+    if (box.clickedButton() == remove) ui->pagesListWidget->removeAllPages();
 }
 
 // ====== Button states ======
@@ -589,6 +680,13 @@ void MainWin::updateButtons() {
     m_helpBtn->setEnabled(!m_busy);
     m_settingsBtn->setEnabled(!m_busy && hasScanners);
     m_scanBtn->setEnabled(!m_busy && m_scannerReady);
+
+    const bool hasPages = ui->pagesListWidget->count() > 0;
+    const bool hasSelection = ui->pagesListWidget->hasSelection();
+    m_rotateBtn->setEnabled(!m_busy && hasSelection);
+    m_saveSelBtn->setEnabled(!m_busy && hasSelection);
+    m_saveAllBtn->setEnabled(!m_busy && hasPages);
+    m_clearBtn->setEnabled(!m_busy && hasPages);
 }
 
 // ====== Events ======

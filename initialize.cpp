@@ -65,6 +65,7 @@ void MainWin::initializeToolBars() {
 
     ui->toolBarFrame->addButton("rotateBtn","",":icons/rotate");
     m_rotateBtn = ui->toolBarFrame->findChild<QToolButton*>("rotateBtn");
+    m_rotateBtn->setToolTip(tr("Rotate the selected pages 90° clockwise"));
     m_rotateBtn->setEnabled(false);
 
     ui->toolBarFrame->addButton("fakeDplxBtn",tr("FAKE_DUPLEX"),"");
@@ -162,6 +163,14 @@ void MainWin::initializeConnects() {
     connect(m_settingsBtn, &QToolButton::clicked, this, &MainWin::showSettingsOverlay);
     connect(m_refreshBtn, &QToolButton::clicked, this, &MainWin::refreshScanners);
     connect(ui->pagesListWidget, &QListWidget::currentItemChanged, this, &MainWin::showCurrentPage);
+    // Page buttons follow the pages and the selection; a rotated page is shown again
+    connect(ui->pagesListWidget, &PageListWidget::pagesChanged, this, &MainWin::updateButtons);
+    connect(ui->pagesListWidget, &PageListWidget::pageImagesChanged, this, &MainWin::showCurrentPage);
+    connect(ui->pagesListWidget, &QListWidget::itemSelectionChanged, this, &MainWin::updateButtons);
+    connect(m_rotateBtn, &QToolButton::clicked, this, &MainWin::rotatePages);
+    connect(m_clearBtn, &QToolButton::clicked, this, &MainWin::clearPages);
+    connect(m_saveSelBtn, &QToolButton::clicked, this, [this] { savePdf(true); });
+    connect(m_saveAllBtn, &QToolButton::clicked, this, [this] { savePdf(false); });
     connect(m_settingsOverlay, &SettingsOverlay::scannerChanged,
             this, &MainWin::getScannerCapabilities);
     connect(m_coffeeBtn, &QToolButton::clicked, this, [] {

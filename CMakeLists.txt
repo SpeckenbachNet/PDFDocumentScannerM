@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(PROJECT_VERSION "0.3.5")
+set(PROJECT_VERSION "0.4.0")
 set(ORGANIZATION_NAME "SpeckenbachNet")
 
 project(

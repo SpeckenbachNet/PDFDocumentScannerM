@@ -41,6 +41,10 @@ public:
     QByteArray splitterState() const;
     void saveWindowLayout(const QByteArray &geometry, const QByteArray &splitter);
 
+    // Folder of the last saved PDF; the user's documents folder before the first save
+    QString lastSaveFolder() const;
+    void setLastSaveFolder(const QString &folder);
+
     // Other
     QMap<QString, QString> scannerValues;
     QStringList resolutionValues;

@@ -62,7 +62,10 @@ private:
     void saveAirscanScanners(const QString &output);
     bool chooseScanner();
     bool useStandInScanner();
-    void addPageToList(const QString &filePath);
+    void addPageToList(const QString &filePath, int dpi);
+    void savePdf(bool selectedOnly);
+    void rotatePages();
+    void clearPages();
     void showPage(QWidget *page);
     void setBusy(bool busy);
     void updateButtons();

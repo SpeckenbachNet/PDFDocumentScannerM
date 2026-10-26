@@ -24,7 +24,8 @@ tools `airscan-discover` and `scanimage` (`QProcess`).
 | Large preview of the current page with zoom | done |
 | Window size and splitter remembered | done |
 | Help page | frame done, texts mostly "Coming soon" |
-| Save as PDF (selected / all pages), rotate, clear, fake duplex | open (buttons exist, not connected) |
+| Save as PDF (selected / all pages, without OCR), rotate, clear | done |
+| Fake duplex | open (button exists, not connected) |
 | OCR, straighten, crop (check boxes in the settings) | open (not bound) |
 
 **Flow**
@@ -199,8 +200,30 @@ skipped. A saved value the scanner does not offer is replaced by its default.
   during a drag under Wayland. A timer scrolls while the drag position (from the drag events) is
   within 40 px of the top or bottom edge (`kDragScrollZone`, `kDragScrollMaxStep`,
   `kDragScrollInterval`).
-- Signal `pagesChanged()` after adding, removing and moving. The preview follows
-  `currentItemChanged` (`MainWin::showCurrentPage`).
+- Signal `pagesChanged()` after adding, removing, moving and rotating; `MainWin::updateButtons()`
+  follows it and the selection. The preview follows `currentItemChanged`
+  (`MainWin::showCurrentPage`) and `pageImagesChanged()` (a rotated page is loaded again).
+- Every page keeps the resolution of its scan (`PageListWidget::kDpiRole`): the setting may
+  change between two scans, the PDF page size needs the right one.
+- Rotate: the selected pages 90° clockwise; the PNG file itself is rewritten, so list, preview
+  and PDF need no extra state.
+- Clear: all pages, after a question (the image files are deleted).
+
+### Saving as PDF (`MainWin::savePdf()`)
+
+- Selected or all pages in list order (`PageListWidget::pages()`).
+- File dialog: name `Scan_<yyyy-MM-dd_HHmm>.pdf`, suggested in the folder of the last save
+  (INI `Save/LastFolder`; before the first save the documents folder).
+- `writePdf()` uses `QPdfWriter` (Qt GUI, no extra dependency): one page per image, the image
+  fills the page. The page size follows from pixels and scan resolution (`pageLayoutFor()`,
+  `FuzzyMatch` turns 209.97 × 297.01 mm into A4); landscape pages get a landscape layout,
+  because `QPageSize` alone is always portrait.
+- **OCR (planned) happens when saving** (decision: variant A). Then tesseract writes the PDF
+  from the same images instead of `QPdfWriter` (`tesseract list.txt out -l deu pdf`, image and
+  invisible text in one run). Order then: straighten → crop → OCR → PDF. Rejected for now: OCR
+  right after scanning with selectable text in the preview (variant B) – rotating, straightening
+  and cropping would have to work on recognized text.
+- Writing blocks the window; a `processEvents()` lets the message "Saving PDF..." appear first.
 
 ### Preview (`PreviewView`)
 
@@ -232,6 +255,7 @@ All access goes through `SettingsManager`.
 | `Scanner/PageOrientation`, `PageFormat` | page |
 | `Scanner/OcrLanguage` | tesseract code (`deu`, `eng`) |
 | `Window/Geometry`, `Window/Splitter` | `saveGeometry()` / `QSplitter::saveState()`, written in `closeEvent` |
+| `Save/LastFolder` | folder of the last saved PDF |
 
 First start without saved window: 900 × 600 (`kDefaultSize` in `restoreWindowLayout()`, fits
 laptops with 150 % scaling), page list 180 px. Qt widens the window by itself if the toolbar
