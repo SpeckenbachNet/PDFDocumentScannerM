@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(PROJECT_VERSION "0.3.4")
+set(PROJECT_VERSION "0.3.5")
 set(ORGANIZATION_NAME "SpeckenbachNet")
 
 project(
@@ -51,7 +51,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         helppage.h helppage.cpp
         twolinedelegate.h twolinedelegate.cpp
         Help.qrc
-    )
+)
 
 target_include_directories(PDFDocumentScannerM
     PRIVATE

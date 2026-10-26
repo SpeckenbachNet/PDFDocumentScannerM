@@ -21,7 +21,7 @@ tools `airscan-discover` and `scanimage` (`QProcess`).
 | Scanner options (source, color mode, scan intent, resolution) from `scanimage --help` | done |
 | Scan flatbed (one page) and feeder (batch), pages appear while scanning | done |
 | Page list: select, remove (×, Delete, context menu), reorder by drag and drop | done |
-| Large preview of the current page | done |
+| Large preview of the current page with zoom | done |
 | Window size and splitter remembered | done |
 | Help page | frame done, texts mostly "Coming soon" |
 | Save as PDF (selected / all pages), rotate, clear, fake duplex | open (buttons exist, not connected) |
@@ -201,6 +201,21 @@ skipped. A saved value the scanner does not offer is replaced by its default.
   `kDragScrollInterval`).
 - Signal `pagesChanged()` after adding, removing and moving. The preview follows
   `currentItemChanged` (`MainWin::showCurrentPage`).
+
+### Preview (`PreviewView`)
+
+- A new page shows the whole page; in this fit mode the page follows every resize. The splitter
+  gives a wider window to the preview, the page list keeps its width (stretch factors 0 / 1).
+- Zoom: **Ctrl + mouse wheel** (at the mouse), Ctrl + Plus / Minus / 0, double click (whole
+  page ↔ 100 %), or the zoom bar in the lower right corner that appears while the mouse is over
+  the preview (−, level – click: whole page –, +). The plain wheel scrolls, so it is not used for
+  zooming.
+- Zoomed, resizing keeps the zoom level, dragging moves the page (`ScrollHandDrag`). Range: whole
+  page up to 8 × of it, at least 100 %.
+- The fit scale is computed from `maximumViewportSize()` instead of `fitInView()`: that measures
+  the viewport while the scroll bars of the zoomed page are still shown.
+- The shortcuts are window shortcuts; they do not fire while the help page is shown (hidden
+  widget).
 
 ---
 

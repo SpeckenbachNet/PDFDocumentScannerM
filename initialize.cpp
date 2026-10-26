@@ -105,6 +105,11 @@ void MainWin::initializeForm() {
     m_settingsOverlay = new SettingsOverlay(nullptr);
     m_settingsOverlay->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
 
+    // A wider or narrower window changes the preview, the page list keeps its width
+    // (it changes only by dragging the splitter)
+    ui->splitter->setStretchFactor(0, 0);
+    ui->splitter->setStretchFactor(1, 1);
+
     restoreWindowLayout();
     applySurfaceColors();
 }

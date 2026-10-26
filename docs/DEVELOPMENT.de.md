@@ -21,7 +21,7 @@ Kommandozeilenwerkzeuge `airscan-discover` und `scanimage` auf (`QProcess`).
 | Scanner-Optionen (Quelle, Farbmodus, Scan-Zweck, Auflösung) aus `scanimage --help` | fertig |
 | Scannen Flachbett (eine Seite) und Einzug (Stapel), Seiten erscheinen schon während des Scans | fertig |
 | Seitenliste: auswählen, entfernen (×, Entf, Kontextmenü), per Drag and Drop umsortieren | fertig |
-| Große Vorschau der aktuellen Seite | fertig |
+| Große Vorschau der aktuellen Seite mit Zoom | fertig |
 | Fenstergröße und Splitter werden gemerkt | fertig |
 | Hilfeseite | Rahmen fertig, Texte meist noch „Folgt.“ |
 | Als PDF speichern (Auswahl / alle Seiten), drehen, leeren, Fake-Duplex | offen (Knöpfe da, nicht verbunden) |
@@ -209,6 +209,21 @@ durch seinen Standard ersetzt.
   (`kDragScrollZone`, `kDragScrollMaxStep`, `kDragScrollInterval`).
 - Signal `pagesChanged()` nach Hinzufügen, Entfernen und Verschieben. Die Vorschau folgt
   `currentItemChanged` (`MainWin::showCurrentPage`).
+
+### Vorschau (`PreviewView`)
+
+- Eine neue Seite wird ganz gezeigt; in diesem Einpass-Modus folgt die Seite jeder
+  Größenänderung. Der Splitter gibt ein breiteres Fenster der Vorschau, die Seitenliste behält
+  ihre Breite (Dehnungsfaktoren 0 / 1).
+- Zoom: **Strg + Mausrad** (an der Maus), Strg + Plus / Minus / 0, Doppelklick (ganze Seite ↔
+  100 %) oder die Zoomleiste unten rechts, die erscheint, solange die Maus über der Vorschau ist
+  (−, Stufe – Klick: ganze Seite –, +). Das Mausrad allein rollt, deshalb zoomt es nicht.
+- Gezoomt bleibt die Zoomstufe bei Größenänderungen erhalten, Ziehen verschiebt die Seite
+  (`ScrollHandDrag`). Bereich: ganze Seite bis 8-fach davon, mindestens 100 %.
+- Der Einpass-Maßstab wird aus `maximumViewportSize()` berechnet statt mit `fitInView()`: Das
+  misst den Viewport, solange die Rollbalken der gezoomten Seite noch da sind.
+- Die Tastenkürzel gelten im ganzen Fenster; solange die Hilfeseite zu sehen ist, lösen sie
+  nicht aus (verstecktes Widget).
 
 ---
 

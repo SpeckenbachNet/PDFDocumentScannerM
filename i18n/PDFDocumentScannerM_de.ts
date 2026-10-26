@@ -72,27 +72,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="51"/>
+        <location filename="../initialize.cpp" line="52"/>
         <source>SCAN</source>
         <translation type="unfinished">Scannen</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="69"/>
+        <location filename="../initialize.cpp" line="70"/>
         <source>FAKE_DUPLEX</source>
         <translation type="unfinished">Fake Duplex</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="81"/>
+        <location filename="../initialize.cpp" line="82"/>
         <source>CLEAR</source>
         <translation type="unfinished">Leeren</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="88"/>
+        <location filename="../initialize.cpp" line="89"/>
         <source>Buy me a coffee – support PDFDocumentScanner via PayPal</source>
         <translation type="unfinished">Spendier mir einen Kaffee – unterstütze PDFDocumentScanner über PayPal</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="92"/>
+        <location filename="../initialize.cpp" line="93"/>
         <source>Help</source>
         <translation type="unfinished">Hilfe</translation>
     </message>
@@ -109,65 +109,66 @@
         <translation type="obsolete">Keine Scanner erkannt</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="73"/>
+        <location filename="../initialize.cpp" line="74"/>
         <source>SAVE_SELECTED</source>
         <translation type="unfinished">Auswahl speichern</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="77"/>
+        <location filename="../initialize.cpp" line="78"/>
         <source>SAVE_ALL</source>
         <translation type="unfinished">Alles Speichern</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="115"/>
+        <location filename="../mainwin.cpp" line="116"/>
         <source>SEARCH_SCANNERS...</source>
         <translation type="unfinished">Suche nach Scannern...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="122"/>
-        <location filename="../mainwin.cpp" line="130"/>
+        <location filename="../mainwin.cpp" line="127"/>
+        <location filename="../mainwin.cpp" line="135"/>
         <source>EROOR_STARTING_SEARCH.</source>
         <translation type="unfinished">Fehler beim Starten der Suche.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="140"/>
+        <location filename="../mainwin.cpp" line="149"/>
         <source>NO_SCANNER_HARDWARE_FOUND.</source>
         <translation type="unfinished">Keine Scanner-Hardware gefunden.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="160"/>
+        <location filename="../mainwin.cpp" line="150"/>
+        <location filename="../mainwin.cpp" line="299"/>
         <source>NO_SCANNERS_DETECTED.</source>
         <translation type="unfinished">Keine Scanner erkannt.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="169"/>
-        <location filename="../mainwin.cpp" line="253"/>
+        <location filename="../mainwin.cpp" line="155"/>
+        <location filename="../mainwin.cpp" line="286"/>
         <source>LOAD_SCANNER_CAPABILITIES...</source>
         <translation type="unfinished">Lade Scanner Eigenschaften...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="263"/>
-        <location filename="../mainwin.cpp" line="341"/>
+        <location filename="../mainwin.cpp" line="303"/>
+        <location filename="../mainwin.cpp" line="382"/>
         <source>Scanner capabilities could not be loaded</source>
         <translation type="unfinished">Scanner-Eigenschaften konnten nicht geladen werden.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="355"/>
+        <location filename="../mainwin.cpp" line="396"/>
         <source>SCANNING...</source>
         <translation type="unfinished">Scanne...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="402"/>
+        <location filename="../mainwin.cpp" line="443"/>
         <source>ERROR_CREATING_TEMP_DIR.</source>
         <translation type="unfinished">Temporäres Verzeichnis konnte nicht erstellt werden.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="472"/>
+        <location filename="../mainwin.cpp" line="513"/>
         <source>ERROR:</source>
         <translation type="unfinished">Fehler:</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="514"/>
+        <location filename="../mainwin.cpp" line="555"/>
         <source>SCAN_FAILED.</source>
         <translation type="unfinished">Scan fehlgeschlagen.</translation>
     </message>
@@ -183,18 +184,36 @@
 <context>
     <name>PageListWidget</name>
     <message>
-        <location filename="../pagelistwidget.cpp" line="41"/>
-        <location filename="../pagelistwidget.cpp" line="135"/>
+        <location filename="../pagelistwidget.cpp" line="55"/>
+        <location filename="../pagelistwidget.cpp" line="149"/>
         <source>PAGE %1</source>
         <translation type="unfinished">Seite %1</translation>
     </message>
     <message numerus="yes">
-        <location filename="../pagelistwidget.cpp" line="197"/>
+        <location filename="../pagelistwidget.cpp" line="233"/>
         <source>REMOVE_PAGES %n</source>
         <translation type="unfinished">
             <numerusform>Seite entfernen</numerusform>
             <numerusform>%n Seiten entfernen</numerusform>
         </translation>
+    </message>
+</context>
+<context>
+    <name>PreviewView</name>
+    <message>
+        <location filename="../previewview.cpp" line="78"/>
+        <source>Zoom out (Ctrl + Minus)</source>
+        <translation type="unfinished">Verkleinern (Strg + Minus)</translation>
+    </message>
+    <message>
+        <location filename="../previewview.cpp" line="79"/>
+        <source>Whole page (Ctrl + 0)</source>
+        <translation type="unfinished">Ganze Seite (Strg + 0)</translation>
+    </message>
+    <message>
+        <location filename="../previewview.cpp" line="80"/>
+        <source>Zoom in (Ctrl + Plus)</source>
+        <translation type="unfinished">Vergrößern (Strg + Plus)</translation>
     </message>
 </context>
 <context>
