@@ -2,6 +2,7 @@
 
 #include <QApplication>
 #include <QLocale>
+#include <QSettings>
 #include <QTranslator>
 #include <QStringLiteral>
 #include <QDebug>
@@ -9,7 +10,11 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    a.setApplicationName(QStringLiteral(PROJECT_NAME));
     a.setApplicationVersion(QLatin1String(PROJECT_VERSION));
+    a.setOrganizationName(QStringLiteral(COMPANY_NAME));
+    // Settings: ~/.config/SpeckenbachNet/PDFDocumentScannerM.ini (SettingsManager)
+    QSettings::setDefaultFormat(QSettings::IniFormat);
     a.setWindowIcon(QIcon(":/icons/app_icon"));
 
     QTranslator translator;

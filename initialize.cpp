@@ -3,6 +3,7 @@
 #include "toolbarm.h"
 #include "uicolors.h"
 #include "helppage.h"
+#include "settingsmanager.h"
 #include <QDesktopServices>
 
 namespace {
@@ -104,14 +105,27 @@ void MainWin::initializeForm() {
     m_settingsOverlay = new SettingsOverlay(nullptr);
     m_settingsOverlay->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
 
-    // Splitter: the final width is only known once the window is shown
-    QTimer::singleShot(0, this, [this]() {
-        int leftWidth = 180;
-        int rightWidth = ui->splitter->width() - leftWidth;
-        ui->splitter->setSizes({leftWidth, rightWidth});
-    });
-
+    restoreWindowLayout();
     applySurfaceColors();
+}
+
+// Size, position and splitter of the last session (saved in closeEvent). First start: 900 × 600
+// (fits laptops with 150 % scaling), page list 180 px. Qt widens the window by itself if the
+// toolbar buttons need more room (minimum size of the layout).
+void MainWin::restoreWindowLayout() {
+    constexpr QSize kDefaultSize(900, 600);
+    const SettingsManager &settings = SettingsManager::instance();
+    if (!restoreGeometry(settings.windowGeometry())) {
+        resize(kDefaultSize);
+    }
+    if (!ui->splitter->restoreState(settings.splitterState())) {
+        // The final width is only known once the window is shown
+        QTimer::singleShot(0, this, [this]() {
+            int leftWidth = 180;
+            int rightWidth = ui->splitter->width() - leftWidth;
+            ui->splitter->setSizes({leftWidth, rightWidth});
+        });
+    }
 }
 
 // Page list and preview lie deeper than the window, like the toolbar. Only the viewports get

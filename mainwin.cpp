@@ -610,6 +610,11 @@ void MainWin::changeEvent(QEvent *event) {
     QMainWindow::changeEvent(event);
 }
 
+void MainWin::closeEvent(QCloseEvent *event) {
+    SettingsManager::instance().saveWindowLayout(saveGeometry(), ui->splitter->saveState());
+    QMainWindow::closeEvent(event);
+}
+
 MainWin::~MainWin()
 {
     delete ui;

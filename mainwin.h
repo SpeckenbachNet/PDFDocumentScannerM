@@ -34,6 +34,7 @@ class MainWin : public QMainWindow
 protected:
     void resizeEvent(QResizeEvent *event);
     void changeEvent(QEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 public:
     MainWin(QWidget *parent = nullptr);
@@ -49,6 +50,7 @@ private:
     void initializeConnects();
     void initializeSettings();
     void applySurfaceColors();
+    void restoreWindowLayout();
     void refreshSettings();
     void searchForScanners();
     void refreshScanners();

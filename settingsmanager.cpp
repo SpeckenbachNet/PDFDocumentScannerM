@@ -1,7 +1,8 @@
 #include "settingsmanager.h"
 
 SettingsManager::SettingsManager() {
-    m_settings = new QSettings(QSettings::IniFormat, QSettings::UserScope, "Speckenbach.Net", "PDFDocumentScannerM");
+    // Organization, application name and INI format are set in main()
+    m_settings = new QSettings();
     resetToDefaults();
     readSettingsFromIni();
 }
@@ -114,6 +115,20 @@ void SettingsManager::setScanIntent(QString scanIntent) {
 void SettingsManager::setOcrLanguage(QString ocrLanguage) {
     m_ocrLanguage = ocrLanguage;
     m_settings->setValue("Scanner/OcrLanguage", ocrLanguage);
+    m_settings->sync();
+}
+
+QByteArray SettingsManager::windowGeometry() const {
+    return m_settings->value("Window/Geometry").toByteArray();
+}
+
+QByteArray SettingsManager::splitterState() const {
+    return m_settings->value("Window/Splitter").toByteArray();
+}
+
+void SettingsManager::saveWindowLayout(const QByteArray &geometry, const QByteArray &splitter) {
+    m_settings->setValue("Window/Geometry", geometry);
+    m_settings->setValue("Window/Splitter", splitter);
     m_settings->sync();
 }
 

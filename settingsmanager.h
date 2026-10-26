@@ -22,7 +22,6 @@ public:
     QString pageFormat() const { return m_pageFormat; }
     QString ocrLanguage() const { return m_ocrLanguage; }
     int resolution() const { return m_resolution; }
-    int splitterWidth() const { return m_splitterWidth; }
     bool intentDocument() const { return m_intentDocument; }
 
     // Setter
@@ -35,6 +34,12 @@ public:
     void setPageFormat(QString pageFormat);
     void setScanIntent(QString scanIntent);
     void setOcrLanguage(QString ocrLanguage);
+
+    // Window size/position and splitter (QWidget::saveGeometry / QSplitter::saveState),
+    // empty before the first close
+    QByteArray windowGeometry() const;
+    QByteArray splitterState() const;
+    void saveWindowLayout(const QByteArray &geometry, const QByteArray &splitter);
 
     // Other
     QMap<QString, QString> scannerValues;
@@ -73,5 +78,4 @@ private:
     bool m_cropDocument = false;
     bool m_intentDocument = false;
     int m_resolution = 300;
-    int m_splitterWidth = 180;
 };

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(PROJECT_VERSION "0.3.1")
+set(PROJECT_VERSION "0.3.2")
+set(ORGANIZATION_NAME "SpeckenbachNet")
 
 project(
     PDFDocumentScannerM
@@ -64,6 +65,7 @@ target_compile_definitions(PDFDocumentScannerM
     PRIVATE
         PROJECT_VERSION="${PROJECT_VERSION}"
         PROJECT_NAME="${PROJECT_NAME}"
+        COMPANY_NAME="${ORGANIZATION_NAME}"
 )
 
 # Define target properties for Android with Qt 6 as:
