@@ -4,6 +4,7 @@
 #include "settingsmanager.h"
 #include "uicolors.h"
 #include <QDir>
+#include <QScrollBar>
 #include <QThread>
 
 namespace {
@@ -145,6 +146,7 @@ void MainWin::initializeForm() {
     //ui->pagesListWidget->setMovement(QListView::Static);
     ui->pagesListWidget->setSpacing(10);   // Distance between pages
     ui->pagesListWidget->setResizeMode(QListView::Adjust);  // Align the text nicely in the center
+    ui->pagesListWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // Pages are scrolled vertically only
 
     m_previewScene = new QGraphicsScene(this);
     ui->previewGraphicsView->setScene(m_previewScene);
@@ -174,18 +176,46 @@ void MainWin::applySurfaceColors() {
     }
 }
 
+// Items fill the list width minus the spacing on both sides. If the pages do not fit at
+// full width, they are shrunk until they fit the height, but at most by the width of the
+// vertical scroll bar. Only if that is not enough the scroll bar appears in the space freed.
+// The calculation uses the viewport size without scroll bars, so it does not depend on
+// whether the bar is currently shown and cannot toggle back and forth.
 void MainWin::updateListIconSize() {
-    int w = ui->pagesListWidget->viewport()->width() - 20;
+    QListWidget *list = ui->pagesListWidget;
+    const QSize area = list->maximumViewportSize();
+    const int spacing = list->spacing();
+    const int textHeight = 30;
+    const int count = list->count();
+
+    auto contentHeight = [&](int width) {
+        return spacing + count * (static_cast<int>(width * 1.41) + textHeight + spacing);
+    };
+
+    const int fullWidth = area.width() - 2 * spacing;
+    const int narrowWidth = fullWidth - list->verticalScrollBar()->sizeHint().width();
+    int w = fullWidth;
+    if (count > 0 && contentHeight(fullWidth) > area.height()) {
+        if (contentHeight(narrowWidth) <= area.height()) {
+            // Largest width at which all pages still fit the height
+            int fitWidth = static_cast<int>((area.height() - spacing - count * (textHeight + spacing))
+                                            / (count * 1.41));
+            w = qMax(narrowWidth, fitWidth);
+        } else {
+            w = narrowWidth;
+        }
+    }
+    if (w < 40) return; // List too narrow
     int h = static_cast<int>(w * 1.41); // A4 Verhältnis
 
     QSize newSize(w, h);
-    ui->pagesListWidget->setIconSize(newSize);
+    list->setIconSize(newSize);
 
     // Wir müssen jedes einzelne Item "anstoßen"
-    for (int i = 0; i < ui->pagesListWidget->count(); ++i) {
-        QListWidgetItem *item = ui->pagesListWidget->item(i);
+    for (int i = 0; i < list->count(); ++i) {
+        QListWidgetItem *item = list->item(i);
         // Wir setzen den sizeHint manuell auf die neue Größe + Platz für Text
-        item->setSizeHint(QSize(w - 10, h + 30));
+        item->setSizeHint(QSize(w, h + textHeight));
     }
     ui->pagesListWidget->doItemsLayout(); // Layout-Engine zum Rechnen zwingen
 }
@@ -719,6 +749,7 @@ void MainWin::addPageToList(const QString &filePath) {
     item->setIcon(QIcon(highRes.scaled(1000, 1414, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
 
     ui->pagesListWidget->addItem(item);
+    updateListIconSize(); // New item needs the current size hint
 
     // Sofort in der großen Vorschau anzeigen
     updatePreview(filePath);
