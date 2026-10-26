@@ -19,6 +19,12 @@ SettingsOverlay::SettingsOverlay(QWidget *parent) : QWidget(parent) {
             this, &SettingsOverlay::onResolutionChanged);
     connect(m_colorModeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &SettingsOverlay::onColorModeChanged);
+    connect(m_scanIntentCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &SettingsOverlay::onScanIntentChanged);
+    connect(m_pageOrientationCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &SettingsOverlay::onPageOrientationChanged);
+    connect(m_paperFormatCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &SettingsOverlay::onPageFormatChanged);
 }
 
 void SettingsOverlay::initializeOverlay()
@@ -126,30 +132,31 @@ void SettingsOverlay::onScanningUnitChanged(int index) {
 }
 
 void SettingsOverlay::onScanIntentChanged(int index) {
-    QString scanIntent = m_scanningUnitCombo->itemData(index, Qt::UserRole).toString();
-    SettingsManager::instance().setScanningUnit(scanIntent);
+    QString scanIntent = m_scanIntentCombo->itemData(index, Qt::UserRole).toString();
+    SettingsManager::instance().setScanIntent(scanIntent);
 }
 
 void SettingsOverlay::onPageOrientationChanged(int index) {
-    QString pageOrientation = m_scanningUnitCombo->itemData(index, Qt::UserRole).toString();
-    SettingsManager::instance().setScanningUnit(pageOrientation);
+    QString pageOrientation = m_pageOrientationCombo->itemData(index, Qt::UserRole).toString();
+    SettingsManager::instance().setPageOrientation(pageOrientation);
 }
 
 void SettingsOverlay::onPageFormatChanged(int index) {
-    QString pageFormat = m_scanningUnitCombo->itemData(index, Qt::UserRole).toString();
-    SettingsManager::instance().setScanningUnit(pageFormat);
+    QString pageFormat = m_paperFormatCombo->itemData(index, Qt::UserRole).toString();
+    SettingsManager::instance().setPageFormat(pageFormat);
 }
 
 void SettingsOverlay::fillComboBoxes() {
-    m_scannerCombo->blockSignals(true);
     // Scanners
     if (!m_scannerCombo) {
         qDebug() << "Error: m_scannerCombo is NULL!";
         return;
     }
+    m_scannerCombo->blockSignals(true);
     m_scannerCombo->clear();
     if (SettingsManager::instance().scannerValues.isEmpty()) {
         m_scannerCombo->addItem(tr("NO_SCANNERS_FOUND"));
+        m_scannerCombo->blockSignals(false);
         return;
     }
 
@@ -212,6 +219,7 @@ void SettingsOverlay::fillComboBoxes() {
     m_pageOrientationCombo->blockSignals(false);
 
     // Page Format
+    m_paperFormatCombo->blockSignals(true);
     m_paperFormatCombo->clear();
     m_paperFormatCombo->addItem(tr("STANDARD"), "Standard");
     m_paperFormatCombo->addItem("A4", "A4");
@@ -220,6 +228,7 @@ void SettingsOverlay::fillComboBoxes() {
     m_paperFormatCombo->addItem("Letter", "Letter");
     m_paperFormatCombo->addItem("Legal", "Legal");
     setComboBoxValue(m_paperFormatCombo, QVariant::fromValue(SettingsManager::instance().pageFormat()));
+    m_paperFormatCombo->blockSignals(false);
 
     // OCR Languages
     m_ocrLanguageCombo->clear();

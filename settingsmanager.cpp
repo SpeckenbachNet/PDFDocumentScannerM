@@ -29,6 +29,18 @@ void SettingsManager::resetToDefaults() {
     scanningUnitDefault = "";
 }
 
+void SettingsManager::clearCapabilities() {
+    // Remove the options of the previously used scanner
+    resolutionValues.clear();
+    resolutionDefault = "";
+    colorModeValues.clear();
+    colorModeDefault = "";
+    intentValues.clear();
+    intentDefault = "";
+    scanningUnitValues.clear();
+    scanningUnitDefault = "";
+}
+
 bool SettingsManager::isLandscape() {
     if(m_pageOrientation == "Portrait") return false;
     else return true;
@@ -83,7 +95,7 @@ void SettingsManager::setPageFormat(QString pageFormat) {
 }
 
 void SettingsManager::setScanIntent(QString scanIntent) {
-    m_pageFormat = scanIntent;
+    m_scanIntent = scanIntent;
     m_settings->setValue("Scanner/ScanIntent", scanIntent);
     m_settings->sync();
 }
@@ -100,7 +112,7 @@ void SettingsManager::dump() const {
     dbg << "Format:       " << m_pageFormat << "\n";
     dbg << "Color Mode:   " << m_colorMode << "\n";
     dbg << "Scan Unit:    " << m_scanningUnit << "\n";
-    dbg << "Scan-Intent:  " << m_intentDocument << "\n";
+    dbg << "Scan-Intent:  " << m_scanIntent << "\n";
 
     dbg << "Lists:\n";
     dbg << "  Resolutions: " << resolutionValues.join(", ") << " [" << resolutionDefault << "]" << "\n";

@@ -5,6 +5,42 @@
 #include <QDir>
 #include <QThread>
 
+namespace {
+
+// Backends name their feeders differently ("ADF", "ADF Front", "ADF Duplex",
+// "Automatic Document Feeder", ...)
+bool isAdfSource(const QString &source) {
+    return source.contains("ADF", Qt::CaseInsensitive)
+        || source.contains("Feeder", Qt::CaseInsensitive)
+        || source.contains("Duplex", Qt::CaseInsensitive);
+}
+
+// Many backends report a range (e.g. "50..1200 (in steps of 1)") instead of a list.
+// In that case offer the common resolutions that lie within the range.
+QStringList expandResolutionValues(const QStringList &values, const QString &defaultValue) {
+    if (values.size() != 1) return values;
+
+    static const QRegularExpression rangeRegex("^(\\d+)\\.\\.(\\d+)");
+    QRegularExpressionMatch match = rangeRegex.match(values.first());
+    if (!match.hasMatch()) return values;
+
+    const int minRes = match.captured(1).toInt();
+    const int maxRes = match.captured(2).toInt();
+    QList<int> resolutions;
+    for (int res : {75, 100, 150, 200, 300, 400, 600, 1200, 2400, 4800}) {
+        if (res >= minRes && res <= maxRes) resolutions.append(res);
+    }
+    const int defaultRes = defaultValue.toInt();
+    if (defaultRes > 0 && !resolutions.contains(defaultRes)) resolutions.append(defaultRes);
+    std::sort(resolutions.begin(), resolutions.end());
+
+    QStringList result;
+    for (int res : std::as_const(resolutions)) result.append(QString::number(res));
+    return result;
+}
+
+}
+
 MainWin::MainWin(QWidget *parent)
     : QMainWindow(parent),
     ui(new Ui::MainWin)
@@ -208,12 +244,20 @@ void MainWin::searchForScanners() {
     m_statusOverlay->showMessage(tr("SEARCH_SCANNERS..."));
 
     QProcess *process = new QProcess(this);
-    process->start("scanimage", QStringList() << "-L");
+
+    // scanimage not installed / not executable: finished() is never emitted in this case
+    connect(process, &QProcess::errorOccurred, this, [this, process](QProcess::ProcessError error) {
+        if (error != QProcess::FailedToStart) return;
+        m_statusOverlay->showMessage(tr("EROOR_STARTING_SEARCH."), true, 3000);
+        m_refreshBtn->setEnabled(true);
+        process->deleteLater();
+    });
 
     connect(process, &QProcess::finished, this, [this, process]() {
         // A) Wurde der Prozess überhaupt korrekt beendet?
         if (process->exitStatus() != QProcess::NormalExit) {
             m_statusOverlay->showMessage(tr("EROOR_STARTING_SEARCH."), true, 3000);
+            m_refreshBtn->setEnabled(true);
             process->deleteLater();
             return;
         }
@@ -223,6 +267,7 @@ void MainWin::searchForScanners() {
         // B) Ist der Output technisch leer?
         if (output.trimmed().isEmpty()) {
             m_statusOverlay->showMessage(tr("NO_SCANNER_HARDWARE_FOUND."), true, 3000);
+            m_refreshBtn->setEnabled(true);
             process->deleteLater();
             return;
         }
@@ -242,10 +287,11 @@ void MainWin::searchForScanners() {
 
         if (!echterScannerGefunden) {
             m_statusOverlay->showMessage(tr("NO_SCANNERS_DETECTED."), true, 3000);
+            m_refreshBtn->setEnabled(true);
             process->deleteLater();
             return;
         }
-        m_statusOverlay->hide();
+        m_statusOverlay->hideOverlay();
         // Only when you have passed all the tests can you start parsing...
         this->saveScanners(output);
         process->deleteLater();
@@ -256,9 +302,13 @@ void MainWin::searchForScanners() {
             this->getScannerCapabilities(SettingsManager::instance().deviceId());
         });
     });
+
+    process->start("scanimage", QStringList() << "-L");
 }
 
 void MainWin::saveScanners(const QString &saneOutput) {
+    // Forget scanners from a previous search
+    SettingsManager::instance().scannerValues.clear();
 
     QStringList lines = saneOutput.split('\n', Qt::SkipEmptyParts);
     for (const QString &line : std::as_const(lines)) {
@@ -298,8 +348,8 @@ void MainWin::saveScanners(const QString &saneOutput) {
 
         SettingsManager::instance().scannerValues.insert(deviceId, displayName);
     }
-    // Get first entry if no deviceID is avaiable
-    if(SettingsManager::instance().deviceId().isEmpty()) {
+    // Get first entry if no deviceID is avaiable or the saved scanner is no longer present
+    if(!SettingsManager::instance().scannerValues.contains(SettingsManager::instance().deviceId())) {
         if (!SettingsManager::instance().scannerValues.isEmpty()) {
             SettingsManager::instance().setDeviceId(SettingsManager::instance().scannerValues.firstKey());
         } else {
@@ -323,13 +373,22 @@ if(deviceID.isEmpty()) return;
     QProcess *process = new QProcess(this);
 
     // Wir verbinden das finished-Signal DES NEUEN Prozesses
-    connect(process, &QProcess::finished, this, [this, process]() {
+    connect(process, &QProcess::finished, this, [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
+        process->deleteLater();
+        // Allow refresh and choosing another scanner even if loading fails
+        m_settingsBtn->setEnabled(true);
+        m_refreshBtn->setEnabled(true);
+
+        if (exitStatus != QProcess::NormalExit || exitCode != 0) {
+            m_statusOverlay->showMessage(tr("Scanner capabilities could not be loaded"), true, 3000);
+            return;
+        }
+
         QString output = QString::fromLocal8Bit(process->readAllStandardOutput());
         QStringList lines = output.split('\n');
 
-        // Variablen für die Ergebnisse
-        QStringList resValues, modeValues, intentValues, sourceValues;
-        QString resDefault, modeDefault, intentDefault, sourceDefault;
+        // Options of the previous scanner are not valid for this one
+        SettingsManager::instance().clearCapabilities();
 
         // Regex: Gruppe 1 = Name, Gruppe 2 = Optionen-Liste, Gruppe 3 = Default in []
         QRegularExpression optRegex("--([a-zA-Z0-9-]+)\\s+(.*?)\\s*\\[(.*?)\\]");
@@ -350,43 +409,53 @@ if(deviceID.isEmpty()) return;
 
                 values.removeAll("*unset*");
 
+                // Option exists but cannot be used in the current device state
+                if (defaultValue == "inactive") continue;
+
                 // Zuordnung zu deinen Variablen
+                // Saved values that the (new) scanner does not support are replaced by its default
                 if (optName == "resolution") {
+                    values = expandResolutionValues(values, defaultValue);
                     SettingsManager::instance().resolutionValues = values;
                     SettingsManager::instance().resolutionDefault = defaultValue;
-                    if (!SettingsManager::instance().resolution()) {
+                    if (!values.contains(QString::number(SettingsManager::instance().resolution()))) {
                         SettingsManager::instance().setResolution(defaultValue.toInt());
                     }
                 }
                 else if (optName == "mode") {
                     SettingsManager::instance().colorModeValues = values;
                     SettingsManager::instance().colorModeDefault = defaultValue;
-                    if (SettingsManager::instance().colorMode() == "") {
+                    if (!values.contains(SettingsManager::instance().colorMode())) {
                         SettingsManager::instance().setColorMode(defaultValue);
                     }
                 }
                 else if (optName == "scan-intent") {
                     SettingsManager::instance().intentValues = values;
                     SettingsManager::instance().intentDefault = defaultValue;
+                    if (!values.contains(SettingsManager::instance().scanIntent())) {
+                        SettingsManager::instance().setScanIntent(defaultValue);
+                    }
                 }
                 else if (optName == "source") {
                     SettingsManager::instance().scanningUnitValues = values;
                     SettingsManager::instance().scanningUnitDefault = defaultValue;
-                    if (SettingsManager::instance().scanningUnit() == "") {
+                    QString scanningUnit = SettingsManager::instance().scanningUnit();
+                    if (scanningUnit != "Automatic" && !values.contains(scanningUnit)) {
                         SettingsManager::instance().setScanningUnit(defaultValue);
                     }
                 }
             }
         }
-        m_statusOverlay->hide();
+        m_statusOverlay->hideOverlay();
         m_scanBtn->setEnabled(true);
-        m_settingsBtn->setEnabled(true);
-        m_refreshBtn->setEnabled(true);
         SettingsManager::instance().dump();
     });
 
-    connect(process, &QProcess::errorOccurred, this, [this, process]() {
+    // scanimage not installed / not executable: finished() is never emitted in this case
+    connect(process, &QProcess::errorOccurred, this, [this, process](QProcess::ProcessError error) {
+        if (error != QProcess::FailedToStart) return;
         m_statusOverlay->showMessage(tr("Scanner capabilities could not be loaded"), true, 3000);
+        m_refreshBtn->setEnabled(true);
         process->deleteLater();
     });
 
@@ -405,12 +474,18 @@ void MainWin::startScan() {
 
     // -- Preparing the list and paths
     m_processedFiles.clear(); // Reset list for this scan run
+    m_scanErrorOutput.clear();
 
     QString mode = SettingsManager::instance().colorMode();
     QString realMode = (mode == "Lineart") ? "Gray" : mode;
     QString resolution = QString::number(SettingsManager::instance().resolution());
     QString scanDevice = SettingsManager::instance().deviceId();
     QString source = SettingsManager::instance().scanningUnit();
+    QString scanIntent = SettingsManager::instance().scanIntent();
+
+    // "Automatic" (or nothing) means: let the scanner use its default source
+    bool setSource = SettingsManager::instance().scanningUnitValues.contains(source);
+    QString effectiveSource = setSource ? source : SettingsManager::instance().scanningUnitDefault;
 
     QString width = "210";
     QString height = "297";
@@ -442,6 +517,10 @@ void MainWin::startScan() {
     QDir tempDir(QDir::tempPath());
     if (!tempDir.mkpath(batchDirName)) {
         qDebug() << "Fehler: Konnte Verzeichnis nicht erstellen";
+        m_statusOverlay->showMessage(tr("ERROR_CREATING_TEMP_DIR."), true, 3000);
+        m_scanBtn->setEnabled(true);
+        m_settingsBtn->setEnabled(true);
+        m_refreshBtn->setEnabled(true);
         return;
     }
     QString batchPath = tempDir.absoluteFilePath(batchDirName);
@@ -453,13 +532,23 @@ void MainWin::startScan() {
     QString program = "scanimage";
     QStringList arguments;
     arguments << "--device-name" << scanDevice;
-    arguments << "--mode" << realMode;
-    arguments << "--resolution" << resolution;
-    arguments << "--source" << source;
+    // Only pass options the scanner reported, otherwise scanimage aborts
+    if (!SettingsManager::instance().colorModeValues.isEmpty()) {
+        arguments << "--mode" << realMode;
+    }
+    if (!SettingsManager::instance().resolutionValues.isEmpty()) {
+        arguments << "--resolution" << resolution;
+    }
+    if (setSource) {
+        arguments << "--source" << source;
+    }
+    if (SettingsManager::instance().intentValues.contains(scanIntent)) {
+        arguments << "--scan-intent" << scanIntent;
+    }
     arguments << "-x" << width;
     arguments << "-y" << height;
     //  When ADF is selected bach mode with more than one page
-    if (source == "ADF") {
+    if (isAdfSource(effectiveSource)) {
         arguments << "--batch=page_%03d.png";
     } else {
         // Only one page for flatbed
@@ -496,20 +585,33 @@ void MainWin::startScan() {
     });
 
     // 5. Fehler-Logging für den Prozess
-    connect(scanProcess, &QProcess::errorOccurred, this, [this, scanProcess](QProcess::ProcessError error) {
+    connect(scanProcess, &QProcess::errorOccurred, this, [this, scanProcess, progressTimer](QProcess::ProcessError error) {
         QMetaEnum metaEnum = QMetaEnum::fromType<QProcess::ProcessError>();
         QString errorName = metaEnum.valueToKey(error);
         qDebug() << "PROCESS ERROR:" << errorName << scanProcess->errorString();
         m_statusOverlay->showMessage(tr("ERROR:") + "<br>" + errorName, true, 6000);
+
+        // finished() is not emitted if the process could not be started, so clean up here
+        if (error == QProcess::FailedToStart) {
+            progressTimer->stop();
+            progressTimer->deleteLater();
+            m_scanBtn->setEnabled(true);
+            m_settingsBtn->setEnabled(true);
+            m_refreshBtn->setEnabled(true);
+            scanProcess->deleteLater();
+        }
     });
 
     // Read messages from scanner
-    connect(scanProcess, &QProcess::readyReadStandardError, this, [scanProcess]() {
-        qDebug() << "SCANNER STATUS:" << scanProcess->readAllStandardError();
+    connect(scanProcess, &QProcess::readyReadStandardError, this, [this, scanProcess]() {
+        QString message = QString::fromLocal8Bit(scanProcess->readAllStandardError()).trimmed();
+        qDebug() << "SCANNER STATUS:" << message;
+        // Keep the last message to show it if the scan fails
+        if (!message.isEmpty()) m_scanErrorOutput = message.section('\n', -1);
     });
 
     // 6. Abschluss-Logik
-    connect(scanProcess, &QProcess::finished, this, [this, batchPath, scanProcess, progressTimer](int exitCode) {
+    connect(scanProcess, &QProcess::finished, this, [this, batchPath, scanProcess, progressTimer](int exitCode, QProcess::ExitStatus exitStatus) {
         progressTimer->stop();
         progressTimer->deleteLater();
 
@@ -523,16 +625,18 @@ void MainWin::startScan() {
             }
         }
 
-        // Falls es ein echter Fehler war (nicht ADF leer = 5)
-        if (exitCode != 0 && exitCode != 5) {
-            qDebug() << "Scan abgebrochen mit Code:" << exitCode;
-        }
-
         // UI aufräumen
         m_scanBtn->setEnabled(true);
         m_settingsBtn->setEnabled(true);
         m_refreshBtn->setEnabled(true);
-        m_statusOverlay->hide();
+        m_statusOverlay->hideOverlay();
+
+        // Falls es ein echter Fehler war (nicht EOF = 5 / ADF leer = 7 nach gescannten Seiten)
+        bool feederEmpty = (exitCode == 5 || exitCode == 7) && !m_processedFiles.isEmpty();
+        if (exitStatus != QProcess::NormalExit || (exitCode != 0 && !feederEmpty)) {
+            qDebug() << "Scan abgebrochen mit Code:" << exitCode;
+            m_statusOverlay->showMessage(tr("SCAN_FAILED.") + "<br>" + m_scanErrorOutput.toHtmlEscaped(), true, 6000);
+        }
 
         scanProcess->deleteLater();
         qDebug() << "Scan-Vorgang beendet. Verzeichnis:" << batchPath;

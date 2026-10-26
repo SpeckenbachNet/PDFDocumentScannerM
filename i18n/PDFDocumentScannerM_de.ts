@@ -74,7 +74,15 @@
     <message>
         <location filename="../mainwin.cpp" line="393"/>
         <source>Scanner capabilities could not be loaded</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Scanner-Eigenschaften konnten nicht geladen werden.</translation>
+    </message>
+    <message>
+        <source>ERROR_CREATING_TEMP_DIR.</source>
+        <translation type="unfinished">Temporäres Verzeichnis konnte nicht erstellt werden.</translation>
+    </message>
+    <message>
+        <source>SCAN_FAILED.</source>
+        <translation type="unfinished">Scan fehlgeschlagen.</translation>
     </message>
     <message>
         <location filename="../mainwin.cpp" line="538"/>

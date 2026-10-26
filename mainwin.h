@@ -62,7 +62,7 @@ private:
     QStringList m_processedFiles;
     SettingsOverlay *m_settingsOverlay = nullptr;
     StatusOverlay *m_statusOverlay = nullptr;
-    QLabel *m_loadingLabel;
+    QLabel *m_loadingLabel = nullptr;
     QToolButton *m_scanBtn = nullptr;
     QToolButton *m_settingsBtn = nullptr;
     QToolButton *m_refreshBtn = nullptr;
@@ -73,9 +73,10 @@ private:
     QToolButton *m_saveAllBtn = nullptr;
 
     QString m_cachedScannerOutput;
+    QString m_scanErrorOutput;           // Last stderr message of scanimage
 
-    QGraphicsScene* m_previewScene;      // Die "Leinwand"
-    QGraphicsPixmapItem* m_previewItem;  // Das eigentliche Bild-Objekt auf der Leinwand
+    QGraphicsScene* m_previewScene = nullptr;      // Die "Leinwand"
+    QGraphicsPixmapItem* m_previewItem = nullptr;  // Das eigentliche Bild-Objekt auf der Leinwand
 
 private slots:
     void showSettingsOverlay();

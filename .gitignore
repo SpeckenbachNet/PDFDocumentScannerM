@@ -57,6 +57,7 @@ compile_commands.json
 
 # Claude
 .claude/
+CLAUDE.md
 
 *_qmlcache.qrc
 

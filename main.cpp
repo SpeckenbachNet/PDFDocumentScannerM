@@ -16,33 +16,27 @@ int main(int argc, char *argv[])
     const QStringList uiLanguages = QLocale::system().uiLanguages();
     bool loaded = false;
 
-
-    if (!translator.load(":/i18n/PDFDocumentScannerM_de.qm")) {
-        qDebug() << "Übersetzung konnte nicht geladen werden!";
-    } else {
-        qDebug() << "Übersetzung geladen.";
-    }
-
-    qApp->installTranslator(&translator);
-
-
-
+    // Use the first system language we have a translation for
     for (const QString &locale : uiLanguages) {
         QString langCode = QLocale(locale).name().left(2);
         const QString baseName = "PDFDocumentScannerM_" + langCode;
-        //qDebug() << baseName;
         if (translator.load(":/i18n/" + baseName)) {
-            a.installTranslator(&translator);
             loaded = true;
             break;
         }
-
-        if (!loaded) {
-            if (translator.load(":/i18n/PDFDocumentScannerM_en")) {
-                a.installTranslator(&translator);
-            }
-        }
     }
+
+    // Fallback: English
+    if (!loaded) {
+        loaded = translator.load(":/i18n/PDFDocumentScannerM_en");
+    }
+
+    if (loaded) {
+        a.installTranslator(&translator);
+    } else {
+        qDebug() << "Übersetzung konnte nicht geladen werden!";
+    }
+
     MainWin w;
     w.setWindowTitle(
         QStringLiteral(PROJECT_NAME) +

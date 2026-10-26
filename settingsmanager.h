@@ -43,6 +43,7 @@ public:
     QString scanningUnitDefault;
     // QStringList scanIntentValues;
     // QString scanIntentDefault;
+    void clearCapabilities();
     bool isLandscape();
     void dump() const;
 
