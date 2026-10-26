@@ -14,6 +14,7 @@ public:
     explicit PreviewView(QWidget *parent = nullptr);
 
     bool setImage(const QString &imagePath);
+    void clearImage();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

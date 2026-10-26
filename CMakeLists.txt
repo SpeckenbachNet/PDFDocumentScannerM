@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(PROJECT_VERSION "0.3.0")
+set(PROJECT_VERSION "0.3.1")
 
 project(
     PDFDocumentScannerM
@@ -48,6 +48,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         uicolors.h
         initialize.cpp
         pagelistwidget.h pagelistwidget.cpp
+        pagedelegate.h pagedelegate.cpp
         previewview.h previewview.cpp
         helppage.h helppage.cpp
         twolinedelegate.h twolinedelegate.cpp

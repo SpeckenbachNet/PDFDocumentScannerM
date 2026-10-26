@@ -57,6 +57,9 @@ private:
     void startScan();
     void getScannerCapabilities(const QString &deviceID);
     void saveScanners(const QString &saneOutput);
+    void saveAirscanScanners(const QString &output);
+    bool chooseScanner();
+    bool useStandInScanner();
     void addPageToList(const QString &filePath);
     void showPage(QWidget *page);
     void setBusy(bool busy);
@@ -82,9 +85,10 @@ private:
     QString m_scanErrorOutput;           // Last stderr message of scanimage
     bool m_busy = false;                 // search, loading the options or scan running
     bool m_scannerReady = false;         // options of the chosen scanner are loaded
+    bool m_probingSavedScanner = false;  // the search missed the saved scanner, it is tried directly
 
 private slots:
     void showSettingsOverlay();
-    void onFilelistTableViewClicked(const QModelIndex &index);
+    void showCurrentPage();
 };
 #endif // MAINWIN_H

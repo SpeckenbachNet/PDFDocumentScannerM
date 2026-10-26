@@ -12,7 +12,9 @@ public:
     }
 
     // Getter
-    QString deviceId() const { return m_deviceId; }
+    QString deviceId() const { return m_deviceId; }             // scanner used in this session
+    QString savedDeviceId() const { return m_savedDeviceId; }   // scanner chosen by the user
+    QString savedDeviceName() const { return m_savedDeviceName; }
     QString scanningUnit() const { return m_scanningUnit; }
     QString colorMode() const { return m_colorMode; }
     QString scanIntent() const { return m_scanIntent; }
@@ -24,7 +26,8 @@ public:
     bool intentDocument() const { return m_intentDocument; }
 
     // Setter
-    void setDeviceId(QString deviceId);
+    void setDeviceId(QString deviceId);   // this session only, e.g. a stand-in for a missing scanner
+    void chooseDevice(QString deviceId, QString displayName);   // the user's choice, stored in the INI
     void setScanningUnit(QString scaningUnit);
     void setColorMode(QString colorMode);
     void setResolution(int resolution);
@@ -56,6 +59,8 @@ private:
     void readSettingsFromIni();
 
     QString m_deviceId;
+    QString m_savedDeviceId;
+    QString m_savedDeviceName;
     QString m_scanningUnit;
     QString m_colorMode;
     QString m_scanIntent;

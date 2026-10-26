@@ -21,6 +21,11 @@ bool PreviewView::setImage(const QString &imagePath) {
     return true;
 }
 
+void PreviewView::clearImage() {
+    m_scene->clear();
+    m_item = nullptr;
+}
+
 void PreviewView::resizeEvent(QResizeEvent *event) {
     QGraphicsView::resizeEvent(event);
     fitImage();

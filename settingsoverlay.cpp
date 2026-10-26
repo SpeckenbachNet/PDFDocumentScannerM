@@ -114,7 +114,7 @@ void SettingsOverlay::initializeOverlay()
 
 void SettingsOverlay::onDeviceIdChanged(int index) {
     QString devId = m_scannerCombo->itemData(index, Qt::UserRole).toString();
-    SettingsManager::instance().setDeviceId(devId);
+    SettingsManager::instance().chooseDevice(devId, m_scannerCombo->itemText(index));
     emit scannerChanged(devId);
     this->hide();
 }

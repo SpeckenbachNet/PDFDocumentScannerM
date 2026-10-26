@@ -2,6 +2,7 @@
 #include "./ui_mainwin.h"
 #include "settingsmanager.h"
 #include <QDir>
+#include <QStandardPaths>
 #include <QThread>
 #include <QUrl>
 
@@ -97,11 +98,14 @@ void MainWin::showPage(QWidget *page) {
     ui->stackedWidget->setCurrentWidget(page);
 }
 
-void MainWin::onFilelistTableViewClicked(const QModelIndex &index) {
-    // Show the clicked page in the large preview
-    QString filePath = index.data(Qt::UserRole).toString();
-    if (!filePath.isEmpty())
-        ui->previewGraphicsView->setImage(filePath);
+// The large preview shows the current page (click, arrow keys, new page); none left: empty
+void MainWin::showCurrentPage() {
+    QListWidgetItem *page = ui->pagesListWidget->currentItem();
+    if (page) {
+        ui->previewGraphicsView->setImage(page->data(Qt::UserRole).toString());
+    } else {
+        ui->previewGraphicsView->clearImage();
+    }
 }
 
 // ====== Scanner functions ======
@@ -110,6 +114,10 @@ void MainWin::searchForScanners() {
     m_scannerReady = false;   // the scanner may be gone after the search
     setBusy(true);
     m_statusOverlay->showMessage(tr("SEARCH_SCANNERS..."));
+
+    // airscan-discover (sane-airscan) finds the network scanners in 1-3 s and reliably;
+    // scanimage -L takes ~10 s and its mDNS search often misses a device
+    const bool useAirscan = !QStandardPaths::findExecutable("airscan-discover").isEmpty();
 
     QProcess *process = new QProcess(this);
 
@@ -121,62 +129,100 @@ void MainWin::searchForScanners() {
         process->deleteLater();
     });
 
-    connect(process, &QProcess::finished, this, [this, process]() {
-        // A) Wurde der Prozess überhaupt korrekt beendet?
+    connect(process, &QProcess::finished, this, [this, process, useAirscan]() {
+        process->deleteLater();
         if (process->exitStatus() != QProcess::NormalExit) {
             m_statusOverlay->showMessage(tr("EROOR_STARTING_SEARCH."), true, 3000);
             setBusy(false);
-            process->deleteLater();
             return;
         }
 
-        QString output = QString::fromLocal8Bit(process->readAllStandardOutput());
+        const QString output = QString::fromLocal8Bit(process->readAllStandardOutput());
+        SettingsManager::instance().scannerValues.clear();   // forget scanners of a previous search
+        if (useAirscan) {
+            saveAirscanScanners(output);
+        } else {
+            saveScanners(output);
+        }
 
-        // B) Ist der Output technisch leer?
-        if (output.trimmed().isEmpty()) {
-            m_statusOverlay->showMessage(tr("NO_SCANNER_HARDWARE_FOUND."), true, 3000);
+        if (!chooseScanner()) {
+            m_statusOverlay->showMessage(output.trimmed().isEmpty() ? tr("NO_SCANNER_HARDWARE_FOUND.")
+                                                                    : tr("NO_SCANNERS_DETECTED."),
+                                         true, 3000);
             setBusy(false);
-            process->deleteLater();
             return;
         }
-
-        // --- VERBESSERTE PRÜFUNG C ---
-        // Wir filtern den Output gedanklich vor:
-        QStringList lines = output.split('\n');
-        bool echterScannerGefunden = false;
-
-        for (const QString &line : std::as_const(lines)) {
-            // Enthält die Zeile ein Device UND ist es keine Webcam (v4l)?
-            if (line.contains("device") && !line.contains("v4l")) {
-                echterScannerGefunden = true;
-                break;
-            }
-        }
-
-        if (!echterScannerGefunden) {
-            m_statusOverlay->showMessage(tr("NO_SCANNERS_DETECTED."), true, 3000);
-            setBusy(false);
-            process->deleteLater();
-            return;
-        }
-        m_statusOverlay->hideOverlay();
-        // Only when you have passed all the tests can you start parsing...
-        this->saveScanners(output);
-        process->deleteLater();
         m_statusOverlay->showMessage(tr("LOAD_SCANNER_CAPABILITIES..."));
-
         QTimer::singleShot(10, this, [this]() {
             this->getScannerCapabilities(SettingsManager::instance().deviceId());
         });
     });
 
-    process->start("scanimage", QStringList() << "-L");
+    if (useAirscan) {
+        process->start("airscan-discover", QStringList());
+    } else {
+        process->start("scanimage", QStringList() << "-L");
+    }
 }
 
-void MainWin::saveScanners(const QString &saneOutput) {
-    // Forget scanners from a previous search
-    SettingsManager::instance().scannerValues.clear();
+// airscan-discover lines: "  Brother MFC-L2710DW series = http://192.168.178.23:80/eSCL/, eSCL".
+// Only eSCL entries with an IPv4 address are used, as escl device (escl:http://192.168.178.23:80):
+// its ID is the URL and stays the same, the airscan IDs (airscan:e0:...) change with every search.
+// escl (SANE 1.4) cannot open IPv6 URLs and does not speak WSD.
+void MainWin::saveAirscanScanners(const QString &output) {
+    static const QRegularExpression lineRegex(
+        "^\\s*(.+?)\\s*=\\s*(https?://(\\d+\\.\\d+\\.\\d+\\.\\d+)(?::\\d+)?)/\\S*,\\s*eSCL\\s*$");
 
+    const QStringList lines = output.split('\n', Qt::SkipEmptyParts);
+    for (const QString &line : lines) {
+        const QRegularExpressionMatch match = lineRegex.match(line);
+        if (!match.hasMatch()) continue;
+        const QString deviceId = "escl:" + match.captured(2);
+        const QString displayName = QString("escl: %1 (%2)").arg(match.captured(1), match.captured(3));
+        SettingsManager::instance().scannerValues.insert(deviceId, displayName);
+    }
+}
+
+// The user's scanner if it was found. If the search missed it, it is tried directly (escl opens
+// its URL without a search); loading its options decides whether it is there
+// (getScannerCapabilities). Without a saved scanner: the first one, for this session only.
+// false: no scanner at all.
+bool MainWin::chooseScanner() {
+    SettingsManager &settings = SettingsManager::instance();
+    const QString saved = settings.savedDeviceId();
+    m_probingSavedScanner = false;
+
+    if (!saved.isEmpty()) {
+        if (!settings.scannerValues.contains(saved)) {
+            const QString name = settings.savedDeviceName();
+            settings.scannerValues.insert(saved, name.isEmpty() ? saved : name);
+            m_probingSavedScanner = true;
+        }
+        settings.setDeviceId(saved);
+        return true;
+    }
+    if (settings.scannerValues.isEmpty()) return false;
+    settings.setDeviceId(settings.scannerValues.firstKey());
+    return true;
+}
+
+// The saved scanner was not found and does not answer either: the first found one stands in
+// (not stored, the next search tries the saved one again)
+bool MainWin::useStandInScanner() {
+    SettingsManager &settings = SettingsManager::instance();
+    m_probingSavedScanner = false;
+    settings.scannerValues.remove(settings.savedDeviceId());
+    if (settings.scannerValues.isEmpty()) {
+        settings.setDeviceId(QString());
+        return false;
+    }
+    settings.setDeviceId(settings.scannerValues.firstKey());
+    getScannerCapabilities(settings.deviceId());
+    return true;
+}
+
+// scanimage -L lines (used when airscan-discover is not installed)
+void MainWin::saveScanners(const QString &saneOutput) {
     QStringList lines = saneOutput.split('\n', Qt::SkipEmptyParts);
     for (const QString &line : std::as_const(lines)) {
 
@@ -224,16 +270,6 @@ void MainWin::saveScanners(const QString &saneOutput) {
 
         SettingsManager::instance().scannerValues.insert(deviceId, displayName);
     }
-    // Get first entry if no deviceID is avaiable or the saved scanner is no longer present
-    if(!SettingsManager::instance().scannerValues.contains(SettingsManager::instance().deviceId())) {
-        if (!SettingsManager::instance().scannerValues.isEmpty()) {
-            SettingsManager::instance().setDeviceId(SettingsManager::instance().scannerValues.firstKey());
-        } else {
-            // Fallback, falls die Map leer ist
-            // firstScannerKey = "Kein Scanner gefunden";
-            qDebug() << "Warnung: scanners list is empty!";
-        }
-    }
 }
 
 void MainWin::getScannerCapabilities(const QString &deviceID) {
@@ -257,6 +293,13 @@ void MainWin::getScannerCapabilities(const QString &deviceID) {
         process->deleteLater();
 
         if (exitStatus != QProcess::NormalExit || exitCode != 0) {
+            // The saved scanner was tried without being found: it is really not there
+            if (m_probingSavedScanner) {
+                if (useStandInScanner()) return;
+                m_statusOverlay->showMessage(tr("NO_SCANNERS_DETECTED."), true, 3000);
+                setBusy(false);
+                return;
+            }
             m_statusOverlay->showMessage(tr("Scanner capabilities could not be loaded"), true, 3000);
             setBusy(false);   // refresh and choosing another scanner stay possible
             return;
@@ -325,6 +368,7 @@ void MainWin::getScannerCapabilities(const QString &deviceID) {
             }
         }
         m_statusOverlay->hideOverlay();
+        m_probingSavedScanner = false;   // the saved scanner answered: it stays in the list
         m_scannerReady = true;
         setBusy(false);
 #ifdef QT_DEBUG
@@ -521,9 +565,8 @@ void MainWin::startScan() {
 }
 
 void MainWin::addPageToList(const QString &filePath) {
-    if (!ui->pagesListWidget->addPage(filePath)) return;
-    // Show the new page in the large preview right away
-    ui->previewGraphicsView->setImage(filePath);
+    // The new page becomes the current one, the preview shows it (showCurrentPage)
+    ui->pagesListWidget->addPage(filePath);
 }
 
 void MainWin::refreshScanners() {

@@ -188,6 +188,14 @@
         <source>PAGE %1</source>
         <translation type="unfinished">Seite %1</translation>
     </message>
+    <message numerus="yes">
+        <location filename="../pagelistwidget.cpp" line="197"/>
+        <source>REMOVE_PAGES %n</source>
+        <translation type="unfinished">
+            <numerusform>Seite entfernen</numerusform>
+            <numerusform>%n Seiten entfernen</numerusform>
+        </translation>
+    </message>
 </context>
 <context>
     <name>SettingsOverlay</name>

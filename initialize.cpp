@@ -142,7 +142,7 @@ void MainWin::initializeConnects() {
     connect(m_scanBtn, &QToolButton::clicked, this, &MainWin::startScan);
     connect(m_settingsBtn, &QToolButton::clicked, this, &MainWin::showSettingsOverlay);
     connect(m_refreshBtn, &QToolButton::clicked, this, &MainWin::refreshScanners);
-    connect(ui->pagesListWidget, &QListView::clicked, this, &::MainWin::onFilelistTableViewClicked);
+    connect(ui->pagesListWidget, &QListWidget::currentItemChanged, this, &MainWin::showCurrentPage);
     connect(m_settingsOverlay, &SettingsOverlay::scannerChanged,
             this, &MainWin::getScannerCapabilities);
     connect(m_coffeeBtn, &QToolButton::clicked, this, [] {

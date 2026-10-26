@@ -47,7 +47,9 @@ bool SettingsManager::isLandscape() {
 }
 
 void SettingsManager::readSettingsFromIni() {
-    m_deviceId = m_settings->value("Scanner/DeviceId", m_deviceId).toString();
+    m_savedDeviceId = m_settings->value("Scanner/DeviceId").toString();
+    m_savedDeviceName = m_settings->value("Scanner/DeviceName").toString();
+    m_deviceId = m_savedDeviceId;
     m_scanningUnit = m_settings->value("Scanner/ScanningUnit", m_scanningUnit).toString();
     m_pageOrientation = m_settings->value("Scanner/PageOrientation", m_pageOrientation).toString();
     m_pageFormat = m_settings->value("Scanner/PageFormat", m_pageFormat).toString();
@@ -57,10 +59,17 @@ void SettingsManager::readSettingsFromIni() {
     m_ocrLanguage = m_settings->value("Scanner/OcrLanguage", m_ocrLanguage).toString();
 }
 
+// Not stored: a scanner that is missing at one search stays the user's choice for the next
 void SettingsManager::setDeviceId(QString devId) {
-    if (m_deviceId == devId) return;
     m_deviceId = devId;
+}
+
+void SettingsManager::chooseDevice(QString devId, QString displayName) {
+    m_deviceId = devId;
+    m_savedDeviceId = devId;
+    m_savedDeviceName = displayName;
     m_settings->setValue("Scanner/DeviceId", devId);
+    m_settings->setValue("Scanner/DeviceName", displayName);
     m_settings->sync();
 }
 
