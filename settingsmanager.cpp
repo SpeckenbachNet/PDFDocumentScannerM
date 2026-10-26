@@ -12,11 +12,11 @@ void SettingsManager::resetToDefaults() {
     // Reset strings/stringlists
     m_deviceId = "";
     m_resolution = 0;
-    m_scanningUnit = "Unknown";
+    m_scanningUnit = "";
     m_pageOrientation = "Portrait";
     m_pageFormat = "Standard";
     m_colorMode = "Color";
-    m_scanningUnit = "";
+    m_ocrLanguage = "deu";
     m_intentDocument = false;
 
     resolutionValues = {"75", "100", "200", "300"};
@@ -54,6 +54,7 @@ void SettingsManager::readSettingsFromIni() {
     m_colorMode = m_settings->value("Scanner/ColorMode", m_colorMode).toString();
     m_resolution = m_settings->value("Scanner/Resolution").toInt();
     m_scanIntent = m_settings->value("Scanner/ScanIntent", m_scanIntent).toString();
+    m_ocrLanguage = m_settings->value("Scanner/OcrLanguage", m_ocrLanguage).toString();
 }
 
 void SettingsManager::setDeviceId(QString devId) {
@@ -100,6 +101,13 @@ void SettingsManager::setScanIntent(QString scanIntent) {
     m_settings->sync();
 }
 
+// Tesseract language code, e.g. "deu", "eng"
+void SettingsManager::setOcrLanguage(QString ocrLanguage) {
+    m_ocrLanguage = ocrLanguage;
+    m_settings->setValue("Scanner/OcrLanguage", ocrLanguage);
+    m_settings->sync();
+}
+
 // --- DER DEBUG OUTPUT ---
 void SettingsManager::dump() const {
     QDebug dbg = qDebug().nospace().noquote();
@@ -113,6 +121,7 @@ void SettingsManager::dump() const {
     dbg << "Color Mode:   " << m_colorMode << "\n";
     dbg << "Scan Unit:    " << m_scanningUnit << "\n";
     dbg << "Scan-Intent:  " << m_scanIntent << "\n";
+    dbg << "OCR Language: " << m_ocrLanguage << "\n";
 
     dbg << "Lists:\n";
     dbg << "  Resolutions: " << resolutionValues.join(", ") << " [" << resolutionDefault << "]" << "\n";

@@ -60,6 +60,7 @@ private slots:
     void onScanIntentChanged(int index);
     void onPageOrientationChanged(int index);
     void onPageFormatChanged(int index);
+    void onOcrLanguageChanged(int index);
 
 signals:
     void scannerChanged(const QString &deviceId);

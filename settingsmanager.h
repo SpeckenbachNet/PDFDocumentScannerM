@@ -18,6 +18,7 @@ public:
     QString scanIntent() const { return m_scanIntent; }
     QString pageOrientation() const { return m_pageOrientation; }
     QString pageFormat() const { return m_pageFormat; }
+    QString ocrLanguage() const { return m_ocrLanguage; }
     int resolution() const { return m_resolution; }
     int splitterWidth() const { return m_splitterWidth; }
     bool intentDocument() const { return m_intentDocument; }
@@ -30,6 +31,7 @@ public:
     void setPageOrientation(QString pageOrientation);
     void setPageFormat(QString pageFormat);
     void setScanIntent(QString scanIntent);
+    void setOcrLanguage(QString ocrLanguage);
 
     // Other
     QMap<QString, QString> scannerValues;
@@ -59,7 +61,7 @@ private:
     QString m_scanIntent;
     QString m_pageOrientation;
     QString m_pageFormat;
-    QString m_ocrLanguage = "en";
+    QString m_ocrLanguage = "deu";
 
     bool m_ocr = false;
     bool m_straightenDocument = false;

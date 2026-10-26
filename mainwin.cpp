@@ -353,7 +353,6 @@ void MainWin::searchForScanners() {
         this->saveScanners(output);
         process->deleteLater();
         m_statusOverlay->showMessage(tr("LOAD_SCANNER_CAPABILITIES..."));
-        QCoreApplication::processEvents();
 
         QTimer::singleShot(10, this, [this]() {
             this->getScannerCapabilities(SettingsManager::instance().deviceId());
@@ -505,7 +504,9 @@ if(deviceID.isEmpty()) return;
         }
         m_statusOverlay->hideOverlay();
         m_scanBtn->setEnabled(true);
+#ifdef QT_DEBUG
         SettingsManager::instance().dump();
+#endif
     });
 
     // scanimage not installed / not executable: finished() is never emitted in this case

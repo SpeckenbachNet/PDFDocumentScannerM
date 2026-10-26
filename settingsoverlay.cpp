@@ -26,6 +26,8 @@ SettingsOverlay::SettingsOverlay(QWidget *parent) : QWidget(parent) {
             this, &SettingsOverlay::onPageOrientationChanged);
     connect(m_paperFormatCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &SettingsOverlay::onPageFormatChanged);
+    connect(m_ocrLanguageCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &SettingsOverlay::onOcrLanguageChanged);
 }
 
 void SettingsOverlay::initializeOverlay()
@@ -147,6 +149,11 @@ void SettingsOverlay::onPageFormatChanged(int index) {
     SettingsManager::instance().setPageFormat(pageFormat);
 }
 
+void SettingsOverlay::onOcrLanguageChanged(int index) {
+    QString ocrLanguage = m_ocrLanguageCombo->itemData(index, Qt::UserRole).toString();
+    SettingsManager::instance().setOcrLanguage(ocrLanguage);
+}
+
 void SettingsOverlay::fillComboBoxes() {
     // Scanners
     if (!m_scannerCombo) {
@@ -232,10 +239,13 @@ void SettingsOverlay::fillComboBoxes() {
     setComboBoxValue(m_paperFormatCombo, QVariant::fromValue(SettingsManager::instance().pageFormat()));
     m_paperFormatCombo->blockSignals(false);
 
-    // OCR Languages
+    // OCR Languages (tesseract language codes)
+    m_ocrLanguageCombo->blockSignals(true);
     m_ocrLanguageCombo->clear();
-    m_ocrLanguageCombo->addItem(tr("ENGLISH"), "en");
-    m_ocrLanguageCombo->addItem(tr("GERMAN"), "de");
+    m_ocrLanguageCombo->addItem(tr("ENGLISH"), "eng");
+    m_ocrLanguageCombo->addItem(tr("GERMAN"), "deu");
+    setComboBoxValue(m_ocrLanguageCombo, QVariant::fromValue(SettingsManager::instance().ocrLanguage()));
+    m_ocrLanguageCombo->blockSignals(false);
 }
 
 bool SettingsOverlay::setComboBoxValue(QComboBox* box, const QVariant& value)
@@ -281,6 +291,7 @@ QPixmap SettingsOverlay::getTintedPixmap(const QIcon &icon, const QSize &size, c
 
 void SettingsOverlay::showEvent(QShowEvent *event) {
     fillComboBoxes();
+    QWidget::showEvent(event);
 }
 
 void SettingsOverlay::paintEvent(QPaintEvent *event) {
