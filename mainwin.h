@@ -44,8 +44,9 @@ public:
 private:
     Ui::MainWin *ui;
     void initSettings();
+    void initializeToolBars();
     void initializeForm();
-    void initializeConnections();
+    void initializeConnects();
     void initializeSettings();
     void updateListIconSize();
     void applySurfaceColors();
