@@ -218,6 +218,8 @@ void SettingsOverlay::fillScannerCombos() {
     }
     setComboBoxValue(m_scanIntentCombo, QVariant::fromValue(SettingsManager::instance().scanIntent()));
     m_scanIntentCombo->blockSignals(false);
+    // Not every backend offers --scan-intent (e.g. escl in SANE 1.4)
+    m_scanIntentCombo->setEnabled(m_scanIntentCombo->count() > 0);
 
     // Resolution
     m_resolutionCombo->blockSignals(true);
