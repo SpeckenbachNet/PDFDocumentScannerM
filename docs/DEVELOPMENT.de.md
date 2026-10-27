@@ -19,7 +19,7 @@ Kommandozeilenwerkzeuge `airscan-discover` und `scanimage` auf (`QProcess`).
 |---|---|
 | Scannersuche (`airscan-discover`, Rückfall `scanimage -L`), gespeicherter Scanner wird gemerkt | fertig |
 | Scanner-Optionen (Quelle, Farbmodus, Scan-Zweck, Auflösung) aus `scanimage --help` | fertig |
-| Scannen Flachbett (eine Seite) und Einzug (Stapel), Seiten erscheinen schon während des Scans | fertig |
+| Scannen Flachbett (eine Seite) und Einzug (Stapel), Seiten erscheinen schon während des Scans, abbrechen (Knopf, Esc) | fertig |
 | Seitenliste: auswählen, entfernen (×, Entf, Kontextmenü), per Drag and Drop umsortieren | fertig |
 | Große Vorschau der aktuellen Seite mit Zoom | fertig |
 | Fenstergröße und Splitter werden gemerkt | fertig |
@@ -195,6 +195,13 @@ durch seinen Standard ersetzt – außer dem Farbmodus: Der gehört der App (nä
   während des Scans ab (erst kopieren, damit nie eine halb geschriebene Datei geladen wird).
 - Exit-Codes 5 und 7 nach mindestens einer Seite heißen „Einzug leer“, kein Fehler.
 - Scheitert der Scan, wird die letzte Zeile von stderr angezeigt.
+- **Abbrechen:** Während des Scans heißt der Scan-Knopf „Abbrechen“ (der einzige benutzbare
+  Knopf), Esc macht dasselbe (`cancelScan()`). `QProcess::terminate()` schickt SIGTERM; scanimage
+  antwortet auf das erste mit `sane_cancel` (der Scanner erfährt es, escl löscht den
+  Scan-Auftrag). Läuft es nach 5 s noch: `kill()`. Fertige Seiten bleiben; eine halb
+  geschriebene letzte Seite wird gelöscht (die Abschlussprüfung lädt jede Datei). Die Meldung
+  ist „Scan abgebrochen“, kein Fehler – scanimage endet mit einem Fehlercode. `endScan()` stellt
+  Knopf und Zustände zurück.
 
 ### Farbmodus (`pageprocessing.*`)
 

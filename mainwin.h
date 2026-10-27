@@ -27,6 +27,8 @@ class MainWin;
 }
 QT_END_NAMESPACE
 
+class QProcess;
+
 class MainWin : public QMainWindow
 {
     Q_OBJECT
@@ -57,6 +59,8 @@ private:
     void showStatusLabel(QString overlayText, bool isError = false, int durationMs = 0);
     void closeStatusLabel();
     void startScan();
+    void cancelScan();
+    void endScan();
     void getScannerCapabilities(const QString &deviceID);
     void saveScanners(const QString &saneOutput);
     void saveAirscanScanners(const QString &output);
@@ -91,6 +95,8 @@ private:
     bool m_busy = false;                 // search, loading the options or scan running
     bool m_scannerReady = false;         // options of the chosen scanner are loaded
     bool m_probingSavedScanner = false;  // the search missed the saved scanner, it is tried directly
+    QProcess *m_scanProcess = nullptr;   // running scan, nullptr: none
+    bool m_scanCancelled = false;        // the user cancelled the running scan
 
 private slots:
     void showSettingsOverlay();

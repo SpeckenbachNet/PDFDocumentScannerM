@@ -72,32 +72,33 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="52"/>
+        <location filename="../initialize.cpp" line="53"/>
+        <location filename="../mainwin.cpp" line="645"/>
         <source>SCAN</source>
         <translation type="unfinished">Scan</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="68"/>
+        <location filename="../initialize.cpp" line="69"/>
         <source>Rotate the selected pages 90° clockwise</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="71"/>
+        <location filename="../initialize.cpp" line="72"/>
         <source>FAKE_DUPLEX</source>
         <translation type="unfinished">Fake Duplex</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="83"/>
+        <location filename="../initialize.cpp" line="84"/>
         <source>CLEAR</source>
         <translation type="unfinished">Clear</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="90"/>
+        <location filename="../initialize.cpp" line="91"/>
         <source>Buy me a coffee – support PDFDocumentScanner via PayPal</source>
         <translation type="unfinished">Buy me a coffee – support PDFDocumentScanner via PayPal</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="94"/>
+        <location filename="../initialize.cpp" line="95"/>
         <source>Help</source>
         <translation type="unfinished">Help</translation>
     </message>
@@ -114,12 +115,12 @@
         <translation type="obsolete">No scanners detected</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="75"/>
+        <location filename="../initialize.cpp" line="76"/>
         <source>SAVE_SELECTED</source>
         <translation type="unfinished">Save selected</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="79"/>
+        <location filename="../initialize.cpp" line="80"/>
         <source>SAVE_ALL</source>
         <translation type="unfinished">Save all</translation>
     </message>
@@ -168,57 +169,68 @@
         <translation type="unfinished">Could not create temporary directory.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="555"/>
+        <location filename="../mainwin.cpp" line="561"/>
         <source>ERROR:</source>
         <translation type="unfinished">Error:</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="598"/>
+        <location filename="../mainwin.cpp" line="611"/>
+        <source>Scan cancelled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="614"/>
         <source>SCAN_FAILED.</source>
         <translation type="unfinished">Scan failed.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="629"/>
+        <location filename="../mainwin.cpp" line="633"/>
+        <source>Cancelling scan...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="668"/>
         <source>Save PDF</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="631"/>
+        <location filename="../mainwin.cpp" line="670"/>
         <source>PDF files (*.pdf)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="637"/>
+        <location filename="../mainwin.cpp" line="676"/>
         <source>Saving PDF...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="644"/>
+        <location filename="../mainwin.cpp" line="683"/>
         <source>PDF saved: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="647"/>
+        <location filename="../mainwin.cpp" line="686"/>
         <source>PDF could not be saved</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="660"/>
+        <location filename="../mainwin.cpp" line="699"/>
         <source>Clear</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="661"/>
+        <location filename="../mainwin.cpp" line="700"/>
         <source>Remove all pages? The scanned images are deleted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="662"/>
+        <location filename="../mainwin.cpp" line="701"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="663"/>
+        <location filename="../mainwin.cpp" line="494"/>
+        <location filename="../mainwin.cpp" line="702"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>

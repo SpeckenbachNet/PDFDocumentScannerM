@@ -488,6 +488,12 @@ void MainWin::startScan() {
     QProcess *scanProcess = new QProcess(this);
     scanProcess->setWorkingDirectory(batchPath);
 
+    // While scanning the scan button cancels (updateButtons keeps it usable)
+    m_scanProcess = scanProcess;
+    m_scanCancelled = false;
+    m_scanBtn->setText(tr("Cancel"));
+    updateButtons();
+
     QString program = "scanimage";
     QStringList arguments;
     arguments << "--device-name" << scanDevice;
@@ -558,7 +564,7 @@ void MainWin::startScan() {
         if (error == QProcess::FailedToStart) {
             progressTimer->stop();
             progressTimer->deleteLater();
-            setBusy(false);
+            endScan();
             scanProcess->deleteLater();
         }
     });
@@ -576,24 +582,34 @@ void MainWin::startScan() {
         progressTimer->stop();
         progressTimer->deleteLater();
 
-        // Letzter Check: Dateien einlesen, die der Timer evtl. am Ende verpasst hat
+        // Letzter Check: Dateien einlesen, die der Timer evtl. am Ende verpasst hat.
+        // After a cancel the last page may be half written: it is dropped and deleted.
         QDir dir(batchPath);
         QStringList finalFiles = dir.entryList(QStringList() << "page_*.png", QDir::Files, QDir::Name);
         for (const QString &fileName : std::as_const(finalFiles)) {
             if (!m_processedFiles.contains(fileName)) {
-                PageProcessing::convertScannedPage(dir.absoluteFilePath(fileName), colorMode);
-                this->addPageToList(dir.absoluteFilePath(fileName), scanDpi);
+                const QString fullPath = dir.absoluteFilePath(fileName);
+                if (QImage(fullPath).isNull()) {
+                    QFile::remove(fullPath);
+                    continue;
+                }
+                PageProcessing::convertScannedPage(fullPath, colorMode);
+                this->addPageToList(fullPath, scanDpi);
                 m_processedFiles.append(fileName);
             }
         }
 
         // UI aufräumen
-        setBusy(false);
+        const bool cancelled = m_scanCancelled;
+        endScan();
         m_statusOverlay->hideOverlay();
 
         // Falls es ein echter Fehler war (nicht EOF = 5 / ADF leer = 7 nach gescannten Seiten)
         bool feederEmpty = (exitCode == 5 || exitCode == 7) && !m_processedFiles.isEmpty();
-        if (exitStatus != QProcess::NormalExit || (exitCode != 0 && !feederEmpty)) {
+        if (cancelled) {
+            // scanimage ends with an error code after a cancel: no error for the user
+            m_statusOverlay->showMessage(tr("Scan cancelled"), false, 3000);
+        } else if (exitStatus != QProcess::NormalExit || (exitCode != 0 && !feederEmpty)) {
             qDebug() << "Scan abgebrochen mit Code:" << exitCode;
             m_statusOverlay->showMessage(tr("SCAN_FAILED.") + "<br>" + breakableHtml(m_scanErrorOutput), true, 6000);
         }
@@ -605,6 +621,29 @@ void MainWin::startScan() {
     // Start!
     progressTimer->start(1500);
     scanProcess->start(program, arguments);
+}
+
+// Scan button and Esc while scanning. scanimage cancels on the first SIGTERM (sane_cancel: the
+// scanner is told, escl deletes the scan job); if it hangs, it is killed after 5 s. Pages that
+// are complete already stay.
+void MainWin::cancelScan() {
+    if (!m_scanProcess || m_scanCancelled) return;
+    m_scanCancelled = true;
+    updateButtons();   // one cancel is enough
+    m_statusOverlay->showMessage(tr("Cancelling scan..."));
+    QProcess *process = m_scanProcess;
+    process->terminate();
+    QTimer::singleShot(5000, process, [process]() {
+        if (process->state() != QProcess::NotRunning) process->kill();
+    });
+}
+
+// Back to normal after a scan (finished, failed to start or cancelled)
+void MainWin::endScan() {
+    m_scanProcess = nullptr;
+    m_scanCancelled = false;
+    m_scanBtn->setText(tr("SCAN"));
+    setBusy(false);
 }
 
 void MainWin::addPageToList(const QString &filePath, int dpi) {
@@ -680,7 +719,8 @@ void MainWin::updateButtons() {
     m_coffeeBtn->setEnabled(!m_busy);
     m_helpBtn->setEnabled(!m_busy);
     m_settingsBtn->setEnabled(!m_busy && hasScanners);
-    m_scanBtn->setEnabled(!m_busy && m_scannerReady);
+    // While scanning it is the cancel button (until it was clicked)
+    m_scanBtn->setEnabled(m_scanProcess ? !m_scanCancelled : !m_busy && m_scannerReady);
 
     const bool hasPages = ui->pagesListWidget->count() > 0;
     const bool hasSelection = ui->pagesListWidget->hasSelection();

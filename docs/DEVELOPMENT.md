@@ -19,7 +19,7 @@ tools `airscan-discover` and `scanimage` (`QProcess`).
 |---|---|
 | Scanner search (`airscan-discover`, fallback `scanimage -L`), saved scanner remembered | done |
 | Scanner options (source, color mode, scan intent, resolution) from `scanimage --help` | done |
-| Scan flatbed (one page) and feeder (batch), pages appear while scanning | done |
+| Scan flatbed (one page) and feeder (batch), pages appear while scanning, cancel (button, Esc) | done |
 | Page list: select, remove (×, Delete, context menu), reorder by drag and drop | done |
 | Large preview of the current page with zoom | done |
 | Window size and splitter remembered | done |
@@ -190,6 +190,12 @@ mode: it is the app's own (next section), `--mode` only decides what to scan wit
   scanning (copy first, so a half written file is never loaded).
 - Exit codes 5 and 7 after at least one page mean "feeder empty", not an error.
 - The last line of stderr is shown if the scan fails.
+- **Cancel:** while scanning the scan button reads "Cancel" (the only usable button), Esc does
+  the same (`cancelScan()`). `QProcess::terminate()` sends SIGTERM; scanimage answers the first
+  one with `sane_cancel` (the scanner is told, escl deletes the scan job). Still running after
+  5 s: `kill()`. Complete pages stay; a half written last page is deleted (the final check
+  loads every file). The message is "Scan cancelled", not an error – scanimage ends with an
+  error code. `endScan()` puts button and states back.
 
 ### Color mode (`pageprocessing.*`)
 
