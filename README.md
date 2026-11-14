@@ -2,12 +2,12 @@
 
 Scan documents with your network scanner and save them as PDF – on Linux.
 
-## What's new in 0.5.2
+## What's new in 0.5.3
 
-- Built-in help for scanning, pages, settings and saving, in English and German
-- First Linux package (AppImage); the window shows the app icon in the task bar
-- "Your language is missing?" – help translating the app
-- Known issue: with the feeder only the first page arrives on some scanners (HP M277dw)
+- The feeder now delivers every page (scanning goes through sane-airscan when it is installed)
+- Fixed: the language button of the online documentation linked to the wrong German page
+- Fixed: the Linux package stayed light in dark mode under some desktops (e.g. niri)
+- Fixed: scroll bars stayed in the empty preview after clearing the pages
 
 All changes: [CHANGELOG.md](CHANGELOG.md)
 
@@ -29,7 +29,7 @@ The app uses the scanner tools of your system:
 | For | Arch / CachyOS | Debian / Ubuntu | Fedora / RHEL | openSUSE |
 |---|---|---|---|---|
 | Scanning (`scanimage`) | `sane` | `sane-utils` | `sane-backends` | `sane-backends` |
-| Fast scanner search | `sane-airscan` | `sane-airscan` | `sane-airscan` | `sane-airscan` |
+| Fast scanner search, all pages from the feeder | `sane-airscan` | `sane-airscan` | `sane-airscan` | `sane-airscan` |
 | Finding network scanners (service running) | `avahi` | `avahi-daemon` | `avahi` | `avahi` |
 
 Tested on CachyOS; the package names of the other distributions are not tested.

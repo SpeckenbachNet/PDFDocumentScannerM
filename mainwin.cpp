@@ -2,6 +2,7 @@
 #include "./ui_mainwin.h"
 #include "settingsmanager.h"
 #include "pageprocessing.h"
+#include "sanedevice.h"
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -179,6 +180,7 @@ void MainWin::searchForScanners() {
 
         const QString output = QString::fromLocal8Bit(process->readAllStandardOutput());
         SettingsManager::instance().scannerValues.clear();   // forget scanners of a previous search
+        SettingsManager::instance().scannerUrls.clear();
         if (useAirscan) {
             saveAirscanScanners(output);
         } else {
@@ -208,18 +210,20 @@ void MainWin::searchForScanners() {
 // airscan-discover lines: "  Brother MFC-L2710DW series = http://192.168.178.23:80/eSCL/, eSCL".
 // Only eSCL entries with an IPv4 address are used, as escl device (escl:http://192.168.178.23:80):
 // its ID is the URL and stays the same, the airscan IDs (airscan:e0:...) change with every search.
-// escl (SANE 1.4) cannot open IPv6 URLs and does not speak WSD.
+// escl (SANE 1.4) cannot open IPv6 URLs and does not speak WSD. The whole URL (with the eSCL path)
+// is kept for scanning through airscan (SaneDevice).
 void MainWin::saveAirscanScanners(const QString &output) {
     static const QRegularExpression lineRegex(
-        "^\\s*(.+?)\\s*=\\s*(https?://(\\d+\\.\\d+\\.\\d+\\.\\d+)(?::\\d+)?)/\\S*,\\s*eSCL\\s*$");
+        "^\\s*(.+?)\\s*=\\s*((https?://(\\d+\\.\\d+\\.\\d+\\.\\d+)(?::\\d+)?)/[^,\\s]*),\\s*eSCL\\s*$");
 
     const QStringList lines = output.split('\n', Qt::SkipEmptyParts);
     for (const QString &line : lines) {
         const QRegularExpressionMatch match = lineRegex.match(line);
         if (!match.hasMatch()) continue;
-        const QString deviceId = "escl:" + match.captured(2);
-        const QString displayName = QString("escl: %1 (%2)").arg(match.captured(1), match.captured(3));
+        const QString deviceId = "escl:" + match.captured(3);
+        const QString displayName = QString("escl: %1 (%2)").arg(match.captured(1), match.captured(4));
         SettingsManager::instance().scannerValues.insert(deviceId, displayName);
+        SettingsManager::instance().scannerUrls.insert(deviceId, match.captured(2));
     }
 }
 
@@ -369,6 +373,11 @@ void MainWin::getScannerCapabilities(const QString &deviceID) {
                 for(QString &v : values) v = v.trimmed();
 
                 values.removeAll("*unset*");
+                // airscan offers "*unset*" as default (the scanner decides): the combo could not show
+                // it, so the first real value stands in ("Document" for the scan intent)
+                if (defaultValue == "*unset*") {
+                    defaultValue = values.contains("Document") ? QString("Document") : values.value(0);
+                }
 
                 // Option exists but cannot be used in the current device state
                 if (defaultValue == "inactive") continue;
@@ -422,7 +431,10 @@ void MainWin::getScannerCapabilities(const QString &deviceID) {
         process->deleteLater();
     });
 
-    process->start("scanimage", QStringList() << "-d" << deviceID << "--help");
+    const SaneDevice::Target target =
+        SaneDevice::forDevice(deviceID, SettingsManager::instance().esclUrl(deviceID));
+    process->setProcessEnvironment(target.environment);
+    process->start("scanimage", QStringList() << "-d" << target.device << "--help");
 }
 
 void MainWin::startScan() {
@@ -496,7 +508,11 @@ void MainWin::startScan() {
 
     QString program = "scanimage";
     QStringList arguments;
-    arguments << "--device-name" << scanDevice;
+    // escl scanners through airscan: escl takes only the first page of a feeder job (SaneDevice)
+    const SaneDevice::Target target =
+        SaneDevice::forDevice(scanDevice, SettingsManager::instance().esclUrl(scanDevice));
+    scanProcess->setProcessEnvironment(target.environment);
+    arguments << "--device-name" << target.device;
     // Only pass options the scanner reported, otherwise scanimage aborts
     if (!scannerMode.isEmpty()) {
         arguments << "--mode" << scannerMode;

@@ -1,5 +1,12 @@
 # PDFDocumentScannerM – Changelog
 
+## 0.5.3 – All pages from the feeder (November 14, 2026)
+
+- The feeder now delivers every page (scanning goes through sane-airscan when it is installed)
+- Fixed: the language button of the online documentation linked to the wrong German page
+- Fixed: the Linux package stayed light in dark mode under some desktops (e.g. niri)
+- Fixed: scroll bars stayed in the empty preview after clearing the pages
+
 ## 0.5.2 – Help and Linux package (November 14, 2026)
 
 - Built-in help for scanning, pages, settings and saving, in English and German

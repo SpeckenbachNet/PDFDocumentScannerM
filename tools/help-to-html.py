@@ -25,9 +25,9 @@ TOPICS = ["scanning", "pages", "settings", "saving", "about"]
 
 TEXTS = {
     "en": {"title": f"{APP} – Documentation", "contents": "Contents", "about": f"About {APP}",
-           "other": "de", "other_name": "Deutsch"},
+           "alias": "documentation", "other": "de", "other_name": "Deutsch"},
     "de": {"title": f"{APP} – Dokumentation", "contents": "Inhalt", "about": f"Über {APP}",
-           "other": "en", "other_name": "English"},
+           "alias": "dokumentation", "other": "en", "other_name": "English"},
 }
 
 
@@ -146,7 +146,7 @@ def page(lang, help_dir):
     out = ['<div class="mm-page">',
            '<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">',
            f'    <h1 class="mb-0">{texts["title"]}</h1>',
-           f'    <a class="btn btn-outline-primary btn-sm" href="{other}/{SLUG}/documentation" '
+           f'    <a class="btn btn-outline-primary btn-sm" href="{other}/{SLUG}/{TEXTS[other]['alias']}" '
            f'hreflang="{other}">{texts["other_name"]}</a>',
            '</div>',
            f'<nav class="card mb-5" aria-label="{texts["contents"]}">',

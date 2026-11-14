@@ -19,8 +19,6 @@ If a search misses your scanner, PDFDocumentScannerM asks it directly. Only if i
 
 The flatbed scans one page, the feeder all pages it holds. Each page appears in the page list as soon as it is scanned; the newest page is shown large on the right. More about the pages under **Pages**.
 
-> Known issue: with the feeder only the first page arrives on some scanners (seen with the HP Color LaserJet MFP M277dw).
-
 ## Cancelling
 
 While scanning, **Scan** turns into **Cancel**. A click on it or the Escape key stops the scan. Pages that are complete already stay in the list.

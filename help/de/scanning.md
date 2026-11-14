@@ -19,8 +19,6 @@ Findet eine Suche deinen Scanner nicht, fragt PDFDocumentScannerM ihn direkt. Er
 
 Das Flachbett scannt eine Seite, der Einzug alle Seiten, die darin liegen. Jede Seite erscheint in der Seitenliste, sobald sie gescannt ist; die neueste wird rechts groß gezeigt. Mehr zu den Seiten unter **Seiten**.
 
-> Bekanntes Problem: Mit dem Einzug kommt bei manchen Scannern nur die erste Seite an (beobachtet beim HP Color LaserJet MFP M277dw).
-
 ## Abbrechen
 
 Während des Scans wird aus **Scannen** **Abbrechen**. Ein Klick darauf oder die Esc-Taste hält den Scan an. Seiten, die schon fertig sind, bleiben in der Liste.

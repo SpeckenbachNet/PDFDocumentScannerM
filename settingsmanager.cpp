@@ -51,6 +51,7 @@ bool SettingsManager::isLandscape() {
 void SettingsManager::readSettingsFromIni() {
     m_savedDeviceId = m_settings->value("Scanner/DeviceId").toString();
     m_savedDeviceName = m_settings->value("Scanner/DeviceName").toString();
+    m_savedDeviceUrl = m_settings->value("Scanner/DeviceUrl").toString();
     m_deviceId = m_savedDeviceId;
     m_scanningUnit = m_settings->value("Scanner/ScanningUnit", m_scanningUnit).toString();
     m_pageOrientation = m_settings->value("Scanner/PageOrientation", m_pageOrientation).toString();
@@ -73,9 +74,18 @@ void SettingsManager::chooseDevice(QString devId, QString displayName) {
     m_deviceId = devId;
     m_savedDeviceId = devId;
     m_savedDeviceName = displayName;
+    m_savedDeviceUrl = esclUrl(devId);
     m_settings->setValue("Scanner/DeviceId", devId);
     m_settings->setValue("Scanner/DeviceName", displayName);
+    m_settings->setValue("Scanner/DeviceUrl", m_savedDeviceUrl);
     m_settings->sync();
+}
+
+QString SettingsManager::esclUrl(const QString &deviceId) const {
+    if (!deviceId.startsWith("escl:")) return QString();
+    if (scannerUrls.contains(deviceId)) return scannerUrls.value(deviceId);
+    if (deviceId == m_savedDeviceId && !m_savedDeviceUrl.isEmpty()) return m_savedDeviceUrl;
+    return deviceId.mid(5) + "/eSCL/";   // escl:http://IP:port -> the path most scanners use
 }
 
 void SettingsManager::setScanningUnit(QString scanUnit) {

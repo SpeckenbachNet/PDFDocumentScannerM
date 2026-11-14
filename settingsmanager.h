@@ -15,6 +15,9 @@ public:
     QString deviceId() const { return m_deviceId; }             // scanner used in this session
     QString savedDeviceId() const { return m_savedDeviceId; }   // scanner chosen by the user
     QString savedDeviceName() const { return m_savedDeviceName; }
+    // eSCL root of an escl scanner (http://IP:port/eSCL/): from the search, the saved one, or the
+    // usual /eSCL/ path
+    QString esclUrl(const QString &deviceId) const;
     QString scanningUnit() const { return m_scanningUnit; }
     QString colorMode() const { return m_colorMode; }
     QString scanIntent() const { return m_scanIntent; }
@@ -47,6 +50,7 @@ public:
 
     // Other
     QMap<QString, QString> scannerValues;
+    QMap<QString, QString> scannerUrls;   // device ID -> eSCL root, as airscan-discover reports it
     QStringList resolutionValues;
     QString resolutionDefault;
     QStringList colorModeValues;
@@ -70,6 +74,7 @@ private:
     QString m_deviceId;
     QString m_savedDeviceId;
     QString m_savedDeviceName;
+    QString m_savedDeviceUrl;
     QString m_scanningUnit;
     QString m_colorMode;
     QString m_scanIntent;

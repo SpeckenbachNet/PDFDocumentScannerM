@@ -130,6 +130,7 @@ Hinweise:
 | `statusoverlay.*` | Meldungen über dem Fenster (Suche, Laden, Scannen, Fehler) |
 | `pagelistwidget.*` | Seitenliste: eine Spalte, Seitengröße folgt der Breite; auswählen, entfernen, Drag and Drop |
 | `pagedelegate.*` | zeichnet eine Seite: Bild, Beschriftung „Seite N“, Auswahl, × beim Überfahren |
+| `sanedevice.*` | wie scanimage einen Scanner öffnet: escl-Scanner über das airscan-Backend (Abschnitt 4) |
 | `pageprocessing.*` | Bearbeitung einer gescannten Seite: Farbmodus, Schwarz/Weiß-Schwellwert (später Ausrichten, Beschneiden) |
 | `previewview.*` | große Vorschau (`QGraphicsView`), passt das Bild in die Ansicht ein |
 | `helppage.*`, `twolinedelegate.*` | Hilfeseite (Markdown in `help/<de\|en>/`, `Help.qrc`); Kopien aus MovieMetaM, an `UiColors` angepasst |
@@ -173,6 +174,27 @@ Hinweise:
 - Antwortet er auch so nicht (`getScannerCapabilities` scheitert), entfernt ihn
   `useStandInScanner()` und nimmt für diese Sitzung den ersten gefundenen Scanner. Die INI behält
   die Wahl des Benutzers; die nächste Suche versucht es wieder.
+
+### Öffnen: escl-Scanner über airscan (`sanedevice.*`)
+
+Das escl-Backend von SANE 1.4 holt **nur die erste Seite eines Einzug-Auftrags**: Der Scanner
+zieht den ganzen Stapel in einem Auftrag ein, escl startet für Seite 2 einen neuen Auftrag und
+bekommt „out of documents“ (beobachtet bei HP und Brother). Das airscan-Backend holt jede Seite des
+Auftrags. Deshalb öffnet `SaneDevice::forDevice()` escl-Scanner über airscan, wenn `sane-airscan`
+installiert ist:
+
+- Eine eigene SANE-Konfiguration in `~/.cache/SpeckenbachNet/PDFDocumentScannerM/sane/`:
+  `dll.conf` nur mit `airscan`, `airscan.conf` mit dem Scanner über seine eSCL-Adresse und
+  `discovery = disable`. Wird vor jedem `--help` und Scan geschrieben.
+- scanimage läuft mit `SANE_CONFIG_DIR` darauf (nur unsere Prozesse; die System-Konfiguration
+  bleibt unberührt) und `-d airscan:e0:Scanner` – immer derselbe Name, das Öffnen braucht keine
+  Suche (0,04 s). Die eigenen IDs von airscan (`airscan:e0:…`, `w3`) ändern sich bei jeder Suche.
+- Gespeichert bleibt die escl-ID. Die eSCL-Adresse kommt von `airscan-discover`
+  (`SettingsManager::scannerUrls`), für den gespeicherten Scanner auch aus der INI
+  (`Scanner/DeviceUrl`); sonst `http://IP:Port/eSCL/`.
+- Ohne `sane-airscan` und bei anderen Backends: wie bisher.
+- airscan meldet `*unset*` als Standard des Scan-Zwecks; der Parser nimmt stattdessen „Document“
+  (die Combo könnte `*unset*` nicht anzeigen).
 
 ### Optionen
 
@@ -300,7 +322,7 @@ Aller Zugriff läuft über `SettingsManager`.
 
 | Schlüssel | Inhalt |
 |---|---|
-| `Scanner/DeviceId`, `Scanner/DeviceName` | der Scanner des Benutzers (nur bei seiner Wahl geschrieben) |
+| `Scanner/DeviceId`, `Scanner/DeviceName`, `Scanner/DeviceUrl` | der Scanner des Benutzers (nur bei seiner Wahl geschrieben) |
 | `Scanner/ScanningUnit`, `Resolution`, `ScanIntent` | Scanner-Optionen |
 | `Scanner/ColorMode` | `Color`, `Gray` oder `BlackWhite` (die Modi der App) |
 | `Scanner/PageOrientation`, `PageFormat` | Seite |
@@ -378,6 +400,11 @@ mit seinem Qt-Plugin. Von Hand dazu: das Wayland-Plugin, das Plattform-Theme des
 (Dateidialog von „PDF speichern“) und `libOpenGL.so.0`. Erster Lauf: etwa 1,8 GB in
 `build/linux-cache`. Braucht nur Podman (ohne root) und Python 3 auf dem Rechner.
 
+Das Plattform-Theme: Ein in der Umgebung gesetztes Theme (z. B. `QT_QPA_PLATFORMTHEME=gtk3` unter
+niri) fehlt im AppImage, Qt fiele auf sein generisches Theme zurück (immer hell). Deshalb schaltet
+`main.cpp` auf `xdgdesktopportal` um, wenn `APPIMAGE` gesetzt ist; das folgt dem hellen / dunklen
+Modus des Desktops (wie in MovieMetaM).
+
 - Der Paketname trägt die Version (`PDFDocumentScannerM-0.5.1-linux.AppImage`); das Skript liest
   sie aus `CMakeLists.txt`.
 - `main.cpp` setzt den Desktop-Dateinamen (`net.speckenbach.PDFDocumentScannerM`): Unter Wayland
@@ -393,5 +420,6 @@ Joomla-Beitrag). Ein Abschnitt pro Hilfedatei, in der Reihenfolge der Hilfeseite
 Abschnittstitel, `##` → `h3`, `>` → Hinweis (`mm-story`), Bilder → `figure` mit Unterschrift
 (`:/images/help/` → `images/software/pdfdocumentscannerm/help/`), fetter Text, der der Titel eines
 anderen Themas ist → Link dorthin (nicht innerhalb dieses Themas). Die Versionszeile der About-Seite fällt weg. Adressen der
-Seiten: `<de|en>/pdfdocumentscannerm/documentation`.
+Seiten: `en/pdfdocumentscannerm/documentation` und `de/pdfdocumentscannerm/dokumentation`
+(`alias` in `TEXTS`; der Sprach-Button verlinkt auf den Alias der anderen Sprache).
 

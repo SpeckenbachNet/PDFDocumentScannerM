@@ -29,6 +29,7 @@ ui_*.h
 *.jsc
 Makefile*
 *build-*
+!tools/build-linux.sh
 build/
 build/*
 *.qm
@@ -63,3 +64,4 @@ CLAUDE.md
 
 _dev/
 _backup/
+__pycache__/

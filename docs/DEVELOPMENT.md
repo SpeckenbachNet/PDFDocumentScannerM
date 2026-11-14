@@ -128,6 +128,7 @@ Notes:
 | `statusoverlay.*` | messages over the window (search, loading, scanning, errors) |
 | `pagelistwidget.*` | page list: one column, page size follows the width; select, remove, drag and drop |
 | `pagedelegate.*` | draws a page: image, label "Page N", selection, × on hover |
+| `sanedevice.*` | how scanimage opens a scanner: escl scanners through the airscan backend (section 4) |
 | `pageprocessing.*` | processing of a scanned page: color mode, black/white threshold (later straighten, crop) |
 | `previewview.*` | large preview (`QGraphicsView`), fits the image into the view |
 | `helppage.*`, `twolinedelegate.*` | help page (Markdown in `help/<de\|en>/`, `Help.qrc`); copies from MovieMetaM, adapted to `UiColors` |
@@ -170,6 +171,26 @@ Notes:
 - If it does not answer either (`getScannerCapabilities` fails), `useStandInScanner()` removes it
   and takes the first found scanner for this session. The INI keeps the user's choice; the next
   search tries it again.
+
+### Opening: escl scanners through airscan (`sanedevice.*`)
+
+The escl backend of SANE 1.4 takes **only the first page of a feeder job**: the scanner pulls the
+whole stack in one job, escl starts a new job for page 2 and gets "out of documents" (seen with the
+HP and the Brother). The airscan backend takes every page of the job. So `SaneDevice::forDevice()`
+opens escl scanners through airscan when `sane-airscan` is installed:
+
+- Our own SANE configuration in `~/.cache/SpeckenbachNet/PDFDocumentScannerM/sane/`: `dll.conf`
+  with only `airscan`, `airscan.conf` with the scanner entered by its eSCL URL and
+  `discovery = disable`. Written before every `--help` and scan.
+- scanimage runs with `SANE_CONFIG_DIR` pointing there (only our processes; the system
+  configuration stays untouched) and `-d airscan:e0:Scanner` – always the same name, opening needs
+  no search (0.04 s). airscan's own IDs (`airscan:e0:…`, `w3`) change with every search.
+- The stored device ID stays the escl one. The eSCL URL comes from `airscan-discover`
+  (`SettingsManager::scannerUrls`), for the saved scanner also from the INI
+  (`Scanner/DeviceUrl`); otherwise `http://IP:port/eSCL/`.
+- Without `sane-airscan`, and for other backends: as before.
+- airscan reports `*unset*` as default of the scan intent; the parser uses "Document" instead
+  (the combo could not show `*unset*`).
 
 ### Options
 
@@ -288,7 +309,7 @@ All access goes through `SettingsManager`.
 
 | Key | Content |
 |---|---|
-| `Scanner/DeviceId`, `Scanner/DeviceName` | the user's scanner (only written on the user's choice) |
+| `Scanner/DeviceId`, `Scanner/DeviceName`, `Scanner/DeviceUrl` | the user's scanner (only written on the user's choice) |
 | `Scanner/ScanningUnit`, `Resolution`, `ScanIntent` | scanner options |
 | `Scanner/ColorMode` | `Color`, `Gray` or `BlackWhite` (the app's modes) |
 | `Scanner/PageOrientation`, `PageFormat` | page |
@@ -362,6 +383,11 @@ its Qt plugin. By hand: the Wayland plugin, the platform theme of the desktop po
 of "Save PDF") and `libOpenGL.so.0`. First run: about 1.8 GB in `build/linux-cache`. Needs only
 Podman (no root) and Python 3 on the host.
 
+The platform theme: a theme set in the environment (e.g. `QT_QPA_PLATFORMTHEME=gtk3` under niri)
+is missing in the AppImage, Qt would fall back to its generic theme (always light). So `main.cpp`
+switches to `xdgdesktopportal` when `APPIMAGE` is set; it follows the light / dark mode of the
+desktop (same as MovieMetaM).
+
 - The name of the package carries the version (`PDFDocumentScannerM-0.5.1-linux.AppImage`); the
   script reads it from `CMakeLists.txt`.
 - `main.cpp` sets the desktop file name (`net.speckenbach.PDFDocumentScannerM`): under Wayland it
@@ -377,5 +403,6 @@ article). One section per help file, in the order of the help page; `#` → sect
 `h3`, `>` → note (`mm-story`), images → `figure` with caption (`:/images/help/` →
 `images/software/pdfdocumentscannerm/help/`), bold text that is another topic's title → link to
 it (not inside that topic itself). The version line of the about page is left out. Page addresses:
-`<de|en>/pdfdocumentscannerm/documentation`.
+`en/pdfdocumentscannerm/documentation` and `de/pdfdocumentscannerm/dokumentation`
+(`alias` in `TEXTS`; the language button links to the alias of the other language).
 

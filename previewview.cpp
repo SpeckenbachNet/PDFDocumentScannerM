@@ -113,6 +113,7 @@ bool PreviewView::setImage(const QString &imagePath) {
 
 void PreviewView::clearImage() {
     m_scene->clear();
+    m_scene->setSceneRect(QRectF(0, 0, 1, 1));   // the old page's size would keep the scroll bars
     m_item = nullptr;
     m_fitMode = true;
     resetTransform();
