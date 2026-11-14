@@ -1,5 +1,12 @@
 # PDFDocumentScannerM – Changelog
 
+## 0.5.2 – Help and Linux package (November 14, 2026)
+
+- Built-in help for scanning, pages, settings and saving, in English and German
+- First Linux package (AppImage); the window shows the app icon in the task bar
+- "Your language is missing?" – help translating the app
+- Known issue: with the feeder only the first page arrives on some scanners (HP M277dw)
+
 ## 0.5.1 – Cancel a scan (October 27, 2026)
 
 - Cancel a running scan with the scan button (it reads "Cancel" while scanning) or Esc; pages already scanned are kept

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(PROJECT_VERSION "0.5.1")
+set(PROJECT_VERSION "0.5.2")
 set(ORGANIZATION_NAME "SpeckenbachNet")
 
 project(
@@ -116,6 +116,13 @@ install(TARGETS PDFDocumentScannerM
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+# Linux: start menu entry and icon (the AppImage takes them from the installed tree)
+if(UNIX AND NOT APPLE)
+    install(FILES ressources/linux/net.speckenbach.PDFDocumentScannerM.desktop
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+    install(FILES ressources/linux/net.speckenbach.PDFDocumentScannerM.png
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps)
+endif()
 
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(PDFDocumentScannerM)

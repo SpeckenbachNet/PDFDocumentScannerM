@@ -16,6 +16,8 @@ int main(int argc, char *argv[])
     // Settings: ~/.config/SpeckenbachNet/PDFDocumentScannerM.ini (SettingsManager)
     QSettings::setDefaultFormat(QSettings::IniFormat);
     a.setWindowIcon(QIcon(":/icons/app_icon"));
+    // Linux: Wayland app id, ties the window to net.speckenbach.PDFDocumentScannerM.desktop (icon in the task bar)
+    a.setDesktopFileName(QStringLiteral("net.speckenbach.PDFDocumentScannerM"));
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();

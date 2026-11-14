@@ -12,6 +12,10 @@ Michael Speckenbach · SpeckenbachNet
 
 Gefällt dir PDFDocumentScannerM? Spendier mir einen Kaffee: [paypal.me/michaelspeckenbach](https://paypal.me/michaelspeckenbach)
 
+## Übersetzungen
+
+PDFDocumentScannerM gibt es auf Deutsch und Englisch. Möchtest du es in deiner Sprache nutzen? Hilf beim Übersetzen: [software.speckenbach.net/de/pdfdocumentscannerm/translation](https://software.speckenbach.net/de/pdfdocumentscannerm/translation)
+
 ## Lizenz
 
 © 2026 Michael Speckenbach

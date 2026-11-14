@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=PDFDocumentScannerM
+GenericName=Document Scanner
+GenericName[de]=Dokumentenscanner
+Comment=Scan documents with a network scanner and save them as PDF
+Comment[de]=Dokumente mit einem Netzwerkscanner scannen und als PDF speichern
+Exec=PDFDocumentScannerM
+Icon=net.speckenbach.PDFDocumentScannerM
+Terminal=false
+Categories=Graphics;Scanning;Qt;
+Keywords=scan;scanner;pdf;document;sane;escl;airscan;
+StartupWMClass=PDFDocumentScannerM

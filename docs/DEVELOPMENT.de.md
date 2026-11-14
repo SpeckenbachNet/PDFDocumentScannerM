@@ -2,7 +2,7 @@
 
 [English](DEVELOPMENT.md)
 
-Stand: Version 0.3.4 (Oktober 2026). Code, Kommentare, Commit-Nachrichten und die Quelltexte der
+Stand: Version 0.5.2 (November 2026). Code, Kommentare, Commit-Nachrichten und die Quelltexte der
 Übersetzungen sind Englisch. Diese Doku gibt es auf Englisch und Deutsch; beide zusammen ändern.
 
 ---
@@ -132,10 +132,13 @@ Hinweise:
 | `pagedelegate.*` | zeichnet eine Seite: Bild, Beschriftung „Seite N“, Auswahl, × beim Überfahren |
 | `pageprocessing.*` | Bearbeitung einer gescannten Seite: Farbmodus, Schwarz/Weiß-Schwellwert (später Ausrichten, Beschneiden) |
 | `previewview.*` | große Vorschau (`QGraphicsView`), passt das Bild in die Ansicht ein |
-| `helppage.*`, `twolinedelegate.*` | Hilfeseite (Markdown in `help/<de|en>/`, `Help.qrc`); Kopien aus MovieMetaM, an `UiColors` angepasst |
+| `helppage.*`, `twolinedelegate.*` | Hilfeseite (Markdown in `help/<de\|en>/`, `Help.qrc`); Kopien aus MovieMetaM, an `UiColors` angepasst |
 | `uicolors.h` | Flächenfarben, nur aus Window/WindowText abgeleitet |
 | `toolbarm.*` | Werkzeugleiste; Kopie aus `../libraries/toolbarm` (Master dort, Version 1.7.0) |
 | `globals.h` | leer (Kandidat zum Aufräumen) |
+| `tools/build-linux.sh` | baut das AppImage und die Release-Dateien (Abschnitt 10) |
+| `tools/help-to-html.py` | Dokumentationsseiten für die Website aus `help/<de\|en>/*.md` |
+| `ressources/linux/` | Startmenü-Eintrag (`.desktop`) und 256-px-Icon für Linux |
 
 ---
 
@@ -349,3 +352,46 @@ wiederhergestellt (das entscheidet der Compositor).
 - Die Version ist `PROJECT_VERSION` in `CMakeLists.txt`. Jede neue Version ist ein eigener
   Commit; die erste Zeile der Nachricht endet mit `(vX.Y.Z)`.
 - Commit-Nachrichten auf Englisch (ältere Commits bis v0.3.2 sind deutsch).
+- Keine Erwähnung von Claude oder `CLAUDE.md` in Commits; `CLAUDE.md` und `.claude/` stehen in
+  `.gitignore`.
+- Änderungen ohne App-Code (Doku, Release-Dateien, Skripte) bekommen keine neue Version.
+
+### Veröffentlichung
+
+1. Version in `CMakeLists.txt` setzen.
+2. `CHANGELOG.md`: neuer Abschnitt oben (Englisch, für Benutzer). `README.md`: Abschnitt „What's
+   new in X.Y.Z“ (sie ist die Beschreibung des GitHub-Releases).
+3. `tools/build-linux.sh` – Ergebnis in `build/` (nicht in Git):
+   - `PDFDocumentScannerM-X.Y.Z-linux.AppImage`
+   - `updates.xml` (Version, Datum des Builds, Release- und Download-Adresse; festes Format, nur
+     Linux)
+   - `CHANGELOG.md`, `README.md` (Kopien)
+   - `doc/documentation-en.html`, `doc/documentation-de.html` (aus der Hilfe, für die Website)
+4. Commit, Tag `vX.Y.Z` (einfacher Tag), `main` und Tag pushen.
+5. GitHub-Release zum Tag: das AppImage als Datei, `README.md` als Beschreibung.
+
+### Linux-Paket (`tools/build-linux.sh`)
+
+Ablauf wie in MovieMetaM: ein Podman-Container mit **Ubuntu 22.04** (glibc 2.35, damit das
+AppImage auch auf älteren Systemen startet), Qt 6.12 über aqtinstall, CMake aus pip, linuxdeploy
+mit seinem Qt-Plugin. Von Hand dazu: das Wayland-Plugin, das Plattform-Theme des Desktop-Portals
+(Dateidialog von „PDF speichern“) und `libOpenGL.so.0`. Erster Lauf: etwa 1,8 GB in
+`build/linux-cache`. Braucht nur Podman (ohne root) und Python 3 auf dem Rechner.
+
+- Der Paketname trägt die Version (`PDFDocumentScannerM-0.5.1-linux.AppImage`); das Skript liest
+  sie aus `CMakeLists.txt`.
+- `main.cpp` setzt den Desktop-Dateinamen (`net.speckenbach.PDFDocumentScannerM`): Unter Wayland
+  verbindet er das Fenster mit dem Startmenü-Eintrag und seinem Icon.
+- `scanimage`, `airscan-discover` (und später `tesseract`) sind **nicht** im Paket; sie kommen vom
+  System (siehe Voraussetzungen). Noch nicht getestet: ob die App aus dem AppImage sie ohne
+  Probleme aufruft.
+
+### Doku für die Website (`tools/help-to-html.py`)
+
+Macht aus der Hilfe die Dokumentationsseiten (dasselbe HTML wie die MovieMetaM-Doku,
+Joomla-Beitrag). Ein Abschnitt pro Hilfedatei, in der Reihenfolge der Hilfeseite; `#` →
+Abschnittstitel, `##` → `h3`, `>` → Hinweis (`mm-story`), Bilder → `figure` mit Unterschrift
+(`:/images/help/` → `images/software/pdfdocumentscannerm/help/`), fetter Text, der der Titel eines
+anderen Themas ist → Link dorthin (nicht innerhalb dieses Themas). Die Versionszeile der About-Seite fällt weg. Adressen der
+Seiten: `<de|en>/pdfdocumentscannerm/documentation`.
+

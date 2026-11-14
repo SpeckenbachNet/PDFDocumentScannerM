@@ -40,8 +40,12 @@
     </message>
     <message>
         <location filename="../helppage.cpp" line="144"/>
+        <source>Color, resolution, format</source>
+        <translation type="unfinished">Farbe, Auflösung, Format</translation>
+    </message>
+    <message>
         <source>Color, resolution, format, OCR</source>
-        <translation type="unfinished">Farbe, Auflösung, Format, OCR</translation>
+        <translation type="obsolete">Farbe, Auflösung, Format, OCR</translation>
     </message>
     <message>
         <location filename="../helppage.cpp" line="145"/>
@@ -122,7 +126,7 @@
     <message>
         <location filename="../initialize.cpp" line="80"/>
         <source>SAVE_ALL</source>
-        <translation type="unfinished">Alles Speichern</translation>
+        <translation type="unfinished">Alles speichern</translation>
     </message>
     <message>
         <location filename="../mainwin.cpp" line="156"/>

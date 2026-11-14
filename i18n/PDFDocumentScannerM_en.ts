@@ -40,8 +40,12 @@
     </message>
     <message>
         <location filename="../helppage.cpp" line="144"/>
+        <source>Color, resolution, format</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Color, resolution, format, OCR</source>
-        <translation type="unfinished">Color, resolution, format, OCR</translation>
+        <translation type="obsolete">Color, resolution, format, OCR</translation>
     </message>
     <message>
         <location filename="../helppage.cpp" line="145"/>

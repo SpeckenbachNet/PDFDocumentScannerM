@@ -141,7 +141,7 @@ HelpPage::HelpPage(QWidget *parent)
     // Order as in enum Topic
     addTopic(":icons/document_portrait", tr("Scanning"), tr("Scanner, flatbed, feeder"), "scanning");
     addTopic(":icons/rotate", tr("Pages"), tr("Preview, rotate, clear"), "pages");
-    addTopic(":icons/settings", tr("Settings"), tr("Color, resolution, format, OCR"), "settings");
+    addTopic(":icons/settings", tr("Settings"), tr("Color, resolution, format"), "settings");
     addTopic(":icons/save", tr("Saving"), tr("PDF of selected or all pages"), "saving");
     addTopic(":icons/info", tr("About %1").arg(QStringLiteral(PROJECT_NAME)),
              tr("Version, license, support"), "about");

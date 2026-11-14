@@ -2,7 +2,7 @@
 
 [Deutsch](DEVELOPMENT.de.md)
 
-As of version 0.3.4 (October 2026). Code, comments, commit messages and the source texts of the
+As of version 0.5.2 (November 2026). Code, comments, commit messages and the source texts of the
 translations are English. This document exists in English and German; change both together.
 
 ---
@@ -130,10 +130,13 @@ Notes:
 | `pagedelegate.*` | draws a page: image, label "Page N", selection, × on hover |
 | `pageprocessing.*` | processing of a scanned page: color mode, black/white threshold (later straighten, crop) |
 | `previewview.*` | large preview (`QGraphicsView`), fits the image into the view |
-| `helppage.*`, `twolinedelegate.*` | help page (Markdown in `help/<de|en>/`, `Help.qrc`); copies from MovieMetaM, adapted to `UiColors` |
+| `helppage.*`, `twolinedelegate.*` | help page (Markdown in `help/<de\|en>/`, `Help.qrc`); copies from MovieMetaM, adapted to `UiColors` |
 | `uicolors.h` | surface colors, derived from Window/WindowText only |
 | `toolbarm.*` | toolbar; copy from `../libraries/toolbarm` (master there, version 1.7.0) |
 | `globals.h` | empty (cleanup candidate) |
+| `tools/build-linux.sh` | builds the AppImage and the release files (section 10) |
+| `tools/help-to-html.py` | documentation pages for the website from `help/<de\|en>/*.md` |
+| `ressources/linux/` | start menu entry (`.desktop`) and 256 px icon for Linux |
 
 ---
 
@@ -335,3 +338,44 @@ needs more room. Under Wayland the window position is not restored (the composit
 - The version is `PROJECT_VERSION` in `CMakeLists.txt`. Every new version is its own commit; the
   first line of the message ends with `(vX.Y.Z)`.
 - Commit messages in English (older commits up to v0.3.2 are German).
+- No mention of Claude or `CLAUDE.md` in commits; `CLAUDE.md` and `.claude/` are in `.gitignore`.
+- Changes without app code (documentation, release files, scripts) get no new version.
+
+### Release
+
+1. Set the version in `CMakeLists.txt`.
+2. `CHANGELOG.md`: new section on top (English, for users). `README.md`: section "What's new in
+   X.Y.Z" (it is the description of the GitHub release).
+3. `tools/build-linux.sh` – result in `build/` (not in Git):
+   - `PDFDocumentScannerM-X.Y.Z-linux.AppImage`
+   - `updates.xml` (version, date of the build, release and download URL; fixed format, Linux only)
+   - `CHANGELOG.md`, `README.md` (copies)
+   - `doc/documentation-en.html`, `doc/documentation-de.html` (from the help, for the website)
+4. Commit, tag `vX.Y.Z` (lightweight), push `main` and the tag.
+5. GitHub release for the tag: the AppImage as file, `README.md` as description.
+
+### Linux package (`tools/build-linux.sh`)
+
+Same procedure as in MovieMetaM: a Podman container with **Ubuntu 22.04** (glibc 2.35, so the
+AppImage also starts on older systems), Qt 6.12 with aqtinstall, CMake from pip, linuxdeploy with
+its Qt plugin. By hand: the Wayland plugin, the platform theme of the desktop portal (file dialog
+of "Save PDF") and `libOpenGL.so.0`. First run: about 1.8 GB in `build/linux-cache`. Needs only
+Podman (no root) and Python 3 on the host.
+
+- The name of the package carries the version (`PDFDocumentScannerM-0.5.1-linux.AppImage`); the
+  script reads it from `CMakeLists.txt`.
+- `main.cpp` sets the desktop file name (`net.speckenbach.PDFDocumentScannerM`): under Wayland it
+  ties the window to the start menu entry and its icon.
+- `scanimage`, `airscan-discover` (and later `tesseract`) are **not** in the package; they come
+  from the system (see Prerequisites). Not tested yet: whether the app started from the AppImage
+  runs them without problems.
+
+### Documentation for the website (`tools/help-to-html.py`)
+
+Turns the help into the documentation pages (same HTML as the MovieMetaM documentation, Joomla
+article). One section per help file, in the order of the help page; `#` → section title, `##` →
+`h3`, `>` → note (`mm-story`), images → `figure` with caption (`:/images/help/` →
+`images/software/pdfdocumentscannerm/help/`), bold text that is another topic's title → link to
+it (not inside that topic itself). The version line of the about page is left out. Page addresses:
+`<de|en>/pdfdocumentscannerm/documentation`.
+

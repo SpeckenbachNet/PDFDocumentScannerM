@@ -2,10 +2,11 @@
 
 Scan documents with your network scanner and save them as PDF – on Linux.
 
-## What's new in 0.5.1
+## What's new in 0.5.2
 
-- Cancel a running scan with the scan button (it reads "Cancel" while scanning) or Esc; pages
-  already scanned are kept
+- Built-in help for scanning, pages, settings and saving, in English and German
+- First Linux package (AppImage); the window shows the app icon in the task bar
+- "Your language is missing?" – help translating the app
 - Known issue: with the feeder only the first page arrives on some scanners (HP M277dw)
 
 All changes: [CHANGELOG.md](CHANGELOG.md)
@@ -47,6 +48,10 @@ Tested on CachyOS; the package names of the other distributions are not tested.
 1. Download `PDFDocumentScannerM-<version>-linux.AppImage` from the release.
 2. Make it executable: `chmod +x PDFDocumentScannerM-*-linux.AppImage`
 3. Start it.
+
+## Your language is missing?
+
+Help translate PDFDocumentScannerM: https://software.speckenbach.net/en/pdfdocumentscannerm/translation
 
 ## License
 
