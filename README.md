@@ -22,6 +22,7 @@ All changes: [CHANGELOG.md](CHANGELOG.md)
 
 - Finds network scanners (eSCL / AirScan) in a few seconds and remembers your scanner
 - Flatbed and document feeder
+- A4, A5, A6, Letter and Legal, portrait or landscape
 - Color, grayscale and black/white – black/white is made by the app for every scanner, so text
   pages stay small (about 60 KB per page in the PDF)
 - Pages appear while scanning; select, reorder by drag and drop, rotate, remove
