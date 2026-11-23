@@ -4,7 +4,7 @@ PDFDocumentScannerM scannt mit Scannern in deinem Netzwerk. Es findet sie selbst
 
 ## Den Scanner finden
 
-Beim Start sucht PDFDocumentScannerM im Netzwerk nach Scannern; das dauert ein paar Sekunden. Dann lädt es die Möglichkeiten deines Scanners (Auflösungen, Farbmodi, Flachbett oder Einzug). Sobald **Scannen** aktiv ist, kann es losgehen.
+Beim Start sucht PDFDocumentScannerM im Netzwerk nach Scannern; das dauert ein paar Sekunden. Dann lädt es die Möglichkeiten deines Scanners (Auflösungen, Farbmodi, Flachbett oder Einzug). Sobald **Scannen** aktiv ist, kann es losgehen. Solange die Seitenliste leer ist, zeigt die Vorschau, welcher Scanner benutzt wird.
 
 - Den Scanner wählst du in den **Einstellungen** (das Zahnrad in der Werkzeugleiste). PDFDocumentScannerM merkt ihn sich.
 - Der Knopf mit den zwei Pfeilen sucht neu, zum Beispiel nachdem du den Scanner eingeschaltet hast.
@@ -14,14 +14,14 @@ Findet eine Suche deinen Scanner nicht, fragt PDFDocumentScannerM ihn direkt. Er
 ## Scannen
 
 1. Lege das Dokument auf das Glas oder in den Einzug.
-2. Wähle in den **Einstellungen** unter **Scannereinheit** **Flatbed** (Flachbett) oder **ADF** (Einzug). **Automatisch** überlässt die Wahl dem Scanner.
+2. Wähle in den **Einstellungen** unter **Scannereinheit** entweder **Flatbed** (Flachbett) oder **ADF** (Einzug). **Automatisch** überlässt die Wahl dem Scanner.
 3. Klicke auf **Scannen**.
 
 Das Flachbett scannt eine Seite, der Einzug alle Seiten, die darin liegen. Jede Seite erscheint in der Seitenliste, sobald sie gescannt ist; die neueste wird rechts groß gezeigt. Mehr zu den Seiten unter **Seiten**.
 
 ## Abbrechen
 
-Während des Scans wird aus **Scannen** **Abbrechen**. Ein Klick darauf oder die Esc-Taste hält den Scan an. Seiten, die schon fertig sind, bleiben in der Liste.
+Während des Scans wird der Button **Scannen** zu **Abbrechen**. Ein Klick darauf oder die Esc-Taste hält den Scan an. Seiten, die schon fertig sind, bleiben in der Liste.
 
 ## Was dein Scanner braucht
 

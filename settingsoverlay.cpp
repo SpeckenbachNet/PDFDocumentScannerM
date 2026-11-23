@@ -3,6 +3,20 @@
 #include "uicolors.h"
 #include <QApplication>
 
+namespace {
+
+// Display name of a scan intent of the scanner (airscan: Document, Text and Graphic, Photo,
+// Preview); the English value is what is stored and sent to scanimage. Unknown values as they are.
+QString intentLabel(const QString &value) {
+    if (value == "Document") return QCoreApplication::translate("SettingsOverlay", "Document");
+    if (value == "Text and Graphic") return QCoreApplication::translate("SettingsOverlay", "Text and graphic");
+    if (value == "Photo") return QCoreApplication::translate("SettingsOverlay", "Photo");
+    if (value == "Preview") return QCoreApplication::translate("SettingsOverlay", "Preview");
+    return value;
+}
+
+}
+
 SettingsOverlay::SettingsOverlay(QWidget *parent) : QWidget(parent) {
     setAttribute(Qt::WA_TranslucentBackground);
     setWindowFlags(Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
@@ -79,7 +93,7 @@ void SettingsOverlay::initializeOverlay()
 
     // Orientation
     m_pageOrientationCombo = new QComboBox(this);
-    grid->addWidget(new QLabel(tr("PAGE_ORENTATION")), 4, 0);
+    grid->addWidget(new QLabel(tr("PAGE_ORIENTATION")), 4, 0);
     grid->addWidget(m_pageOrientationCombo, 4, 1);
 
     // Paper format
@@ -213,7 +227,7 @@ void SettingsOverlay::fillScannerCombos() {
     m_scanIntentCombo->blockSignals(true);
     m_scanIntentCombo->clear();
     for (const QString& scanIntent : std::as_const(SettingsManager::instance().intentValues)) {
-        m_scanIntentCombo->addItem(scanIntent, scanIntent);
+        m_scanIntentCombo->addItem(intentLabel(scanIntent), scanIntent);   // the English value is stored
     }
     setComboBoxValue(m_scanIntentCombo, QVariant::fromValue(SettingsManager::instance().scanIntent()));
     m_scanIntentCombo->blockSignals(false);

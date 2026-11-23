@@ -1,5 +1,19 @@
 # PDFDocumentScannerM – Changelog
 
+## 0.5.4 – Ask before closing, landscape, dark mode (November 23, 2026)
+
+- Scanner options load in well under a second instead of about 10 seconds (measured with the HP M277dw)
+- Closing asks first if pages are not saved yet (save all, discard, cancel) and stops a running scan
+- The scanned images are deleted from the temporary folder when the app closes
+- The empty preview shows which scanner is used (or why there is none); tooltip on the scan button
+- Help: the text stands in the middle of the page
+- Page list and preview are gray instead of almost white in light mode
+- The entries of "Scan purpose" are translated
+- Light / dark mode follows the desktop at once (XDG desktop portal, also in the AppImage), with Fusion's own light and dark colors
+- Qt's own texts (standard buttons, file dialog) in the language of the app
+- Landscape no longer cuts off A4, Letter and Legal pages: the sheet is scanned upright and turned afterwards
+- The scan area is limited to what the scanner can scan (e.g. Legal on an A4 flatbed)
+
 ## 0.5.3 – All pages from the feeder (November 14, 2026)
 
 - The feeder now delivers every page (scanning goes through sane-airscan when it is installed)

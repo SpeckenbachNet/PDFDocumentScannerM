@@ -15,4 +15,4 @@ Jede Seite der PDF hat die gescannte Größe: Aus einem A4-Scan wird eine A4-Sei
 
 Schwarz-weiße Seiten sind klein (etwa 60 KB pro Textseite), Graustufen- und Farbseiten deutlich größer. Für Text ist **Schwarz/Weiß** in den **Einstellungen** die beste Wahl.
 
-> Die Seitenliste bleibt beim Schließen von PDFDocumentScannerM nicht erhalten. Speichere deine Seiten, bevor du es schließt.
+> Die Seitenliste bleibt beim Schließen von PDFDocumentScannerM nicht erhalten, die gescannten Bilder werden gelöscht. Sind noch Seiten nicht gespeichert, fragt PDFDocumentScannerM vorher nach: **Alles speichern**, **Verwerfen** oder **Abbrechen**.

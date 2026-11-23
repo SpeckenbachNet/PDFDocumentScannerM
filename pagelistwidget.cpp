@@ -9,7 +9,6 @@
 #include <QMenu>
 #include <QScrollBar>
 #include <QTimer>
-#include <QTransform>
 #include <algorithm>
 
 namespace {
@@ -22,18 +21,6 @@ QIcon pageIcon(const QImage &img) {
     return QIcon(QPixmap::fromImage(img.scaled(1000, 1414, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
 }
 
-// 90° clockwise in the same format: Qt turns a 1 bit image into 32 bit while rotating, the
-// black/white page would lose its small size
-QImage rotatedImage(const QImage &image) {
-    if (image.isNull()) return image;
-    QImage rotated = image.transformed(QTransform().rotate(90));
-    if (rotated.format() != image.format()) {
-        rotated = rotated.convertToFormat(image.format(), Qt::ThresholdDither);
-    }
-    rotated.setDotsPerMeterX(image.dotsPerMeterY());
-    rotated.setDotsPerMeterY(image.dotsPerMeterX());
-    return rotated;
-}
 }
 
 PageListWidget::PageListWidget(QWidget *parent) : QListWidget(parent) {
@@ -100,12 +87,12 @@ void PageListWidget::rotateSelectedPages() {
     if (selected.isEmpty()) return;
     for (QListWidgetItem *page : selected) {
         const QString filePath = page->data(Qt::UserRole).toString();
-        const QImage rotated = rotatedImage(QImage(filePath));
+        const QImage rotated = PageProcessing::rotatedImage(QImage(filePath));
         if (rotated.isNull() || !rotated.save(filePath, "PNG")) continue;
         page->setIcon(pageIcon(rotated));
         // The gray original of a black/white page turns along (for a later new threshold)
         const QString original = PageProcessing::originalPath(filePath);
-        if (QFile::exists(original)) rotatedImage(QImage(original)).save(original, "PNG");
+        if (QFile::exists(original)) PageProcessing::rotatedImage(QImage(original)).save(original, "PNG");
     }
     viewport()->update();
     emit pagesChanged();

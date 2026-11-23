@@ -18,6 +18,7 @@
 #include <QTextBrowser>
 #include <QTextCursor>
 #include <QTextDocumentFragment>
+#include <QTextFrame>
 #include <QTextList>
 #include <QTextTable>
 #include <QToolButton>
@@ -92,7 +93,7 @@ QColor surfaceColor()
 {
     const QPalette pal = QApplication::palette();
     return UiColors::mix(pal.color(QPalette::Window), pal.color(QPalette::WindowText),
-                         UiColors::surfaceShade);
+                         UiColors::surfaceShadeFor(pal));
 }
 
 } // namespace
@@ -122,10 +123,8 @@ HelpPage::HelpPage(QWidget *parent)
     m_text = new QTextBrowser(this);
     m_text->setOpenExternalLinks(true);
     m_text->document()->setDocumentMargin(14);
-    // Lines not too long to read (narrower windows: see eventFilter, otherwise the text runs
-    // out on the right)
-    m_text->setLineWrapMode(QTextEdit::FixedPixelWidth);
-    m_text->setLineWrapColumnOrWidth(kMaxLineWidth);
+    // Lines not too long to read: a column in the middle, see centerText()
+    m_text->setLineWrapMode(QTextEdit::WidgetWidth);
     m_text->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_text->viewport()->installEventFilter(this);
 
@@ -204,6 +203,7 @@ void HelpPage::loadText(int row)
         if (end > 0) text.insert(end, QStringLiteral("\n\n---"));
     }
     m_text->setMarkdown(text);
+    centerText();   // a new text may come with a new root frame format
     spaceOut();
     scaleImages();
     m_text->verticalScrollBar()->setValue(0);
@@ -331,10 +331,26 @@ void HelpPage::restyle()
     }
 }
 
+// Wider text areas get equal margins left and right of the column instead of empty space on
+// the right; narrower ones keep the document margin
+void HelpPage::centerText()
+{
+    const qreal margin = m_text->document()->documentMargin();
+    const qreal side = qMax(margin, margin + (m_text->viewport()->width() - kMaxLineWidth) / 2.0);
+    QTextFrame *root = m_text->document()->rootFrame();
+    QTextFrameFormat format = root->frameFormat();
+    if (qFuzzyCompare(format.leftMargin(), side) && qFuzzyCompare(format.rightMargin(), side)) {
+        return;   // unchanged: no new layout (it could show or hide the scroll bar again)
+    }
+    format.setLeftMargin(side);
+    format.setRightMargin(side);
+    root->setFrameFormat(format);
+}
+
 bool HelpPage::eventFilter(QObject *watched, QEvent *event)
 {
     if (watched == m_text->viewport() && event->type() == QEvent::Resize) {
-        m_text->setLineWrapColumnOrWidth(qMin(kMaxLineWidth, m_text->viewport()->width()));
+        centerText();
     }
     return QWidget::eventFilter(watched, event);
 }

@@ -57,7 +57,7 @@ Laufzeit nennen auch andere Distributionen.
 | Paket | getestet | wofür |
 |---|---|---|
 | `cmake` | 4.4.4 | Build (mindestens 3.16) |
-| `qt6-base`, `qt6-svg` | 6.12.0 | Widgets, SVG-Icons |
+| `qt6-base`, `qt6-svg` | 6.12.0 | Widgets, D-Bus (Hell/Dunkel), SVG-Icons |
 | `qt6-tools` | 6.12.0 | `lupdate` / `lrelease` für die `.ts`-Dateien |
 
 **Laufzeit**
@@ -123,7 +123,8 @@ Hinweise:
 
 | Datei | Inhalt |
 |---|---|
-| `main.cpp` | Programm- und Organisationsname, INI-Format, Übersetzer, Hauptfenster |
+| `main.cpp` | Programm- und Organisationsname, Fusion-Stil, Hell/Dunkel, INI-Format, Übersetzer, Hauptfenster |
+| `colorschemewatcher.*` | Hell/Dunkel-Einstellung des Desktops über das XDG-Desktop-Portal, meldet Änderungen (Kopie aus NiriSettingsM) |
 | `mainwin.*`, `initialize.cpp` | Hauptfenster: Scannersuche, Optionen, Scannen, Knopfzustände; `initialize.cpp` baut Werkzeugleisten, Formular, Verbindungen und stellt das Fensterlayout wieder her |
 | `settingsmanager.*` | Singleton: alle Einstellungen (INI) und die Optionen des aktuellen Scanners |
 | `settingsoverlay.*` | Einstellungs-Popup mit Nase unter dem Einstellungsknopf |
@@ -131,10 +132,10 @@ Hinweise:
 | `pagelistwidget.*` | Seitenliste: eine Spalte, Seitengröße folgt der Breite; auswählen, entfernen, Drag and Drop |
 | `pagedelegate.*` | zeichnet eine Seite: Bild, Beschriftung „Seite N“, Auswahl, × beim Überfahren |
 | `sanedevice.*` | wie scanimage einen Scanner öffnet: escl-Scanner über das airscan-Backend (Abschnitt 4) |
-| `pageprocessing.*` | Bearbeitung einer gescannten Seite: Farbmodus, Schwarz/Weiß-Schwellwert (später Ausrichten, Beschneiden) |
+| `pageprocessing.*` | Bearbeitung einer gescannten Seite: Drehung bei Querformat, Farbmodus, Schwarz/Weiß-Schwellwert, Drehen (später Ausrichten, Beschneiden) |
 | `previewview.*` | große Vorschau (`QGraphicsView`), passt das Bild in die Ansicht ein |
 | `helppage.*`, `twolinedelegate.*` | Hilfeseite (Markdown in `help/<de\|en>/`, `Help.qrc`); Kopien aus MovieMetaM, an `UiColors` angepasst |
-| `uicolors.h` | Flächenfarben, nur aus Window/WindowText abgeleitet |
+| `uicolors.h` | Flächenfarben, nur aus Window/WindowText abgeleitet; die Palette der App (`applyStandardPalette`) |
 | `toolbarm.*` | Werkzeugleiste; Kopie aus `../libraries/toolbarm` (Master dort, Version 1.7.0) |
 | `globals.h` | leer (Kandidat zum Aufräumen) |
 | `tools/build-linux.sh` | baut das AppImage und die Release-Dateien (Abschnitt 10) |
@@ -201,7 +202,9 @@ installiert ist:
 `getScannerCapabilities()` ruft `scanimage -d <id> --help` auf und liest `--resolution`,
 `--mode`, `--source`, `--scan-intent` (Werteliste und Standard in `[...]`). Bereiche wie
 `50..1200` werden zu den üblichen Auflösungen darin (`expandResolutionValues`). Optionen mit
-`[inactive]` werden übersprungen. Ein gespeicherter Wert, den der Scanner nicht anbietet, wird
+`[inactive]` werden übersprungen. Die größte Scanfläche kommt aus `-x 0..215.9mm` /
+`-y 0..297.011mm` (`scanAreaMaxWidth/Height`); sie hängt von der Quelle ab (HP M277dw: Flachbett
+297 mm lang, Einzug 381 mm) und gilt nur für die Standardquelle (`scanAreaSource`). Ein gespeicherter Wert, den der Scanner nicht anbietet, wird
 durch seinen Standard ersetzt – außer dem Farbmodus: Der gehört der App (nächster Abschnitt),
 `--mode` entscheidet nur, womit gescannt wird.
 
@@ -212,8 +215,12 @@ durch seinen Standard ersetzt – außer dem Farbmodus: Der gehört der App (nä
 ### Scannen (`MainWin::startScan()`)
 
 - `scanimage` mit `--device-name` und nur den Optionen, die der Scanner gemeldet hat (sonst
-  bricht `scanimage` ab), `-x`/`-y` aus dem Seitenformat (Querformat tauscht sie),
-  `--format=png`.
+  bricht `scanimage` ab), `-x`/`-y` aus dem Seitenformat, `--format=png`.
+- Die Scanfläche ist immer hochkant, auch bei Querformat: Das Blatt liegt hochkant auf dem Glas
+  oder im Einzug (A4 quer ist breiter als das Glas). Jede Seite wird danach um 90° gegen den
+  Uhrzeigersinn gedreht (`convertScannedPage(…, landscape)`).
+- `-x`/`-y` werden beim Scannen mit `scanAreaSource` auf die größte Scanfläche gekürzt: airscan
+  macht das selbst, escl gibt zu große Werte ungeprüft weiter.
 - Einzug (Quelle enthält ADF/Feeder/Duplex, `isAdfSource`): `--batch=page_%03d.png`.
   Flachbett: eine Seite (`--batch-count=1`).
 - Zielordner `/tmp/scan_job_<yyyyMMdd_hhmmss>/`. Ein Timer (1,5 s) holt fertige Seiten schon
@@ -253,7 +260,7 @@ Die App hat drei feste Modi; die Namen des Scanners (`Color`, `Colour`, `24bit C
 - Das Grau-Original einer Schwarz/Weiß-Seite bleibt als `gray_page_001.png` (`originalPath()`;
   das Präfix hält es aus dem Filter `page_*.png` heraus) für einen späteren neuen Schwellwert.
   Drehen dreht es mit, Entfernen einer Seite löscht es.
-- Drehen behält das Bildformat (`rotatedImage()` in `pagelistwidget.cpp`): Qt macht aus einem
+- Drehen behält das Bildformat (`PageProcessing::rotatedImage()`): Qt macht aus einem
   1-Bit-Bild beim Drehen 32 Bit.
 - Ältere Einstellungen mit `Lineart` werden als `BlackWhite` gelesen.
 
@@ -343,16 +350,23 @@ wiederhergestellt (das entscheidet der Compositor).
   `i18n/`, `translation.qrc` bettet sie ein.
 - Viele Quelltexte sind Schlüssel (`SCAN`, `REMOVE_PAGES %n`), deshalb braucht auch Englisch eine
   Übersetzung. Neuere Texte sind normale englische Sätze.
-- `main.cpp` lädt die erste Systemsprache, für die es eine Übersetzung gibt, sonst Englisch.
+- `main.cpp` lädt die erste Systemsprache, für die es eine Übersetzung gibt, sonst Englisch, und
+  Qts eigene Übersetzung `qtbase` in derselben Sprache (Standardknöpfe, Dateidialog).
 - Hilfetexte: `help/de/*.md`, `help/en/*.md` (`Help.qrc`).
 
 ---
 
 ## 8. UI-Bausteine und Stil
 
-- **Farben werden nur aus Window/WindowText abgeleitet** (`uicolors.h`, `UiColors::mix`). Mit
-  dem gtk3-Platform-Theme sind Window, Button und Base gleich und Light/Mid/Dark fast gleich;
-  daraus genommene Farben verschwinden.
+- **Hell/Dunkel:** Stil Fusion. `ColorSchemeWatcher` liest `color-scheme` aus dem
+  XDG-Desktop-Portal und meldet Änderungen; `main.cpp` setzt es mit
+  `QStyleHints::setColorScheme()` und danach `UiColors::applyStandardPalette()`: immer Fusions
+  eigene helle oder dunkle Palette (ein Plattform-Theme wie gtk3 hat Farben nur für einen Modus,
+  gemischt mit denen von Fusion sahen sie nach mehrmaligem Umschalten anders aus), mit lesbarer
+  Auswahlfarbe. Funktioniert mit jedem `QT_QPA_PLATFORMTHEME` und im AppImage gleich.
+- **Farben werden nur aus Window/WindowText abgeleitet** (`uicolors.h`, `UiColors::mix`).
+  Ursprünglich, weil mit der gtk3-Palette Window, Button und Base gleich und Light/Mid/Dark fast
+  gleich sind; mit der Fusion-Palette weiterhin der sichere Weg.
 - Seitenliste und Vorschau liegen tiefer als das Fenster, wie die Werkzeugleiste
   (`applySurfaceColors`, bei Palettenwechsel erneut aufgerufen, so wirkt ein Wechsel hell/dunkel
   sofort).
@@ -400,10 +414,10 @@ mit seinem Qt-Plugin. Von Hand dazu: das Wayland-Plugin, das Plattform-Theme des
 (Dateidialog von „PDF speichern“) und `libOpenGL.so.0`. Erster Lauf: etwa 1,8 GB in
 `build/linux-cache`. Braucht nur Podman (ohne root) und Python 3 auf dem Rechner.
 
-Das Plattform-Theme: Ein in der Umgebung gesetztes Theme (z. B. `QT_QPA_PLATFORMTHEME=gtk3` unter
-niri) fehlt im AppImage, Qt fiele auf sein generisches Theme zurück (immer hell). Deshalb schaltet
-`main.cpp` auf `xdgdesktopportal` um, wenn `APPIMAGE` gesetzt ist; das folgt dem hellen / dunklen
-Modus des Desktops (wie in MovieMetaM).
+Hell/Dunkel im AppImage: Ein in der Umgebung gesetztes Theme (z. B. `QT_QPA_PLATFORMTHEME=gtk3`
+unter niri) fehlt dort. Das spielt keine Rolle mehr: Die App fragt das Desktop-Portal selbst
+(`ColorSchemeWatcher`, Abschnitt 8) und nimmt die Fusion-Palette. Qts eigene Übersetzungen
+(`qtbase_*.qm`) packt linuxdeploy mit ins Paket (`usr/translations`).
 
 - Der Paketname trägt die Version (`PDFDocumentScannerM-0.5.1-linux.AppImage`); das Skript liest
   sie aus `CMakeLists.txt`.

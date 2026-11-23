@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(PROJECT_VERSION "0.5.3")
+set(PROJECT_VERSION "0.5.4")
 set(ORGANIZATION_NAME "SpeckenbachNet")
 
 project(
@@ -16,8 +16,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Svg LinguistTools)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Svg LinguistTools)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Svg LinguistTools DBus)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Svg LinguistTools DBus)
 
 set(TS_FILES
     i18n/PDFDocumentScannerM_en.ts
@@ -53,6 +53,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         helppage.h helppage.cpp
         twolinedelegate.h twolinedelegate.cpp
         Help.qrc
+        colorschemewatcher.h colorschemewatcher.cpp
 )
 
 target_include_directories(PDFDocumentScannerM
@@ -95,6 +96,7 @@ endif()
 target_link_libraries(PDFDocumentScannerM PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Svg   # SVG icons (tinted toolbar icons, window icon)
+    Qt${QT_VERSION_MAJOR}::DBus
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

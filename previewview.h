@@ -19,12 +19,18 @@ public:
 
     bool setImage(const QString &imagePath);
     void clearImage();
+    // Notice in the middle while no page is shown: a colored dot (state), a bold title, a
+    // subtitle and an optional note below. None: nothing is shown.
+    enum class HintState { None, Ready, Warning, Problem };
+    void setHint(HintState state, const QString &title = QString(),
+                 const QString &subtitle = QString(), const QString &note = QString());
 
     void zoomIn();
     void zoomOut();
     void fitPage();   // whole page, follows resizes again
 
 protected:
+    void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
@@ -43,4 +49,8 @@ private:
     QGraphicsPixmapItem *m_item = nullptr;
     bool m_fitMode = true;        // whole page shown: resizes fit it again
     ZoomBar *m_zoomBar = nullptr;
+    struct Hint {
+        HintState state = HintState::None;
+        QString title, subtitle, note;
+    } m_hint;
 };

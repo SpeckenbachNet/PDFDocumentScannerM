@@ -14,7 +14,13 @@ QString scannerModeFor(const QString &colorMode, const QStringList &scannerModes
 
 // Brings the page file to the color mode: gray or 1 bit black/white (automatic threshold).
 // For black/white the gray image is kept as originalPath() for a later new threshold.
-bool convertScannedPage(const QString &filePath, const QString &colorMode);
+// landscape: the page was scanned upright (as it lies on the glass or in the feeder) and is
+// turned 90° counter-clockwise first, so it becomes a landscape page.
+bool convertScannedPage(const QString &filePath, const QString &colorMode, bool landscape = false);
+
+// Turned by a multiple of 90° (90 = clockwise) in the same format: Qt turns a 1 bit image into
+// 32 bit while rotating, the black/white page would lose its small size
+QImage rotatedImage(const QImage &image, int degrees = 90);
 
 // Gray original of a black/white page: gray_page_001.png next to page_001.png
 // (the prefix keeps it out of the scan's "page_*.png" filter)

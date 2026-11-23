@@ -29,3 +29,5 @@ Punkte pro Zoll (dpi). 300 dpi reichen für Text, höhere Werte für Kleingedruc
 ## Seitenausrichtung und Seitenformat
 
 **Hochformat** oder **Querformat** und die Größe des gescannten Bereichs: A4, A5, A6, Letter oder Legal. **Standard** nimmt A4, in Ländern mit dem Letter-Format Letter.
+
+Das Blatt liegt immer hochkant auf dem Glas oder im Einzug. Bei **Querformat** dreht das Programm jede gescannte Seite danach um 90° gegen den Uhrzeigersinn. Liegt sie falsch herum, drehe sie mit dem Knopf mit dem runden Pfeil. Ist das Format größer, als der Scanner scannen kann (etwa Legal auf einem A4-Glas), wird nur der Bereich gescannt, den er schafft.

@@ -59,6 +59,12 @@ public:
     QString intentDefault;
     QStringList scanningUnitValues;
     QString scanningUnitDefault;
+    // Largest scan area in mm (scanimage -x / -y), 0 = unknown. It depends on the source
+    // (HP M277dw: flatbed 297 mm long, feeder 381 mm), so it is only valid for scanAreaSource
+    // (the default source when the options were loaded; empty: the scanner has no sources).
+    double scanAreaMaxWidth = 0;
+    double scanAreaMaxHeight = 0;
+    QString scanAreaSource;
     // QStringList scanIntentValues;
     // QString scanIntentDefault;
     void clearCapabilities();

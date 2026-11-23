@@ -3,6 +3,7 @@
 #include "settingsmanager.h"
 #include "pageprocessing.h"
 #include "sanedevice.h"
+#include <QCloseEvent>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -16,79 +17,79 @@
 
 namespace {
 
-// Plain text (e.g. a scanimage message) as HTML for the status overlay. Device URLs have no
-// spaces, so zero width spaces after '/' and ':' give the word wrap places to break.
-QString breakableHtml(const QString &text) {
-    QString html = text.toHtmlEscaped();
-    html.replace('/', QStringLiteral("/​"));
-    html.replace(':', QStringLiteral(":​"));
-    return html;
-}
+    // Plain text (e.g. a scanimage message) as HTML for the status overlay. Device URLs have no
+    // spaces, so zero width spaces after '/' and ':' give the word wrap places to break.
+    QString breakableHtml(const QString &text) {
+        QString html = text.toHtmlEscaped();
+        html.replace('/', QStringLiteral("/​"));
+        html.replace(':', QStringLiteral(":​"));
+        return html;
+    }
 
-// Backends name their feeders differently ("ADF", "ADF Front", "ADF Duplex",
-// "Automatic Document Feeder", ...)
-// PDF page of the scanned size: pixels and resolution. Without a known scan resolution the one
-// stored in the image is used. Landscape pages stay landscape (QPageSize alone is portrait).
-QPageLayout pageLayoutFor(const QImage &image, int dpi) {
-    if (dpi <= 0) dpi = qRound(image.dotsPerMeterX() * 0.0254);
-    if (dpi <= 0) dpi = 300;
-    const QSizeF mm(image.width() * 25.4 / dpi, image.height() * 25.4 / dpi);
-    const QPageSize size(QSizeF(qMin(mm.width(), mm.height()), qMax(mm.width(), mm.height())),
-                         QPageSize::Millimeter, QString(), QPageSize::FuzzyMatch);
-    const auto orientation = mm.width() > mm.height() ? QPageLayout::Landscape : QPageLayout::Portrait;
-    return QPageLayout(size, orientation, QMarginsF(0, 0, 0, 0));
-}
+    // Backends name their feeders differently ("ADF", "ADF Front", "ADF Duplex",
+    // "Automatic Document Feeder", ...)
+    // PDF page of the scanned size: pixels and resolution. Without a known scan resolution the one
+    // stored in the image is used. Landscape pages stay landscape (QPageSize alone is portrait).
+    QPageLayout pageLayoutFor(const QImage &image, int dpi) {
+        if (dpi <= 0) dpi = qRound(image.dotsPerMeterX() * 0.0254);
+        if (dpi <= 0) dpi = 300;
+        const QSizeF mm(image.width() * 25.4 / dpi, image.height() * 25.4 / dpi);
+        const QPageSize size(QSizeF(qMin(mm.width(), mm.height()), qMax(mm.width(), mm.height())),
+                             QPageSize::Millimeter, QString(), QPageSize::FuzzyMatch);
+        const auto orientation = mm.width() > mm.height() ? QPageLayout::Landscape : QPageLayout::Portrait;
+        return QPageLayout(size, orientation, QMarginsF(0, 0, 0, 0));
+    }
 
-// One page per image, the image fills the page
-bool writePdf(const QString &filePath, const QList<PageListWidget::Page> &pages) {
-    QPdfWriter writer(filePath);
-    writer.setCreator(QCoreApplication::applicationName());
-    writer.setTitle(QFileInfo(filePath).completeBaseName());
+    // One page per image, the image fills the page
+    bool writePdf(const QString &filePath, const QList<PageListWidget::Page> &pages) {
+        QPdfWriter writer(filePath);
+        writer.setCreator(QCoreApplication::applicationName());
+        writer.setTitle(QFileInfo(filePath).completeBaseName());
 
-    QPainter painter;
-    for (int i = 0; i < pages.size(); ++i) {
-        const QImage image(pages[i].filePath);
-        if (image.isNull()) return false;
-        writer.setPageLayout(pageLayoutFor(image, pages[i].dpi));   // applies to the next page
-        if (i == 0) {
-            if (!painter.begin(&writer)) return false;
-        } else if (!writer.newPage()) {
-            return false;
+        QPainter painter;
+        for (int i = 0; i < pages.size(); ++i) {
+            const QImage image(pages[i].filePath);
+            if (image.isNull()) return false;
+            writer.setPageLayout(pageLayoutFor(image, pages[i].dpi));   // applies to the next page
+            if (i == 0) {
+                if (!painter.begin(&writer)) return false;
+            } else if (!writer.newPage()) {
+                return false;
+            }
+            painter.drawImage(QRect(0, 0, writer.width(), writer.height()), image);
         }
-        painter.drawImage(QRect(0, 0, writer.width(), writer.height()), image);
+        return painter.end();
     }
-    return painter.end();
-}
 
-bool isAdfSource(const QString &source) {
-    return source.contains("ADF", Qt::CaseInsensitive)
-        || source.contains("Feeder", Qt::CaseInsensitive)
-        || source.contains("Duplex", Qt::CaseInsensitive);
-}
-
-// Many backends report a range (e.g. "50..1200 (in steps of 1)") instead of a list.
-// In that case offer the common resolutions that lie within the range.
-QStringList expandResolutionValues(const QStringList &values, const QString &defaultValue) {
-    if (values.size() != 1) return values;
-
-    static const QRegularExpression rangeRegex("^(\\d+)\\.\\.(\\d+)");
-    QRegularExpressionMatch match = rangeRegex.match(values.first());
-    if (!match.hasMatch()) return values;
-
-    const int minRes = match.captured(1).toInt();
-    const int maxRes = match.captured(2).toInt();
-    QList<int> resolutions;
-    for (int res : {75, 100, 150, 200, 300, 400, 600, 1200, 2400, 4800}) {
-        if (res >= minRes && res <= maxRes) resolutions.append(res);
+    bool isAdfSource(const QString &source) {
+        return source.contains("ADF", Qt::CaseInsensitive)
+            || source.contains("Feeder", Qt::CaseInsensitive)
+            || source.contains("Duplex", Qt::CaseInsensitive);
     }
-    const int defaultRes = defaultValue.toInt();
-    if (defaultRes > 0 && !resolutions.contains(defaultRes)) resolutions.append(defaultRes);
-    std::sort(resolutions.begin(), resolutions.end());
 
-    QStringList result;
-    for (int res : std::as_const(resolutions)) result.append(QString::number(res));
-    return result;
-}
+    // Many backends report a range (e.g. "50..1200 (in steps of 1)") instead of a list.
+    // In that case offer the common resolutions that lie within the range.
+    QStringList expandResolutionValues(const QStringList &values, const QString &defaultValue) {
+        if (values.size() != 1) return values;
+
+        static const QRegularExpression rangeRegex("^(\\d+)\\.\\.(\\d+)");
+        QRegularExpressionMatch match = rangeRegex.match(values.first());
+        if (!match.hasMatch()) return values;
+
+        const int minRes = match.captured(1).toInt();
+        const int maxRes = match.captured(2).toInt();
+        QList<int> resolutions;
+        for (int res : {75, 100, 150, 200, 300, 400, 600, 1200, 2400, 4800}) {
+            if (res >= minRes && res <= maxRes) resolutions.append(res);
+        }
+        const int defaultRes = defaultValue.toInt();
+        if (defaultRes > 0 && !resolutions.contains(defaultRes)) resolutions.append(defaultRes);
+        std::sort(resolutions.begin(), resolutions.end());
+
+        QStringList result;
+        for (int res : std::as_const(resolutions)) result.append(QString::number(res));
+        return result;
+    }
 
 }
 
@@ -153,6 +154,7 @@ void MainWin::showCurrentPage() {
 
 void MainWin::searchForScanners() {
     m_scannerReady = false;   // the scanner may be gone after the search
+    m_standInFor.clear();
     setBusy(true);
     m_statusOverlay->showMessage(tr("SEARCH_SCANNERS..."));
 
@@ -165,7 +167,7 @@ void MainWin::searchForScanners() {
     // scanimage not installed / not executable: finished() is never emitted in this case
     connect(process, &QProcess::errorOccurred, this, [this, process](QProcess::ProcessError error) {
         if (error != QProcess::FailedToStart) return;
-        m_statusOverlay->showMessage(tr("EROOR_STARTING_SEARCH."), true, 3000);
+        m_statusOverlay->showMessage(tr("ERROR_STARTING_SEARCH."), true, 3000);
         setBusy(false);
         process->deleteLater();
     });
@@ -173,7 +175,7 @@ void MainWin::searchForScanners() {
     connect(process, &QProcess::finished, this, [this, process, useAirscan]() {
         process->deleteLater();
         if (process->exitStatus() != QProcess::NormalExit) {
-            m_statusOverlay->showMessage(tr("EROOR_STARTING_SEARCH."), true, 3000);
+            m_statusOverlay->showMessage(tr("ERROR_STARTING_SEARCH."), true, 3000);
             setBusy(false);
             return;
         }
@@ -194,7 +196,7 @@ void MainWin::searchForScanners() {
             setBusy(false);
             return;
         }
-        m_statusOverlay->showMessage(tr("LOAD_SCANNER_CAPABILITIES..."));
+        // The search overlay stays until the options are loaded (getScannerCapabilities)
         QTimer::singleShot(10, this, [this]() {
             this->getScannerCapabilities(SettingsManager::instance().deviceId());
         });
@@ -260,8 +262,11 @@ bool MainWin::useStandInScanner() {
         settings.setDeviceId(QString());
         return false;
     }
+    const QString missing = settings.savedDeviceName().isEmpty() ? settings.savedDeviceId()
+                                                                 : settings.savedDeviceName();
     settings.setDeviceId(settings.scannerValues.firstKey());
     getScannerCapabilities(settings.deviceId());
+    m_standInFor = missing;
     return true;
 }
 
@@ -306,7 +311,7 @@ void MainWin::saveScanners(const QString &saneOutput) {
         // Get Display Name (trim ip)
         QString rawName = remainingText.section("ip=", 0, 0).section('?', 0, 0).trimmed();
 
-        // 5. Zusammenbau
+        // 5. Put together
         QString displayName = QString("%1: %2").arg(backend, rawName.trimmed());
         if (!connectionInfo.isEmpty()) {
             displayName += QString(" (%1)").arg(connectionInfo);
@@ -318,6 +323,8 @@ void MainWin::saveScanners(const QString &saneOutput) {
 
 void MainWin::getScannerCapabilities(const QString &deviceID) {
     m_scannerReady = false;
+    m_standInFor.clear();   // useStandInScanner() sets it again after this call
+    m_capabilitiesTimer->stop();
     if (deviceID.isEmpty()) {
         // e.g. only unusable devices were found: refresh must stay possible
         m_statusOverlay->hideOverlay();
@@ -327,14 +334,14 @@ void MainWin::getScannerCapabilities(const QString &deviceID) {
 
     qDebug() << "Get scanner capabilities...";
     setBusy(true);
-    m_statusOverlay->showMessage(tr("LOAD_SCANNER_CAPABILITIES..."));
-    m_statusOverlay->raise();
+    m_capabilitiesTimer->start();   // the overlay appears only if this takes a while
     // QProcess auf dem Heap, damit er weiterläuft, wenn die Funktion endet
     QProcess *process = new QProcess(this);
 
     // Wir verbinden das finished-Signal DES NEUEN Prozesses
     connect(process, &QProcess::finished, this, [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
         process->deleteLater();
+        m_capabilitiesTimer->stop();
 
         if (exitStatus != QProcess::NormalExit || exitCode != 0) {
             // The saved scanner was tried without being found: it is really not there
@@ -357,10 +364,20 @@ void MainWin::getScannerCapabilities(const QString &deviceID) {
 
         // Regex: Gruppe 1 = Name, Gruppe 2 = Optionen-Liste, Gruppe 3 = Default in []
         QRegularExpression optRegex("--([a-zA-Z0-9-]+)\\s+(.*?)\\s*\\[(.*?)\\]");
+        // Largest scan area: "-x 0..215.9mm [215.9]" (width) and "-y 0..297.011mm [297.011]"
+        static const QRegularExpression areaRegex("^-([xy])\\s+[0-9.]+\\.\\.([0-9.]+)mm");
 
         // 1. as_const prevents the LIST from being copied (detachment)
         // 2. & prevents the individual STRING from being copied
         for (const QString &line : std::as_const(lines)) {
+            const QRegularExpressionMatch area = areaRegex.match(line.trimmed());
+            if (area.hasMatch()) {
+                const double max = area.captured(2).toDouble();
+                if (area.captured(1) == "x") SettingsManager::instance().scanAreaMaxWidth = max;
+                else SettingsManager::instance().scanAreaMaxHeight = max;
+                continue;
+            }
+
             QRegularExpressionMatch match = optRegex.match(line.trimmed());
 
             if (match.hasMatch()) {
@@ -414,6 +431,8 @@ void MainWin::getScannerCapabilities(const QString &deviceID) {
                 }
             }
         }
+        // The scan area above belongs to the source the scanner had when asked: its default
+        SettingsManager::instance().scanAreaSource = SettingsManager::instance().scanningUnitDefault;
         m_statusOverlay->hideOverlay();
         m_probingSavedScanner = false;   // the saved scanner answered: it stays in the list
         m_scannerReady = true;
@@ -426,6 +445,7 @@ void MainWin::getScannerCapabilities(const QString &deviceID) {
     // scanimage not installed / not executable: finished() is never emitted in this case
     connect(process, &QProcess::errorOccurred, this, [this, process](QProcess::ProcessError error) {
         if (error != QProcess::FailedToStart) return;
+        m_capabilitiesTimer->stop();
         m_statusOverlay->showMessage(tr("Scanner capabilities could not be loaded"), true, 3000);
         setBusy(false);
         process->deleteLater();
@@ -480,10 +500,10 @@ void MainWin::startScan() {
     } else if (pageFormat == "Legal") {
         width = "215.9"; height = "355.6";
     }
-    // Check orientation
-    if (SettingsManager::instance().isLandscape()) {
-        std::swap(width, height);
-    }
+    // Landscape: the sheet still lies upright on the glass or in the feeder (A4 landscape is
+    // wider than the glass), so the area stays upright and each page is turned afterwards
+    // (convertScannedPage)
+    const bool landscape = SettingsManager::instance().isLandscape();
 
     // Create temporary directory in /tmp
     QString batchDirName = "scan_job_" + QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
@@ -495,6 +515,7 @@ void MainWin::startScan() {
         return;
     }
     QString batchPath = tempDir.absoluteFilePath(batchDirName);
+    m_scanDirs.append(batchPath);
 
     // Configure QProcess
     QProcess *scanProcess = new QProcess(this);
@@ -529,9 +550,20 @@ void MainWin::startScan() {
     if (SettingsManager::instance().intentValues.contains(scanIntent)) {
         arguments << "--scan-intent" << scanIntent;
     }
+    // Not larger than the scanner can: airscan cuts it down itself, escl passes it on unchecked.
+    // Only with the source the limits were read for (they differ between flatbed and feeder).
+    const SettingsManager &scanner = SettingsManager::instance();
+    if (scanner.scanAreaSource.isEmpty() || scanner.scanAreaSource == effectiveSource) {
+        if (scanner.scanAreaMaxWidth > 0 && width.toDouble() > scanner.scanAreaMaxWidth) {
+            width = QString::number(scanner.scanAreaMaxWidth);
+        }
+        if (scanner.scanAreaMaxHeight > 0 && height.toDouble() > scanner.scanAreaMaxHeight) {
+            height = QString::number(scanner.scanAreaMaxHeight);
+        }
+    }
     arguments << "-x" << width;
     arguments << "-y" << height;
-    //  When ADF is selected bach mode with more than one page
+    //  When ADF is selected batch mode with more than one page
     if (isAdfSource(effectiveSource)) {
         arguments << "--batch=page_%03d.png";
     } else {
@@ -543,7 +575,7 @@ void MainWin::startScan() {
 
     // 4. Timer für die Live-Anzeige (alle 1,5 Sekunden prüfen)
     QTimer *progressTimer = new QTimer(this);
-    connect(progressTimer, &QTimer::timeout, this, [this, batchPath, scanDpi, colorMode]() {
+    connect(progressTimer, &QTimer::timeout, this, [this, batchPath, scanDpi, colorMode, landscape]() {
         QDir dir(batchPath);
         QStringList currentFiles = dir.entryList(QStringList() << "page_*.png", QDir::Files, QDir::Name);
 
@@ -559,7 +591,7 @@ void MainWin::startScan() {
                     QImage img(tempCopy);
                     // Prüfen, ob das Bild valide und nicht leer ist
                     if (!img.isNull() && img.width() > 0) {
-                        PageProcessing::convertScannedPage(fullPath, colorMode);   // the page is complete now
+                        PageProcessing::convertScannedPage(fullPath, colorMode, landscape);   // the page is complete now
                         this->addPageToList(fullPath, scanDpi); // Hier wird das Item im UI erstellt
                         m_processedFiles.append(fileName);
                     }
@@ -594,7 +626,7 @@ void MainWin::startScan() {
     });
 
     // 6. Abschluss-Logik
-    connect(scanProcess, &QProcess::finished, this, [this, batchPath, scanDpi, colorMode, scanProcess, progressTimer](int exitCode, QProcess::ExitStatus exitStatus) {
+    connect(scanProcess, &QProcess::finished, this, [this, batchPath, scanDpi, colorMode, landscape, scanProcess, progressTimer](int exitCode, QProcess::ExitStatus exitStatus) {
         progressTimer->stop();
         progressTimer->deleteLater();
 
@@ -609,7 +641,7 @@ void MainWin::startScan() {
                     QFile::remove(fullPath);
                     continue;
                 }
-                PageProcessing::convertScannedPage(fullPath, colorMode);
+                PageProcessing::convertScannedPage(fullPath, colorMode, landscape);
                 this->addPageToList(fullPath, scanDpi);
                 m_processedFiles.append(fileName);
             }
@@ -675,16 +707,17 @@ void MainWin::refreshScanners() {
 
 // Selected or all pages in list order. Without OCR the PDF is written here (QPdfWriter);
 // with OCR (later) tesseract writes it from the same images instead.
-void MainWin::savePdf(bool selectedOnly) {
+// Returns whether the PDF was written (false: dialog cancelled or error)
+bool MainWin::savePdf(bool selectedOnly) {
     const QList<PageListWidget::Page> pages = ui->pagesListWidget->pages(selectedOnly);
-    if (pages.isEmpty()) return;
+    if (pages.isEmpty()) return false;
 
     SettingsManager &settings = SettingsManager::instance();
     const QString name = "Scan_" + QDateTime::currentDateTime().toString("yyyy-MM-dd_HHmm") + ".pdf";
     QString filePath = QFileDialog::getSaveFileName(this, tr("Save PDF"),
                                                     QDir(settings.lastSaveFolder()).filePath(name),
                                                     tr("PDF files (*.pdf)"));
-    if (filePath.isEmpty()) return;
+    if (filePath.isEmpty()) return false;
     if (!filePath.endsWith(".pdf", Qt::CaseInsensitive)) filePath += ".pdf";
     settings.setLastSaveFolder(QFileInfo(filePath).absolutePath());
 
@@ -696,11 +729,14 @@ void MainWin::savePdf(bool selectedOnly) {
     setBusy(false);
 
     if (saved) {
+        // All pages are in a PDF now (also "Save selected" with every page selected)
+        if (pages.size() == ui->pagesListWidget->count()) m_unsaved = false;
         m_statusOverlay->showMessage(tr("PDF saved: %1").arg(QFileInfo(filePath).fileName()), false, 3000);
     } else {
         QFile::remove(filePath);   // no half written file
         m_statusOverlay->showMessage(tr("PDF could not be saved"), true, 3000);
     }
+    return saved;
 }
 
 void MainWin::rotatePages() {
@@ -744,6 +780,28 @@ void MainWin::updateButtons() {
     m_saveSelBtn->setEnabled(!m_busy && hasSelection);
     m_saveAllBtn->setEnabled(!m_busy && hasPages);
     m_clearBtn->setEnabled(!m_busy && hasPages);
+    updateScannerHint();
+}
+
+// Empty preview (also after "Clear"): which scanner is used, or why there is none
+void MainWin::updateScannerHint() {
+    const SettingsManager &settings = SettingsManager::instance();
+    const QString name = settings.scannerValues.value(settings.deviceId());
+    m_scanBtn->setToolTip(m_scannerReady && !m_scanProcess ? tr("Scan with %1").arg(name) : QString());
+
+    // Searching and loading show the status overlay (activity), the notice states facts only
+    using State = PreviewView::HintState;
+    PreviewView *preview = ui->previewGraphicsView;
+    if (ui->pagesListWidget->count() > 0 || m_scanProcess || m_busy) {
+        preview->setHint(State::None);
+    } else if (m_scannerReady && !m_standInFor.isEmpty()) {
+        preview->setHint(State::Warning, tr("Ready to scan"), name,
+                         tr("Your scanner (%1) does not answer").arg(m_standInFor));
+    } else if (m_scannerReady) {
+        preview->setHint(State::Ready, tr("Ready to scan"), name);
+    } else {
+        preview->setHint(State::Problem, tr("No scanner found"), tr("Search again with the arrow button"));
+    }
 }
 
 // ====== Events ======
@@ -766,8 +824,59 @@ void MainWin::changeEvent(QEvent *event) {
 }
 
 void MainWin::closeEvent(QCloseEvent *event) {
+    if (!confirmClose()) {
+        event->ignore();
+        return;
+    }
     SettingsManager::instance().saveWindowLayout(saveGeometry(), ui->splitter->saveState());
+    removeScanDirs();
     QMainWindow::closeEvent(event);
+}
+
+// Before closing: a running scan is cancelled and unsaved pages are saved or discarded, only
+// if the user agrees. false: the window stays open.
+bool MainWin::confirmClose() {
+    if (m_scanProcess) {
+        QMessageBox box(QMessageBox::Question, tr("Close"),
+                        tr("A scan is running. Cancel it and close?"), QMessageBox::NoButton, this);
+        QPushButton *stop = box.addButton(tr("Cancel scan"), QMessageBox::DestructiveRole);
+        box.addButton(tr("Keep scanning"), QMessageBox::RejectRole);
+        box.exec();
+        if (box.clickedButton() != stop) return false;
+        stopScanNow();   // pages complete already land in the list
+    }
+    if (m_unsaved && ui->pagesListWidget->count() > 0) {
+        QMessageBox box(QMessageBox::Question, tr("Close"),
+                        tr("Some pages are not saved as PDF yet. The scanned images are deleted when the app closes."),
+                        QMessageBox::NoButton, this);
+        QPushButton *save = box.addButton(tr("SAVE_ALL"), QMessageBox::AcceptRole);
+        QPushButton *discard = box.addButton(tr("Discard"), QMessageBox::DestructiveRole);
+        box.addButton(tr("Cancel"), QMessageBox::RejectRole);
+        box.setDefaultButton(save);
+        box.exec();
+        if (box.clickedButton() == save) return savePdf(false);   // dialog cancelled: stay open
+        return box.clickedButton() == discard;
+    }
+    return true;
+}
+
+// Like cancelScan(), but waits for scanimage: the app is about to close. finished() still runs
+// (from waitForFinished) and takes the complete pages.
+void MainWin::stopScanNow() {
+    QProcess *process = m_scanProcess;
+    if (!process) return;
+    m_scanCancelled = true;
+    process->terminate();
+    if (!process->waitForFinished(5000)) {
+        process->kill();
+        process->waitForFinished(1000);
+    }
+}
+
+// The scanned images live in /tmp (in RAM on many systems): gone with the app
+void MainWin::removeScanDirs() {
+    for (const QString &path : std::as_const(m_scanDirs)) QDir(path).removeRecursively();
+    m_scanDirs.clear();
 }
 
 MainWin::~MainWin()

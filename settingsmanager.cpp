@@ -41,6 +41,9 @@ void SettingsManager::clearCapabilities() {
     intentDefault = "";
     scanningUnitValues.clear();
     scanningUnitDefault = "";
+    scanAreaMaxWidth = 0;
+    scanAreaMaxHeight = 0;
+    scanAreaSource.clear();
 }
 
 bool SettingsManager::isLandscape() {
@@ -176,6 +179,7 @@ void SettingsManager::dump() const {
     dbg << "  Scan-Intent: " << intentValues.join(", ") << " [" << intentDefault << "]" << "\n";
     dbg << "  Colors:      " << colorModeValues.join(", ") << " [" << colorModeDefault << "]" << "\n";
     dbg << "  Sources:     " << scanningUnitValues.join(", ") << " [" << scanningUnitDefault << "]" << "\n";
+    dbg << "  Scan area:   " << scanAreaMaxWidth << " x " << scanAreaMaxHeight << " mm [" << scanAreaSource << "]" << "\n";
 
     dbg << "Scanner Values (Map):\n";
     if (scannerValues.isEmpty()) {

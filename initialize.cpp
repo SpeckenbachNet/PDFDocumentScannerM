@@ -104,6 +104,14 @@ void MainWin::initializeForm() {
 
     // Overlays
     m_statusOverlay = new StatusOverlay(this);
+    // Loading the options of a scanner often takes a fraction of a second: no overlay for that
+    m_capabilitiesTimer = new QTimer(this);
+    m_capabilitiesTimer->setSingleShot(true);
+    m_capabilitiesTimer->setInterval(300);
+    connect(m_capabilitiesTimer, &QTimer::timeout, this, [this] {
+        m_statusOverlay->showMessage(tr("LOAD_SCANNER_CAPABILITIES..."));
+        m_statusOverlay->raise();
+    });
     m_settingsOverlay = new SettingsOverlay(nullptr);
     m_settingsOverlay->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
 
@@ -143,7 +151,7 @@ void MainWin::applySurfaceColors() {
     const QPalette appPal = QApplication::palette();
     const QColor surface = UiColors::mix(appPal.color(QPalette::Window),
                                          appPal.color(QPalette::WindowText),
-                                         UiColors::surfaceShade);
+                                         UiColors::surfaceShadeFor(appPal));
 
     const QList<QWidget*> viewports = {
         ui->pagesListWidget->viewport(),
@@ -175,6 +183,10 @@ void MainWin::initializeConnects() {
     connect(ui->pagesListWidget, &QListWidget::currentItemChanged, this, &MainWin::showCurrentPage);
     // Page buttons follow the pages and the selection; a rotated page is shown again
     connect(ui->pagesListWidget, &PageListWidget::pagesChanged, this, &MainWin::updateButtons);
+    // Anything changed: the pages are not (all) in a PDF any more; an empty list has nothing to lose
+    connect(ui->pagesListWidget, &PageListWidget::pagesChanged, this, [this] {
+        m_unsaved = ui->pagesListWidget->count() > 0;
+    });
     connect(ui->pagesListWidget, &PageListWidget::pageImagesChanged, this, &MainWin::showCurrentPage);
     connect(ui->pagesListWidget, &QListWidget::itemSelectionChanged, this, &MainWin::updateButtons);
     connect(m_rotateBtn, &QToolButton::clicked, this, &MainWin::rotatePages);

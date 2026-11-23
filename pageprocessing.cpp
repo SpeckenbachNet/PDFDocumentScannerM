@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QStringList>
+#include <QTransform>
 #include <algorithm>
 #include <array>
 
@@ -93,21 +94,38 @@ QImage toBlackWhite(const QImage &gray, int threshold) {
     return result;
 }
 
-bool convertScannedPage(const QString &filePath, const QString &colorMode) {
-    if (colorMode != "Gray" && colorMode != "BlackWhite") return true;   // color: as scanned
+bool convertScannedPage(const QString &filePath, const QString &colorMode, bool landscape) {
+    const bool toGray = colorMode == "Gray" || colorMode == "BlackWhite";
+    if (!toGray && !landscape) return true;   // color, portrait: as scanned
 
-    const QImage scanned(filePath);
+    QImage scanned(filePath);
     if (scanned.isNull()) return false;
+    if (landscape) scanned = rotatedImage(scanned, -90);
+    if (!toGray) return scanned.save(filePath, "PNG");
+
     const bool scannedGray = scanned.format() == QImage::Format_Grayscale8;
     const QImage gray = scannedGray ? scanned : scanned.convertToFormat(QImage::Format_Grayscale8);
 
     if (colorMode == "Gray") {
-        // Scanned in gray already (the usual case): nothing to write
-        return scannedGray || gray.save(filePath, "PNG");
+        // Scanned in gray already and not turned (the usual case): nothing to write
+        return (scannedGray && !landscape) || gray.save(filePath, "PNG");
     }
 
     gray.save(originalPath(filePath), "PNG");   // without it only a new threshold is lost
     return toBlackWhite(gray, otsuThreshold(gray)).save(filePath, "PNG");
+}
+
+QImage rotatedImage(const QImage &image, int degrees) {
+    if (image.isNull()) return image;
+    QImage rotated = image.transformed(QTransform().rotate(degrees));
+    if (rotated.format() != image.format()) {
+        rotated = rotated.convertToFormat(image.format(), Qt::ThresholdDither);
+    }
+    if (degrees % 180 != 0) {
+        rotated.setDotsPerMeterX(image.dotsPerMeterY());
+        rotated.setDotsPerMeterY(image.dotsPerMeterX());
+    }
+    return rotated;
 }
 
 }

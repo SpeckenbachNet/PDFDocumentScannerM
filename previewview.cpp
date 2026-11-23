@@ -121,6 +121,89 @@ void PreviewView::clearImage() {
     m_zoomBar->hide();
 }
 
+namespace {
+// Notice in the empty preview
+constexpr qreal kHintTitleScale = 1.0;   // size of the bold title relative to the normal text
+}
+
+void PreviewView::setHint(HintState state, const QString &title, const QString &subtitle,
+                          const QString &note) {
+    const Hint hint{state, title, subtitle, note};
+    if (hint.state == m_hint.state && hint.title == m_hint.title && hint.subtitle == m_hint.subtitle
+        && hint.note == m_hint.note) {
+        return;
+    }
+    m_hint = hint;
+    viewport()->update();
+}
+
+// The notice as one block (dot, then the texts), centered
+void PreviewView::paintEvent(QPaintEvent *event) {
+    QGraphicsView::paintEvent(event);
+    if (m_item || m_hint.state == HintState::None) return;
+
+    const QPalette appPal = QApplication::palette();
+    const QColor surface = viewport()->palette().color(QPalette::Window);
+    const QColor text = appPal.color(QPalette::WindowText);
+    const bool light = UiColors::isLight(appPal);
+
+    QFont titleFont = viewport()->font();
+    titleFont.setBold(true);
+    titleFont.setPointSizeF(titleFont.pointSizeF() * kHintTitleScale);
+    const QFont textFont = viewport()->font();
+    const QFontMetrics titleFm(titleFont);
+    const QFontMetrics textFm(textFont);
+
+    constexpr int kMargin = 24;   // to the edge of the view
+    constexpr int kGap = 10;      // dot to text
+    constexpr int kLineGap = 2;
+    const int dot = qRound(titleFm.height() * 0.5);
+    const int maxText = qMax(80, viewport()->width() - 2 * kMargin - dot - kGap);
+    auto sizeOf = [maxText](const QFontMetrics &fm, const QString &s) {
+        return s.isEmpty() ? QSize(0, 0)
+                           : fm.boundingRect(QRect(0, 0, maxText, 10000), Qt::TextWordWrap, s).size();
+    };
+    const QSize titleSize = sizeOf(titleFm, m_hint.title);
+    const QSize subSize = sizeOf(textFm, m_hint.subtitle);
+    const QSize noteSize = sizeOf(textFm, m_hint.note);
+    const int textW = qMax(titleSize.width(), qMax(subSize.width(), noteSize.width()));
+    int textH = titleSize.height();
+    if (subSize.height() > 0) textH += kLineGap + subSize.height();
+    if (noteSize.height() > 0) textH += 3 * kLineGap + noteSize.height();
+
+    const QSize blockSize(dot + kGap + textW, textH);
+    const QRect block(QPoint((viewport()->width() - blockSize.width()) / 2,
+                             (viewport()->height() - blockSize.height()) / 2), blockSize);
+
+    QPainter painter(viewport());
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    // Dot: green ready, orange stand-in scanner, red no scanner (a different tone per mode)
+    QColor dotColor;
+    switch (m_hint.state) {
+    case HintState::Ready:   dotColor = light ? QColor(30, 140, 60)  : QColor(80, 200, 110);  break;
+    case HintState::Warning: dotColor = light ? QColor(205, 120, 0)  : QColor(240, 170, 60);  break;
+    default:                 dotColor = light ? QColor(200, 40, 40)  : QColor(240, 100, 100); break;
+    }
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(dotColor);
+    painter.drawEllipse(QRectF(block.left(), block.top() + (titleFm.height() - dot) / 2.0, dot, dot));
+
+    // Texts, left aligned
+    const int x = block.left() + dot + kGap;
+    int y = block.top();
+    auto drawBlock = [&](const QFont &font, const QColor &color, const QString &s, const QSize &size) {
+        painter.setFont(font);
+        painter.setPen(color);
+        painter.drawText(QRect(x, y, textW, size.height()), Qt::AlignLeft | Qt::TextWordWrap, s);
+        y += size.height();
+    };
+    const QColor soft = UiColors::mix(surface, text, 0.65);
+    drawBlock(titleFont, text, m_hint.title, titleSize);
+    if (subSize.height() > 0) { y += kLineGap; drawBlock(textFont, soft, m_hint.subtitle, subSize); }
+    if (noteSize.height() > 0) { y += 3 * kLineGap; drawBlock(textFont, soft, m_hint.note, noteSize); }
+}
+
 // ====== Zoom ======
 
 qreal PreviewView::currentScale() const {

@@ -56,7 +56,7 @@ other distributions.
 | Package | Tested | For |
 |---|---|---|
 | `cmake` | 4.4.4 | build (at least 3.16) |
-| `qt6-base`, `qt6-svg` | 6.12.0 | Widgets, SVG icons |
+| `qt6-base`, `qt6-svg` | 6.12.0 | Widgets, D-Bus (light / dark mode), SVG icons |
 | `qt6-tools` | 6.12.0 | `lupdate` / `lrelease` for the `.ts` files |
 
 **Runtime**
@@ -121,7 +121,8 @@ Notes:
 
 | File | Content |
 |---|---|
-| `main.cpp` | application and organization name, INI format, translator, main window |
+| `main.cpp` | application and organization name, Fusion style, light / dark mode, INI format, translators, main window |
+| `colorschemewatcher.*` | light / dark setting of the desktop from the XDG desktop portal, reports changes (copy from NiriSettingsM) |
 | `mainwin.*`, `initialize.cpp` | main window: scanner search, options, scanning, button states; `initialize.cpp` builds toolbars, form, connections and restores the window layout |
 | `settingsmanager.*` | singleton: all settings (INI) and the options of the current scanner |
 | `settingsoverlay.*` | settings popup with the nose below the settings button |
@@ -129,10 +130,10 @@ Notes:
 | `pagelistwidget.*` | page list: one column, page size follows the width; select, remove, drag and drop |
 | `pagedelegate.*` | draws a page: image, label "Page N", selection, × on hover |
 | `sanedevice.*` | how scanimage opens a scanner: escl scanners through the airscan backend (section 4) |
-| `pageprocessing.*` | processing of a scanned page: color mode, black/white threshold (later straighten, crop) |
+| `pageprocessing.*` | processing of a scanned page: landscape turn, color mode, black/white threshold, rotating (later straighten, crop) |
 | `previewview.*` | large preview (`QGraphicsView`), fits the image into the view |
 | `helppage.*`, `twolinedelegate.*` | help page (Markdown in `help/<de\|en>/`, `Help.qrc`); copies from MovieMetaM, adapted to `UiColors` |
-| `uicolors.h` | surface colors, derived from Window/WindowText only |
+| `uicolors.h` | surface colors, derived from Window/WindowText only; the app palette (`applyStandardPalette`) |
 | `toolbarm.*` | toolbar; copy from `../libraries/toolbarm` (master there, version 1.7.0) |
 | `globals.h` | empty (cleanup candidate) |
 | `tools/build-linux.sh` | builds the AppImage and the release files (section 10) |
@@ -197,7 +198,9 @@ opens escl scanners through airscan when `sane-airscan` is installed:
 `getScannerCapabilities()` runs `scanimage -d <id> --help` and reads `--resolution`, `--mode`,
 `--source`, `--scan-intent` (value list and default in `[...]`). Ranges like `50..1200` become
 the common resolutions within (`expandResolutionValues`). Options marked `[inactive]` are
-skipped. A saved value the scanner does not offer is replaced by its default – except the color
+skipped. The largest scan area comes from `-x 0..215.9mm` / `-y 0..297.011mm`
+(`scanAreaMaxWidth/Height`); it depends on the source (HP M277dw: flatbed 297 mm long, feeder
+381 mm) and is stored for the default source only (`scanAreaSource`). A saved value the scanner does not offer is replaced by its default – except the color
 mode: it is the app's own (next section), `--mode` only decides what to scan with.
 
 ---
@@ -207,7 +210,12 @@ mode: it is the app's own (next section), `--mode` only decides what to scan wit
 ### Scanning (`MainWin::startScan()`)
 
 - `scanimage` with `--device-name`, and only the options the scanner reported (otherwise
-  `scanimage` aborts), `-x`/`-y` from the page format (orientation swaps them), `--format=png`.
+  `scanimage` aborts), `-x`/`-y` from the page format, `--format=png`.
+- The scan area is always upright, even in landscape: the sheet lies upright on the glass or in
+  the feeder (A4 landscape is wider than the glass). Each page is turned 90° counter-clockwise
+  afterwards (`convertScannedPage(…, landscape)`).
+- `-x`/`-y` are cut down to the largest scan area when scanning with `scanAreaSource`: airscan
+  does that itself, escl passes too large values on unchecked.
 - Feeder (source contains ADF/Feeder/Duplex, `isAdfSource`): `--batch=page_%03d.png`.
   Flatbed: one page (`--batch-count=1`).
 - Target folder `/tmp/scan_job_<yyyyMMdd_hhmmss>/`. A timer (1.5 s) picks up finished pages while
@@ -244,7 +252,7 @@ The app has three fixed modes; the scanner's names (`Color`, `Colour`, `24bit Co
 - The gray original of a black/white page stays as `gray_page_001.png` (`originalPath()`; the
   prefix keeps it out of the `page_*.png` filter) for a later new threshold. Rotating turns it
   along, removing a page deletes it.
-- Rotating keeps the image format (`rotatedImage()` in `pagelistwidget.cpp`): Qt turns a 1 bit
+- Rotating keeps the image format (`PageProcessing::rotatedImage()`): Qt turns a 1 bit
   image into 32 bit while rotating.
 - Older settings with `Lineart` are read as `BlackWhite`.
 
@@ -329,16 +337,23 @@ needs more room. Under Wayland the window position is not restored (the composit
   `i18n/`, `translation.qrc` embeds them.
 - Many sources are keys (`SCAN`, `REMOVE_PAGES %n`), so English needs a translation too. Newer
   texts are plain English sentences.
-- `main.cpp` loads the first system language with a translation, otherwise English.
+- `main.cpp` loads the first system language with a translation, otherwise English, and Qt's own
+  `qtbase` translation in the same language (standard buttons, file dialog).
 - Help texts: `help/de/*.md`, `help/en/*.md` (`Help.qrc`).
 
 ---
 
 ## 8. UI Building Blocks and Style
 
-- **Colors are derived from Window/WindowText only** (`uicolors.h`, `UiColors::mix`). With the
-  gtk3 platform theme Window, Button and Base are equal and Light/Mid/Dark nearly so; colors taken
-  from them vanish.
+- **Light / dark mode:** style Fusion. `ColorSchemeWatcher` reads `color-scheme` from the XDG
+  desktop portal and reports changes; `main.cpp` sets it with `QStyleHints::setColorScheme()` and
+  then `UiColors::applyStandardPalette()`: always Fusion's own light or dark palette (a platform
+  theme such as gtk3 has colors for one mode only, mixed with Fusion's they looked different after
+  switching back and forth), with a readable selection color. Works the same with any
+  `QT_QPA_PLATFORMTHEME` and in the AppImage.
+- **Colors are derived from Window/WindowText only** (`uicolors.h`, `UiColors::mix`). Originally
+  because with the gtk3 palette Window, Button and Base are equal and Light/Mid/Dark nearly so;
+  with the Fusion palette still the safe way.
 - Page list and preview lie deeper than the window, like the toolbar (`applySurfaceColors`,
   called again on palette changes, so light/dark switches apply live).
 - `ToolbarM`: buttons with a fixed size from text, icon and font; `addSpacer()` for groups.
@@ -383,10 +398,10 @@ its Qt plugin. By hand: the Wayland plugin, the platform theme of the desktop po
 of "Save PDF") and `libOpenGL.so.0`. First run: about 1.8 GB in `build/linux-cache`. Needs only
 Podman (no root) and Python 3 on the host.
 
-The platform theme: a theme set in the environment (e.g. `QT_QPA_PLATFORMTHEME=gtk3` under niri)
-is missing in the AppImage, Qt would fall back to its generic theme (always light). So `main.cpp`
-switches to `xdgdesktopportal` when `APPIMAGE` is set; it follows the light / dark mode of the
-desktop (same as MovieMetaM).
+Light / dark mode in the AppImage: a theme set in the environment (e.g.
+`QT_QPA_PLATFORMTHEME=gtk3` under niri) is missing there. That no longer matters: the app asks
+the desktop portal itself (`ColorSchemeWatcher`, section 8) and uses Fusion's palette. Qt's own
+translations (`qtbase_*.qm`) are put into the package by linuxdeploy (`usr/translations`).
 
 - The name of the package carries the version (`PDFDocumentScannerM-0.5.1-linux.AppImage`); the
   script reads it from `CMakeLists.txt`.

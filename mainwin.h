@@ -67,12 +67,16 @@ private:
     bool chooseScanner();
     bool useStandInScanner();
     void addPageToList(const QString &filePath, int dpi);
-    void savePdf(bool selectedOnly);
+    bool savePdf(bool selectedOnly);
     void rotatePages();
     void clearPages();
     void showPage(QWidget *page);
+    bool confirmClose();
+    void stopScanNow();
+    void removeScanDirs();
     void setBusy(bool busy);
     void updateButtons();
+    void updateScannerHint();
 
     QString getPageFormat();
     QStringList m_processedFiles;
@@ -96,7 +100,11 @@ private:
     bool m_scannerReady = false;         // options of the chosen scanner are loaded
     bool m_probingSavedScanner = false;  // the search missed the saved scanner, it is tried directly
     QProcess *m_scanProcess = nullptr;   // running scan, nullptr: none
+    QTimer *m_capabilitiesTimer = nullptr;   // shows "loading" only if loading the options takes a while
+    QString m_standInFor;                // name of the saved scanner that did not answer, empty: none
     bool m_scanCancelled = false;        // the user cancelled the running scan
+    bool m_unsaved = false;              // pages changed since the last PDF of all pages
+    QStringList m_scanDirs;              // folders of this session's scans in /tmp, removed on close
 
 private slots:
     void showSettingsOverlay();

@@ -15,4 +15,4 @@ Each page of the PDF has the size that was scanned, so an A4 scan becomes an A4 
 
 Black and white pages are small (about 60 KB per text page), grayscale and color pages much bigger. For text, **Black/white** in the **Settings** is the best choice.
 
-> The page list is not kept when you close PDFDocumentScannerM. Save your pages before you close it.
+> The page list is not kept when you close PDFDocumentScannerM, the scanned images are deleted. If some pages are not saved yet, PDFDocumentScannerM asks first: **Save all**, **Discard** or **Cancel**.

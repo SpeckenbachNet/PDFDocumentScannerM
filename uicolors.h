@@ -1,7 +1,10 @@
 #ifndef UICOLORS_H
 #define UICOLORS_H
 
+#include <QApplication>
 #include <QColor>
+#include <QPalette>
+#include <QStyle>
 #include <QtGlobal>
 #include <QtMath>
 
@@ -11,7 +14,19 @@
 namespace UiColors {
 
 // Surfaces lying deeper than the window: toolbar, page list, preview
-constexpr qreal surfaceShade = -0.06;
+constexpr qreal surfaceShade = -0.06;      // dark mode: away from the (bright) text, darker than the window
+constexpr qreal surfaceShadeLight = 0.15;  // light mode: towards the (dark) text, a gray like PDF viewers
+
+// Light mode: the window is brighter than its text
+inline bool isLight(const QPalette &pal)
+{
+    return pal.color(QPalette::Window).lightnessF() > pal.color(QPalette::WindowText).lightnessF();
+}
+
+inline qreal surfaceShadeFor(const QPalette &pal)
+{
+    return isLight(pal) ? surfaceShadeLight : surfaceShade;
+}
 
 // Frame of the settings overlay
 constexpr qreal overlayFrameShade = 0.15;
@@ -40,6 +55,33 @@ inline QColor mix(const QColor &a, const QColor &b, qreal t)
                             channel(a.greenF(), b.greenF()),
                             channel(a.blueF(),  b.blueF()),
                             a.alphaF());
+}
+
+// The palette of the app: always Fusion's own light or dark palette (style()->standardPalette()
+// follows the color scheme). A platform theme (e.g. gtk3) has its own colors for one mode only;
+// mixed with Fusion's for the other mode, dark looked different after switching back and forth.
+// If the selection color and its text have too little contrast (e.g. accent color "Graphite"
+// in dark mode: white on white), the accent color is used for the selection and black or
+// white for its text.
+// Call after creating the QApplication and again whenever light / dark mode switches.
+inline void applyStandardPalette()
+{
+    constexpr qreal minContrast = 3.0;
+    QPalette pal = QApplication::style()->standardPalette();
+
+    for (QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive}) {
+        QColor highlight = pal.color(group, QPalette::Highlight);
+        QColor text      = pal.color(group, QPalette::HighlightedText);
+        if (contrastRatio(highlight, text) >= minContrast)
+            continue;
+        highlight = pal.color(group, QPalette::Accent);
+        if (contrastRatio(highlight, text) < minContrast)
+            text = contrastRatio(highlight, Qt::white) >= contrastRatio(highlight, Qt::black)
+                       ? QColor(Qt::white) : QColor(Qt::black);
+        pal.setColor(group, QPalette::Highlight, highlight);
+        pal.setColor(group, QPalette::HighlightedText, text);
+    }
+    QApplication::setPalette(pal);
 }
 
 }

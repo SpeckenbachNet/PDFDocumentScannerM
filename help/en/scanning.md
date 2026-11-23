@@ -4,7 +4,7 @@ PDFDocumentScannerM scans with scanners in your network. It finds them by itself
 
 ## Finding the scanner
 
-At the start PDFDocumentScannerM searches the network for scanners; this takes a few seconds. Then it loads the options of your scanner (resolutions, color modes, flatbed or feeder). As soon as **Scan** is active, you can start.
+At the start PDFDocumentScannerM searches the network for scanners; this takes a few seconds. Then it loads the options of your scanner (resolutions, color modes, flatbed or feeder). As soon as **Scan** is active, you can start. While the page list is empty, the preview tells which scanner is used.
 
 - Choose the scanner in the **Settings** (the gear in the toolbar). PDFDocumentScannerM remembers it.
 - The button with the two arrows searches again, for example after you switched the scanner on.

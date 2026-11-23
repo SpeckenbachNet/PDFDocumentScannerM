@@ -28,10 +28,10 @@ signals:
 
 protected:
     void changeEvent(QEvent *event) override;
-    bool eventFilter(QObject *watched, QEvent *event) override;   // line width follows the text area
+    bool eventFilter(QObject *watched, QEvent *event) override;   // text column follows the text area
 
 private:
-    static constexpr int kMaxLineWidth = 760;   // lines not too long to read
+    static constexpr int kMaxLineWidth = 820;   // lines not too long to read (text column, with margins)
     static constexpr int kTopicsWidth = 240;
     static constexpr int kImageHeight = 20;     // SVG pictures in the texts
     static constexpr int kScreenshotScale = 2;  // screenshots (PNG) are Retina shots: shown in half the pixels
@@ -41,6 +41,7 @@ private:
     void spaceOut();      // headings, line spacing, paragraphs
     void scaleImages();   // SVGs to kImageHeight, screenshots in their size; sharp on the screen
     void restyle();
+    void centerText();    // text column of at most kMaxLineWidth in the middle of the text area
     static QString language();   // the language of the app ("de", "en")
 
     ToolbarM           *m_toolbar = nullptr;
