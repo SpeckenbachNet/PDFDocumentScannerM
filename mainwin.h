@@ -66,7 +66,7 @@ private:
     void saveAirscanScanners(const QString &output);
     bool chooseScanner();
     bool useStandInScanner();
-    void addPageToList(const QString &filePath, int dpi);
+    void addPageToList(const QString &filePath, int dpi, double straightenedBy = 0);
     bool savePdf(bool selectedOnly);
     bool writeOcrPdf(const QString &filePath, const QStringList &imagePaths, const QString &language);
     void cancelOcr();

@@ -73,7 +73,7 @@
     </message>
     <message>
         <location filename="../initialize.cpp" line="53"/>
-        <location filename="../mainwin.cpp" line="695"/>
+        <location filename="../mainwin.cpp" line="698"/>
         <source>SCAN</source>
         <translation type="unfinished">Scannen</translation>
     </message>
@@ -109,7 +109,7 @@
     </message>
     <message>
         <location filename="../initialize.cpp" line="80"/>
-        <location filename="../mainwin.cpp" line="948"/>
+        <location filename="../mainwin.cpp" line="951"/>
         <source>SAVE_ALL</source>
         <translation type="unfinished">Alles speichern</translation>
     </message>
@@ -152,27 +152,27 @@
         <translation type="unfinished">Scanne...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="515"/>
+        <location filename="../mainwin.cpp" line="516"/>
         <source>ERROR_CREATING_TEMP_DIR.</source>
         <translation type="unfinished">Temporäres Verzeichnis konnte nicht erstellt werden.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="611"/>
+        <location filename="../mainwin.cpp" line="613"/>
         <source>ERROR:</source>
         <translation type="unfinished">Fehler:</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="661"/>
+        <location filename="../mainwin.cpp" line="664"/>
         <source>Scan cancelled</source>
         <translation type="unfinished">Scan abgebrochen</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="664"/>
+        <location filename="../mainwin.cpp" line="667"/>
         <source>SCAN_FAILED.</source>
         <translation type="unfinished">Scan fehlgeschlagen.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="683"/>
+        <location filename="../mainwin.cpp" line="686"/>
         <source>Cancelling scan...</source>
         <translation type="unfinished">Scan wird abgebrochen...</translation>
     </message>
@@ -185,122 +185,122 @@
         <translation type="obsolete">PDF-Dateien (*.pdf)</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="736"/>
+        <location filename="../mainwin.cpp" line="739"/>
         <source>Saving PDF...</source>
         <translation type="unfinished">PDF wird gespeichert...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="747"/>
+        <location filename="../mainwin.cpp" line="750"/>
         <source>PDF saved: %1</source>
         <translation type="unfinished">PDF gespeichert: %1</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="749"/>
+        <location filename="../mainwin.cpp" line="752"/>
         <source>Saving cancelled</source>
         <translation type="unfinished">Speichern abgebrochen</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="751"/>
+        <location filename="../mainwin.cpp" line="754"/>
         <source>PDF could not be saved</source>
         <translation type="unfinished">PDF konnte nicht gespeichert werden</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="774"/>
-        <location filename="../mainwin.cpp" line="786"/>
+        <location filename="../mainwin.cpp" line="777"/>
+        <location filename="../mainwin.cpp" line="789"/>
         <source>Text recognition: page %1 of %2</source>
         <translation type="unfinished">Texterkennung: Seite %1 von %2</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="802"/>
+        <location filename="../mainwin.cpp" line="805"/>
         <source>tesseract could not be started</source>
         <translation type="unfinished">tesseract konnte nicht gestartet werden</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="825"/>
+        <location filename="../mainwin.cpp" line="828"/>
         <source>Cancelling...</source>
         <translation type="unfinished">Wird abgebrochen...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="842"/>
+        <location filename="../mainwin.cpp" line="845"/>
         <source>Clear</source>
         <translation type="unfinished">Leeren</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="843"/>
+        <location filename="../mainwin.cpp" line="846"/>
         <source>Remove all pages? The scanned images are deleted.</source>
         <translation type="unfinished">Alle Seiten entfernen? Die gescannten Bilder werden gelöscht.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="844"/>
+        <location filename="../mainwin.cpp" line="847"/>
         <source>Remove</source>
         <translation type="unfinished">Entfernen</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="881"/>
+        <location filename="../mainwin.cpp" line="884"/>
         <source>Scan with %1</source>
         <translation type="unfinished">Scannen mit %1</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="889"/>
         <location filename="../mainwin.cpp" line="892"/>
+        <location filename="../mainwin.cpp" line="895"/>
         <source>Ready to scan</source>
         <translation type="unfinished">Bereit zum Scannen</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="890"/>
+        <location filename="../mainwin.cpp" line="893"/>
         <source>Your scanner (%1) does not answer</source>
         <translation type="unfinished">Dein Scanner (%1) antwortet nicht</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="894"/>
+        <location filename="../mainwin.cpp" line="897"/>
         <source>No scanner found</source>
         <translation type="unfinished">Kein Scanner gefunden</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="894"/>
+        <location filename="../mainwin.cpp" line="897"/>
         <source>Search again with the arrow button</source>
         <translation type="unfinished">Mit dem Pfeil-Knopf neu suchen</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="932"/>
+        <location filename="../mainwin.cpp" line="935"/>
         <source>The PDF is being saved. Wait or cancel with Esc.</source>
         <translation type="unfinished">Die PDF wird gerade gespeichert. Bitte warten oder mit Esc abbrechen.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="936"/>
-        <location filename="../mainwin.cpp" line="945"/>
+        <location filename="../mainwin.cpp" line="939"/>
+        <location filename="../mainwin.cpp" line="948"/>
         <source>Close</source>
         <translation type="unfinished">Schließen</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="937"/>
+        <location filename="../mainwin.cpp" line="940"/>
         <source>A scan is running. Cancel it and close?</source>
         <translation type="unfinished">Ein Scan läuft. Abbrechen und schließen?</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="938"/>
+        <location filename="../mainwin.cpp" line="941"/>
         <source>Cancel scan</source>
         <translation type="unfinished">Scan abbrechen</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="939"/>
+        <location filename="../mainwin.cpp" line="942"/>
         <source>Keep scanning</source>
         <translation type="unfinished">Weiterscannen</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="946"/>
+        <location filename="../mainwin.cpp" line="949"/>
         <source>Some pages are not saved as PDF yet. The scanned images are deleted when the app closes.</source>
         <translation type="unfinished">Einige Seiten sind noch nicht als PDF gespeichert. Die gescannten Bilder werden beim Schließen gelöscht.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="949"/>
+        <location filename="../mainwin.cpp" line="952"/>
         <source>Discard</source>
         <translation type="unfinished">Verwerfen</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="529"/>
-        <location filename="../mainwin.cpp" line="845"/>
-        <location filename="../mainwin.cpp" line="950"/>
+        <location filename="../mainwin.cpp" line="530"/>
+        <location filename="../mainwin.cpp" line="848"/>
+        <location filename="../mainwin.cpp" line="953"/>
         <source>Cancel</source>
         <translation type="unfinished">Abbrechen</translation>
     </message>
@@ -308,13 +308,22 @@
 <context>
     <name>PageListWidget</name>
     <message>
-        <location filename="../pagelistwidget.cpp" line="61"/>
-        <location filename="../pagelistwidget.cpp" line="192"/>
+        <location filename="../pagelistwidget.cpp" line="204"/>
         <source>PAGE %1</source>
         <translation type="unfinished">Seite %1</translation>
     </message>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="209"/>
+        <source>PAGE %1 · straightened %2°</source>
+        <translation type="unfinished">Seite %1 · ausgerichtet %2°</translation>
+    </message>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="210"/>
+        <source>Straightened by %1° after scanning</source>
+        <translation type="unfinished">Nach dem Scannen um %1° ausgerichtet</translation>
+    </message>
     <message numerus="yes">
-        <location filename="../pagelistwidget.cpp" line="276"/>
+        <location filename="../pagelistwidget.cpp" line="293"/>
         <source>REMOVE_PAGES %n</source>
         <translation type="unfinished">
             <numerusform>Seite entfernen</numerusform>
@@ -325,32 +334,32 @@
 <context>
     <name>PdfSaveDialog</name>
     <message>
-        <location filename="../pdfsavedialog.cpp" line="14"/>
+        <location filename="../pdfsavedialog.cpp" line="19"/>
         <source>Save PDF</source>
         <translation type="unfinished">PDF speichern</translation>
     </message>
     <message>
-        <location filename="../pdfsavedialog.cpp" line="19"/>
+        <location filename="../pdfsavedialog.cpp" line="24"/>
         <source>PDF files (*.pdf)</source>
         <translation type="unfinished">PDF-Dateien (*.pdf)</translation>
     </message>
     <message>
-        <location filename="../pdfsavedialog.cpp" line="31"/>
+        <location filename="../pdfsavedialog.cpp" line="42"/>
         <source>Cancel</source>
         <translation type="unfinished">Abbrechen</translation>
     </message>
     <message>
-        <location filename="../pdfsavedialog.cpp" line="32"/>
+        <location filename="../pdfsavedialog.cpp" line="43"/>
         <source>Save with OCR</source>
         <translation type="unfinished">Mit OCR speichern</translation>
     </message>
     <message>
-        <location filename="../pdfsavedialog.cpp" line="33"/>
+        <location filename="../pdfsavedialog.cpp" line="44"/>
         <source>Save</source>
         <translation type="unfinished">Speichern</translation>
     </message>
     <message>
-        <location filename="../pdfsavedialog.cpp" line="72"/>
+        <location filename="../pdfsavedialog.cpp" line="103"/>
         <source>OCR language:</source>
         <translation type="unfinished">OCR-Sprache:</translation>
     </message>
@@ -359,7 +368,7 @@
         <translation type="obsolete">Texterkennung (OCR)</translation>
     </message>
     <message>
-        <location filename="../pdfsavedialog.cpp" line="38"/>
+        <location filename="../pdfsavedialog.cpp" line="49"/>
         <source>Makes the text in the PDF searchable and copyable. Takes a few seconds per page.</source>
         <translation type="unfinished">Macht den Text in der PDF durchsuchbar und kopierbar. Dauert einige Sekunden pro Seite.</translation>
     </message>
@@ -368,7 +377,7 @@
         <translation type="obsolete">Sprache des Textes</translation>
     </message>
     <message>
-        <location filename="../pdfsavedialog.cpp" line="40"/>
+        <location filename="../pdfsavedialog.cpp" line="51"/>
         <source>Text recognition needs the program tesseract with at least one language (e.g. the package tesseract-data-deu or tesseract-ocr-deu).</source>
         <translation type="unfinished">Für die Texterkennung wird das Programm tesseract mit mindestens einer Sprache gebraucht (z. B. das Paket tesseract-data-deu oder tesseract-ocr-deu).</translation>
     </message>
@@ -394,17 +403,17 @@
 <context>
     <name>SettingsOverlay</name>
     <message>
-        <location filename="../settingsoverlay.cpp" line="59"/>
+        <location filename="../settingsoverlay.cpp" line="61"/>
         <source>SCANNER</source>
         <translation type="unfinished">Scanner</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="215"/>
+        <location filename="../settingsoverlay.cpp" line="225"/>
         <source>AUTOMATIC</source>
         <translation type="unfinished">Automatisch</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="77"/>
+        <location filename="../settingsoverlay.cpp" line="79"/>
         <source>SCANNING_UNIT</source>
         <translation type="unfinished">Scannereinheit</translation>
     </message>
@@ -429,72 +438,77 @@
         <translation type="unfinished">Vorschau</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="82"/>
+        <location filename="../settingsoverlay.cpp" line="84"/>
         <source>COLORMODE</source>
         <translation type="unfinished">Farbmodus</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="87"/>
+        <location filename="../settingsoverlay.cpp" line="89"/>
         <source>SCAN_INTENT</source>
         <translation type="unfinished">Scan-Zweck</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="92"/>
+        <location filename="../settingsoverlay.cpp" line="94"/>
         <source>RESOLUTION</source>
         <translation type="unfinished">Auflösung</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="117"/>
+        <location filename="../settingsoverlay.cpp" line="116"/>
+        <source>Pages that lie slightly askew (up to 5°) are turned straight right after scanning.</source>
+        <translation type="unfinished">Leicht schief liegende Seiten (bis 5°) werden direkt nach dem Scannen gerade gedreht.</translation>
+    </message>
+    <message>
+        <location filename="../settingsoverlay.cpp" line="123"/>
         <source>Coming in a later version</source>
         <translation type="unfinished">Kommt in einer späteren Version</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="225"/>
+        <location filename="../settingsoverlay.cpp" line="235"/>
         <source>Color</source>
         <translation type="unfinished">Farbe</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="226"/>
+        <location filename="../settingsoverlay.cpp" line="236"/>
         <source>Grayscale</source>
         <translation type="unfinished">Graustufen</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="227"/>
+        <location filename="../settingsoverlay.cpp" line="237"/>
         <source>Black/white</source>
         <translation type="unfinished">Schwarz/Weiß</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="262"/>
+        <location filename="../settingsoverlay.cpp" line="272"/>
         <source>PORTRAIT</source>
         <translation type="unfinished">Hochformat</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="263"/>
+        <location filename="../settingsoverlay.cpp" line="273"/>
         <source>LANDSCAPE</source>
         <translation type="unfinished">Querformat</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="282"/>
+        <location filename="../settingsoverlay.cpp" line="292"/>
         <source>Not installed</source>
         <translation type="unfinished">Nicht installiert</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="285"/>
+        <location filename="../settingsoverlay.cpp" line="295"/>
         <source>Text recognition needs the program tesseract with at least one language (e.g. the package tesseract-data-deu or tesseract-ocr-deu).</source>
         <translation type="unfinished">Für die Texterkennung wird das Programm tesseract mit mindestens einer Sprache gebraucht (z. B. das Paket tesseract-data-deu oder tesseract-ocr-deu).</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="97"/>
+        <location filename="../settingsoverlay.cpp" line="99"/>
         <source>PAGE_ORIENTATION</source>
         <translation type="unfinished">Seitenausrichtung</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="270"/>
+        <location filename="../settingsoverlay.cpp" line="280"/>
         <source>STANDARD</source>
         <translation type="unfinished">Standard</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="102"/>
+        <location filename="../settingsoverlay.cpp" line="104"/>
         <source>PAGE_FORMAT</source>
         <translation type="unfinished">Seitenformat</translation>
     </message>
@@ -507,12 +521,12 @@
         <translation type="obsolete">Deutsch</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="107"/>
+        <location filename="../settingsoverlay.cpp" line="109"/>
         <source>OCR_LANGUAGE</source>
         <translation type="unfinished">OCR Sprache</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="114"/>
+        <location filename="../settingsoverlay.cpp" line="115"/>
         <source>STRAIGHTEN_DOCUMENT</source>
         <translation type="unfinished">Dokument ausrichten</translation>
     </message>
@@ -521,12 +535,12 @@
         <translation type="obsolete">OCR</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="114"/>
+        <location filename="../settingsoverlay.cpp" line="121"/>
         <source>CROP_DOCUMENT</source>
         <translation type="unfinished">Dokument beschneiden</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="192"/>
+        <location filename="../settingsoverlay.cpp" line="202"/>
         <source>NO_SCANNERS_FOUND</source>
         <translation type="unfinished">Keine Scanner gefunden</translation>
     </message>

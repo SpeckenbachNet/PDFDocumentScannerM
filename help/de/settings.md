@@ -35,3 +35,7 @@ Das Blatt liegt immer hochkant auf dem Glas oder im Einzug. Bei **Querformat** d
 ## OCR-Sprache
 
 Die Sprache für die Texterkennung beim Speichern (**Mit OCR speichern**, siehe **Speichern**). Der Speicherdialog startet mit ihr. Zur Auswahl stehen die Sprachen, die für tesseract installiert sind; steht dort **Nicht installiert**, fehlt tesseract oder eine Sprache.
+
+## Dokument ausrichten
+
+Liegt ein Blatt leicht schief auf dem Glas oder läuft schräg durch den Einzug (bis 5°), dreht PDFDocumentScannerM die Seite gleich nach dem Scannen gerade. Das Programm richtet sich nach den Textzeilen; Seiten ohne Text, etwa Fotos, und leere Seiten bleiben, wie sie sind. Die frei werdenden Ecken werden weiß. In der Seitenliste steht dann unter der Seite, um wie viel sie ausgerichtet wurde, zum Beispiel **Seite 3 · ausgerichtet 2,8°**. Die Einstellung gilt für die nächsten Scans.

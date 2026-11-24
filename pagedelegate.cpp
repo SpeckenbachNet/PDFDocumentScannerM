@@ -68,7 +68,8 @@ void PageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     const QRect label(entry.left(), entry.top() + kPadding + m_pageSize.height(),
                       entry.width(), kTextHeight);
     painter->setPen(textColor);
-    painter->drawText(label, Qt::AlignCenter, opt.text);
+    painter->drawText(label, Qt::AlignCenter,
+                      opt.fontMetrics.elidedText(opt.text, Qt::ElideRight, label.width() - 2 * kPadding));
 
     // Round × over the image (any colors underneath): dark disc, white ×; accent color when the
     // mouse is over it

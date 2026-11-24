@@ -2,15 +2,11 @@
 
 Scan documents with your network scanner and save them as PDF – on Linux.
 
-## What's new in 0.6.0
+## What's new in 0.7.0
 
-- Text recognition (OCR) when saving: the save dialog has the buttons "Save" and "Save with OCR", the PDF becomes searchable and text can be copied (needs tesseract)
-- The OCR language is preset in the settings and can be changed in the save dialog for one save
-- The languages offered are the ones installed for tesseract
-- Saving with text recognition shows the page it is at and can be cancelled with Esc
-- Straighten and crop are grayed out in the settings until they work
-- Rounded combo boxes and more room in the settings
-- Save dialog: rounded fields and lists, more room, no file type row; it remembers its size and view
+- Straighten Document: pages that lie slightly askew (up to 5°) are turned straight right after scanning (setting, off by default); the page list shows the angle below the page
+- Smaller PDFs with text recognition: black/white pages are stored as CCITT G4 (2 text pages: 110 KB → 70 KB)
+- Crop stays grayed out in the settings until it works
 
 All changes: [CHANGELOG.md](CHANGELOG.md)
 
@@ -23,6 +19,7 @@ All changes: [CHANGELOG.md](CHANGELOG.md)
   pages stay small (about 60 KB per page in the PDF)
 - Pages appear while scanning; select, reorder by drag and drop, rotate, remove
 - Large preview with zoom (Ctrl + mouse wheel, Ctrl + Plus / Minus / 0, double click)
+- Straightens pages that lie slightly askew, right after scanning
 - Save the selected or all pages as one PDF
 - Text recognition (OCR) with tesseract when saving: searchable PDFs
 - English and German, light and dark themes

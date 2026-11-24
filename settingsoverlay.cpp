@@ -43,6 +43,8 @@ SettingsOverlay::SettingsOverlay(QWidget *parent) : QWidget(parent) {
             this, &SettingsOverlay::onPageFormatChanged);
     connect(m_ocrLanguageCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &SettingsOverlay::onOcrLanguageChanged);
+    connect(m_straightenCheck, &QCheckBox::toggled,
+            this, [](bool checked) { SettingsManager::instance().setStraighten(checked); });
 }
 
 void SettingsOverlay::initializeOverlay()
@@ -110,13 +112,16 @@ void SettingsOverlay::initializeOverlay()
     m_layout->addSpacing(10);
 
     // --- Checkboxes ---
-    // Straighten and crop do not work yet: shown, but disabled
-    for (const QString &text : {tr("STRAIGHTEN_DOCUMENT"), tr("CROP_DOCUMENT")}) {
-        auto *check = new QCheckBox(text);
-        check->setEnabled(false);
-        check->setToolTip(tr("Coming in a later version"));
-        m_layout->addWidget(check);
-    }
+    m_straightenCheck = new QCheckBox(tr("STRAIGHTEN_DOCUMENT"));
+    m_straightenCheck->setToolTip(tr("Pages that lie slightly askew (up to 5°) are turned straight "
+                                     "right after scanning."));
+    m_layout->addWidget(m_straightenCheck);
+
+    // Crop does not work yet: shown, but disabled
+    auto *cropCheck = new QCheckBox(tr("CROP_DOCUMENT"));
+    cropCheck->setEnabled(false);
+    cropCheck->setToolTip(tr("Coming in a later version"));
+    m_layout->addWidget(cropCheck);
 
     m_layout->addStretch();
     applyFieldStyles();
@@ -290,6 +295,10 @@ void SettingsOverlay::fillGeneralCombos() {
         : tr("Text recognition needs the program tesseract with at least one language "
              "(e.g. the package tesseract-data-deu or tesseract-ocr-deu)."));
     m_ocrLanguageCombo->blockSignals(false);
+
+    m_straightenCheck->blockSignals(true);
+    m_straightenCheck->setChecked(SettingsManager::instance().straighten());
+    m_straightenCheck->blockSignals(false);
 }
 
 bool SettingsOverlay::setComboBoxValue(QComboBox* box, const QVariant& value)

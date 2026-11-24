@@ -27,7 +27,8 @@ tools `airscan-discover` and `scanimage` (`QProcess`).
 | Save as PDF (selected / all pages), rotate, clear | done |
 | OCR when saving (tesseract, buttons "Save" / "Save with OCR" and language in the save dialog) | done |
 | Fake duplex | open (button exists, not connected) |
-| Straighten, crop (check boxes in the settings, disabled) | open |
+| Straighten right after scanning (check box in the settings) | done |
+| Crop (check box in the settings, disabled) | open |
 
 **Flow**
 
@@ -134,7 +135,7 @@ Notes:
 | `sanedevice.*` | how scanimage opens a scanner: escl scanners through the airscan backend (section 4) |
 | `ocr.*` | tesseract: installed languages and their names |
 | `pdfsavedialog.*` | file dialog for saving, buttons "Save" / "Save with OCR" and OCR language |
-| `pageprocessing.*` | processing of a scanned page: landscape turn, color mode, black/white threshold, rotating (later straighten, crop) |
+| `pageprocessing.*` | processing of a scanned page: landscape turn, straighten, color mode, black/white threshold, rotating (later crop) |
 | `previewview.*` | large preview (`QGraphicsView`), fits the image into the view |
 | `helppage.*`, `twolinedelegate.*` | help page (Markdown in `help/<de\|en>/`, `Help.qrc`); copies from MovieMetaM, adapted to `UiColors` |
 | `uicolors.h` | surface colors, derived from Window/WindowText only; the app palette (`applyStandardPalette`) |
@@ -260,6 +261,29 @@ The app has three fixed modes; the scanner's names (`Color`, `Colour`, `24bit Co
   image into 32 bit while rotating.
 - Older settings with `Lineart` are read as `BlackWhite`.
 
+### Straighten (`pageprocessing.*`)
+
+Setting `Scanner/Straighten` (check box "Straighten Document", off by default), read when the
+scan starts. Done in `convertScannedPage()` right after the page arrives: landscape turn →
+straighten → color mode. Black/white pages are straightened in gray and thresholded afterwards
+(a turned 1 bit image gets ragged letters).
+
+- `skewAngle()`: the page scaled to 1000 px width (about 100 dpi), dark points by Otsu, outer
+  3 % left out (edge shadows). For each angle every point is counted in the row
+  `y − x · tan(angle)`; the angle whose row profile has the largest sum of squared neighbor
+  differences wins (text lines fall on few rows). Search ±5°: coarse in 0.25° steps, then
+  0.025° around the best.
+- No turn if: less than 0.2 % or more than 35 % of the page is dark (blank page, photo), the
+  best score is under 1.5 × the median of the coarse scores (no clear lines), or the angle is
+  below 0.2°.
+- `straightenedImage()`: painted in 32 bit with `SmoothPixmapTransform`, turned by −angle around
+  the center, same size, uncovered corners white; back to the page's format, resolution kept.
+- The angle comes back through `convertScannedPage(..., &straightenedBy)` and is stored in the
+  item (`PageListWidget::kStraightenedRole`); the label reads "Page 3 · straightened 2.8°"
+  (`setPageLabel()`, also on renumbering), full text as tooltip, the delegate elides it.
+- Measured with synthetic A4 pages at 300 dpi (tilt 0.3° … 4.9°, both directions): angle found to
+  0.025°, about 60 ms to find and 70 ms to turn. Not yet tested with real scans.
+
 ### Page list (`PageListWidget`, `PageDelegate`)
 
 - ListMode, one column. Pages fill the width (A4 ratio). If they do not fit the height, they
@@ -307,11 +331,18 @@ The app has three fixed modes; the scanner's names (`Color`, `Colour`, `24bit Co
   run). Page size from the resolution in the PNG (`pHYs`, written by scanimage, kept by Qt when
   converting and rotating). Measured: the PDF is not bigger than with `QPdfWriter`, about 4 s
   per A4 page at 300 dpi.
+- tesseract puts a PNG into the PDF as it is (Flate), other files it encodes itself (Leptonica:
+  1 bit → CCITT G4). So black/white pages go to it as uncompressed 1 bit TIFF
+  (`PageProcessing::writeBlackWhiteTiff()`, own writer with the resolution tags – Qt's TIFF
+  writer is a plugin and only knows LZW). Measured with two real text pages: 110 KB → 70 KB,
+  same text, same picture. Smaller would be JBIG2 (PDFScanner on the Mac: 45 KB) – needs
+  jbig2enc and an own PDF writer, later.
 - `writeOcrPdf()` runs its own `QEventLoop`: the window stays responsive, the status message
   shows "page n of m" (from tesseract's lines `Page n : …`), **Esc** cancels. The page list is
   locked meanwhile (the images must not change), closing waits. tesseract writes
   `<target>.part.pdf`, renamed only at the end: a cancel or error leaves an existing file as it is.
-- Order later: straighten → crop → OCR → PDF. Rejected for now: OCR right after scanning with
+- Straightening happens right after scanning (see Straighten), crop will too; saving then only
+  does OCR → PDF. Rejected for now: OCR right after scanning with
   selectable text in the preview (variant B) – rotating, straightening and cropping would have to
   work on recognized text.
 - Without OCR writing blocks the window; a `processEvents()` lets the message "Saving PDF..."

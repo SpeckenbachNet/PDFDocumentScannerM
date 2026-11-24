@@ -13,6 +13,7 @@
 #include <QPdfWriter>
 #include <QPushButton>
 #include <QStandardPaths>
+#include <QTemporaryDir>
 #include <QTemporaryFile>
 #include <QThread>
 #include <QUrl>
@@ -129,7 +130,7 @@ void MainWin::showSettingsOverlay() {
         int y = globalBtnPos.y();
 
         int width = 400;
-        int height = 440;
+        int height = 420;
 
         m_settingsOverlay->setGeometry(x, y, width, height);
         m_settingsOverlay->show();
@@ -506,6 +507,7 @@ void MainWin::startScan() {
     // wider than the glass), so the area stays upright and each page is turned afterwards
     // (convertScannedPage)
     const bool landscape = SettingsManager::instance().isLandscape();
+    const bool straighten = SettingsManager::instance().straighten();
 
     // Create temporary directory in /tmp
     QString batchDirName = "scan_job_" + QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
@@ -577,7 +579,7 @@ void MainWin::startScan() {
 
     // 4. Timer für die Live-Anzeige (alle 1,5 Sekunden prüfen)
     QTimer *progressTimer = new QTimer(this);
-    connect(progressTimer, &QTimer::timeout, this, [this, batchPath, scanDpi, colorMode, landscape]() {
+    connect(progressTimer, &QTimer::timeout, this, [this, batchPath, scanDpi, colorMode, landscape, straighten]() {
         QDir dir(batchPath);
         QStringList currentFiles = dir.entryList(QStringList() << "page_*.png", QDir::Files, QDir::Name);
 
@@ -593,8 +595,9 @@ void MainWin::startScan() {
                     QImage img(tempCopy);
                     // Prüfen, ob das Bild valide und nicht leer ist
                     if (!img.isNull() && img.width() > 0) {
-                        PageProcessing::convertScannedPage(fullPath, colorMode, landscape);   // the page is complete now
-                        this->addPageToList(fullPath, scanDpi); // Hier wird das Item im UI erstellt
+                        double straightenedBy = 0;
+                        PageProcessing::convertScannedPage(fullPath, colorMode, landscape, straighten, &straightenedBy);   // the page is complete now
+                        this->addPageToList(fullPath, scanDpi, straightenedBy); // Hier wird das Item im UI erstellt
                         m_processedFiles.append(fileName);
                     }
                     QFile::remove(tempCopy); // Temporäre Kopie sofort löschen
@@ -628,7 +631,7 @@ void MainWin::startScan() {
     });
 
     // 6. Abschluss-Logik
-    connect(scanProcess, &QProcess::finished, this, [this, batchPath, scanDpi, colorMode, landscape, scanProcess, progressTimer](int exitCode, QProcess::ExitStatus exitStatus) {
+    connect(scanProcess, &QProcess::finished, this, [this, batchPath, scanDpi, colorMode, landscape, straighten, scanProcess, progressTimer](int exitCode, QProcess::ExitStatus exitStatus) {
         progressTimer->stop();
         progressTimer->deleteLater();
 
@@ -643,8 +646,9 @@ void MainWin::startScan() {
                     QFile::remove(fullPath);
                     continue;
                 }
-                PageProcessing::convertScannedPage(fullPath, colorMode, landscape);
-                this->addPageToList(fullPath, scanDpi);
+                double straightenedBy = 0;
+                PageProcessing::convertScannedPage(fullPath, colorMode, landscape, straighten, &straightenedBy);
+                this->addPageToList(fullPath, scanDpi, straightenedBy);
                 m_processedFiles.append(fileName);
             }
         }
@@ -696,9 +700,9 @@ void MainWin::endScan() {
     setBusy(false);
 }
 
-void MainWin::addPageToList(const QString &filePath, int dpi) {
+void MainWin::addPageToList(const QString &filePath, int dpi, double straightenedBy) {
     // The new page becomes the current one, the preview shows it (showCurrentPage)
-    ui->pagesListWidget->addPage(filePath, dpi);
+    ui->pagesListWidget->addPage(filePath, dpi, straightenedBy);
 }
 
 void MainWin::refreshScanners() {
@@ -763,9 +767,25 @@ bool MainWin::writeOcrPdf(const QString &filePath, const QStringList &imagePaths
     m_ocrCancelled = false;
     m_ocrErrorOutput.clear();
 
+    // Black/white pages go to tesseract as TIFF, it puts them into the PDF as CCITT G4 (a PNG it
+    // takes as it is, about half again as big); color and gray pages stay PNG
+    QTemporaryDir tiffDir(QDir(QDir::tempPath()).filePath("PDFDocumentScannerM_ocr_XXXXXX"));
+    QStringList inputPaths;
+    for (int i = 0; i < imagePaths.size(); ++i) {
+        const QString &imagePath = imagePaths.at(i);
+        const QImage page(imagePath);
+        const QString tiffPath = tiffDir.filePath(QString("page_%1.tif").arg(i + 1, 3, 10, QChar('0')));
+        if (page.format() == QImage::Format_Mono && tiffDir.isValid()
+            && PageProcessing::writeBlackWhiteTiff(page, tiffPath)) {
+            inputPaths << tiffPath;
+        } else {
+            inputPaths << imagePath;
+        }
+    }
+
     QTemporaryFile listFile(QDir(QDir::tempPath()).filePath("PDFDocumentScannerM_ocr_XXXXXX.txt"));
     if (!listFile.open()) return false;
-    listFile.write((imagePaths.join('\n') + '\n').toUtf8());
+    listFile.write((inputPaths.join('\n') + '\n').toUtf8());
     listFile.flush();
 
     const QString outputBase = filePath + ".part";   // tesseract appends ".pdf"

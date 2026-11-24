@@ -22,8 +22,9 @@ public:
     };
 
     // Adds the image as a new page; the file path is stored in Qt::UserRole, the scan
-    // resolution in kDpiRole
-    bool addPage(const QString &filePath, int dpi);
+    // resolution in kDpiRole, the angle it was straightened by in kStraightenedRole (0: not
+    // straightened; the label says so)
+    bool addPage(const QString &filePath, int dpi, double straightenedBy = 0);
 
     // Pages in list order: all or only the selected ones
     QList<Page> pages(bool selectedOnly) const;
@@ -33,6 +34,7 @@ public:
     void removeAllPages();        // the image files are deleted too
 
     static constexpr int kDpiRole = Qt::UserRole + 1;
+    static constexpr int kStraightenedRole = Qt::UserRole + 2;
 
 signals:
     void pagesChanged();       // pages added, removed, moved or rotated
@@ -55,6 +57,7 @@ private:
     void removeRows(QList<int> rows);
     void removeSelectedPages();
     void renumber();
+    void setPageLabel(QListWidgetItem *page, int number);   // "Page 3", plus the straightening
     int crossRowAt(const QPoint &pos) const;   // row whose × is at pos, -1: none
     void setCrossHoverRow(int row);
     int dragScrollStep() const;   // pixels per timer tick at m_dragPos, 0: outside the edge zones

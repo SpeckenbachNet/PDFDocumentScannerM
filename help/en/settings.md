@@ -35,3 +35,7 @@ The sheet always lies upright on the glass or in the feeder. With **Landscape** 
 ## OCR language
 
 The language for text recognition when saving (**Save with OCR**, see **Saving**). The save dialog starts with it. The languages installed for tesseract can be chosen; **Not installed** means tesseract or a language is missing.
+
+## Straighten Document
+
+If a sheet lies slightly askew on the glass or runs through the feeder at a slant (up to 5°), PDFDocumentScannerM turns the page straight right after scanning. The app goes by the lines of text; pages without text, such as photos, and blank pages stay as they are. The uncovered corners become white. The page list then shows below the page how much it was straightened, for example **Page 3 · straightened 2.8°**. The setting applies to the next scans.

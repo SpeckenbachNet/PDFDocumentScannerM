@@ -42,6 +42,7 @@ private:
     QComboBox   *m_paperFormatCombo;
     QComboBox   *m_scanningUnitCombo;
     QComboBox   *m_scanIntentCombo;
+    QCheckBox   *m_straightenCheck;
     QPixmap getTintedPixmap(const QIcon &icon, const QSize &size, const QColor &color);
     bool setComboBoxValue(QComboBox* box, const QVariant& value);
     void updateScannerList();

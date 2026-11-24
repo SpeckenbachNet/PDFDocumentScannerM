@@ -1,5 +1,11 @@
 # PDFDocumentScannerM – Changelog
 
+## 0.7.0 – Straighten, smaller PDFs (November 24, 2026)
+
+- Straighten Document: pages that lie slightly askew (up to 5°) are turned straight right after scanning (setting, off by default); the page list shows the angle below the page
+- Smaller PDFs with text recognition: black/white pages are stored as CCITT G4 (2 text pages: 110 KB → 70 KB)
+- Crop stays grayed out in the settings until it works
+
 ## 0.6.0 – Text recognition (November 24, 2026)
 
 - Text recognition (OCR) when saving: the save dialog has the buttons "Save" and "Save with OCR", the PDF becomes searchable and text can be copied (needs tesseract)

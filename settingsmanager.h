@@ -24,6 +24,7 @@ public:
     QString pageOrientation() const { return m_pageOrientation; }
     QString pageFormat() const { return m_pageFormat; }
     QString ocrLanguage() const { return m_ocrLanguage; }
+    bool straighten() const { return m_straightenDocument; }   // new scans are turned straight
     int resolution() const { return m_resolution; }
     bool intentDocument() const { return m_intentDocument; }
 
@@ -37,6 +38,7 @@ public:
     void setPageFormat(QString pageFormat);
     void setScanIntent(QString scanIntent);
     void setOcrLanguage(QString ocrLanguage);
+    void setStraighten(bool straighten);
 
     // Window size/position and splitter (QWidget::saveGeometry / QSplitter::saveState),
     // empty before the first close

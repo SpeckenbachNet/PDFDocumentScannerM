@@ -6,6 +6,7 @@
 #include <QDragMoveEvent>
 #include <QFile>
 #include <QImage>
+#include <QLocale>
 #include <QMenu>
 #include <QScrollBar>
 #include <QTimer>
@@ -54,13 +55,15 @@ PageListWidget::PageListWidget(QWidget *parent) : QListWidget(parent) {
     setItemDelegate(m_delegate);
 }
 
-bool PageListWidget::addPage(const QString &filePath, int dpi) {
+bool PageListWidget::addPage(const QString &filePath, int dpi, double straightenedBy) {
     QImage img(filePath);
     if (img.isNull()) return false;
 
-    QListWidgetItem *item = new QListWidgetItem(pageIcon(img), tr("PAGE %1").arg(count() + 1));
+    QListWidgetItem *item = new QListWidgetItem(pageIcon(img), QString());
     item->setData(Qt::UserRole, filePath);
     item->setData(kDpiRole, dpi);
+    item->setData(kStraightenedRole, straightenedBy);
+    setPageLabel(item, count() + 1);
 
     addItem(item);
     updateItemSizes(); // More pages may need the narrower width
@@ -189,8 +192,22 @@ void PageListWidget::removeSelectedPages() {
 
 void PageListWidget::renumber() {
     for (int i = 0; i < count(); ++i) {
-        item(i)->setText(tr("PAGE %1").arg(i + 1));
+        setPageLabel(item(i), i + 1);
     }
+}
+
+// A straightened page says by how much (the direction does not matter to the reader);
+// the tooltip holds the whole text in case the label is cut off in a narrow list
+void PageListWidget::setPageLabel(QListWidgetItem *page, int number) {
+    const double straightenedBy = page->data(kStraightenedRole).toDouble();
+    if (straightenedBy == 0) {
+        page->setText(tr("PAGE %1").arg(number));
+        page->setToolTip(QString());
+        return;
+    }
+    const QString angle = QLocale().toString(qAbs(straightenedBy), 'f', 1);
+    page->setText(tr("PAGE %1 · straightened %2°").arg(number).arg(angle));
+    page->setToolTip(tr("Straightened by %1° after scanning").arg(angle));
 }
 
 // ====== Scrolling while dragging ======

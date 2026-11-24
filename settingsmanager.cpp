@@ -19,6 +19,7 @@ void SettingsManager::resetToDefaults() {
     m_pageFormat = "Standard";
     m_colorMode = "Color";
     m_ocrLanguage.clear();
+    m_straightenDocument = false;
     m_intentDocument = false;
 
     resolutionValues = {"75", "100", "200", "300"};
@@ -66,6 +67,7 @@ void SettingsManager::readSettingsFromIni() {
     m_resolution = m_settings->value("Scanner/Resolution").toInt();
     m_scanIntent = m_settings->value("Scanner/ScanIntent", m_scanIntent).toString();
     m_ocrLanguage = m_settings->value("Scanner/OcrLanguage", m_ocrLanguage).toString();
+    m_straightenDocument = m_settings->value("Scanner/Straighten", m_straightenDocument).toBool();
 }
 
 // Not stored: a scanner that is missing at one search stays the user's choice for the next
@@ -132,6 +134,12 @@ void SettingsManager::setScanIntent(QString scanIntent) {
 void SettingsManager::setOcrLanguage(QString ocrLanguage) {
     m_ocrLanguage = ocrLanguage;
     m_settings->setValue("Scanner/OcrLanguage", ocrLanguage);
+    m_settings->sync();
+}
+
+void SettingsManager::setStraighten(bool straighten) {
+    m_straightenDocument = straighten;
+    m_settings->setValue("Scanner/Straighten", straighten);
     m_settings->sync();
 }
 

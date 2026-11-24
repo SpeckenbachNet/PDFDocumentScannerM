@@ -27,7 +27,8 @@ Kommandozeilenwerkzeuge `airscan-discover` und `scanimage` auf (`QProcess`).
 | Als PDF speichern (Auswahl / alle Seiten), drehen, leeren | fertig |
 | OCR beim Speichern (tesseract, Knöpfe „Speichern“ / „Mit OCR speichern“ und Sprache im Speicherdialog) | fertig |
 | Fake-Duplex | offen (Knopf da, nicht verbunden) |
-| Begradigen, Zuschneiden (Häkchen in den Einstellungen, ausgegraut) | offen |
+| Ausrichten gleich nach dem Scan (Häkchen in den Einstellungen) | fertig |
+| Beschneiden (Häkchen in den Einstellungen, ausgegraut) | offen |
 
 **Ablauf**
 
@@ -136,7 +137,7 @@ Hinweise:
 | `sanedevice.*` | wie scanimage einen Scanner öffnet: escl-Scanner über das airscan-Backend (Abschnitt 4) |
 | `ocr.*` | tesseract: installierte Sprachen und ihre Namen |
 | `pdfsavedialog.*` | Dateidialog zum Speichern, Knöpfe „Speichern“ / „Mit OCR speichern“ und OCR-Sprache |
-| `pageprocessing.*` | Bearbeitung einer gescannten Seite: Drehung bei Querformat, Farbmodus, Schwarz/Weiß-Schwellwert, Drehen (später Ausrichten, Beschneiden) |
+| `pageprocessing.*` | Bearbeitung einer gescannten Seite: Drehung bei Querformat, Ausrichten, Farbmodus, Schwarz/Weiß-Schwellwert, Drehen (später Beschneiden) |
 | `previewview.*` | große Vorschau (`QGraphicsView`), passt das Bild in die Ansicht ein |
 | `helppage.*`, `twolinedelegate.*` | Hilfeseite (Markdown in `help/<de\|en>/`, `Help.qrc`); Kopien aus MovieMetaM, an `UiColors` angepasst |
 | `uicolors.h` | Flächenfarben, nur aus Window/WindowText abgeleitet; die Palette der App (`applyStandardPalette`) |
@@ -268,6 +269,32 @@ Die App hat drei feste Modi; die Namen des Scanners (`Color`, `Colour`, `24bit C
   1-Bit-Bild beim Drehen 32 Bit.
 - Ältere Einstellungen mit `Lineart` werden als `BlackWhite` gelesen.
 
+### Ausrichten (`pageprocessing.*`)
+
+Einstellung `Scanner/Straighten` (Häkchen „Dokument ausrichten“, Standard aus), gelesen beim
+Start des Scans. Gemacht in `convertScannedPage()` gleich nach dem Eintreffen der Seite: Drehung
+bei Querformat → Ausrichten → Farbmodus. Schwarz/Weiß-Seiten werden in Grau ausgerichtet und
+danach mit dem Schwellwert umgewandelt (ein gedrehtes 1-Bit-Bild bekommt ausgefranste Buchstaben).
+
+- `skewAngle()`: Seite auf 1000 px Breite verkleinert (etwa 100 dpi), dunkle Punkte nach Otsu,
+  äußere 3 % ausgelassen (Randschatten). Für jeden Winkel wird jeder Punkt in der Zeile
+  `y − x · tan(Winkel)` gezählt; es gewinnt der Winkel, dessen Zeilenprofil die größte Summe der
+  quadrierten Nachbar-Unterschiede hat (Textzeilen fallen auf wenige Zeilen). Suche ±5°: grob in
+  0,25°-Schritten, dann 0,025° um den besten.
+- Keine Drehung, wenn weniger als 0,2 % oder mehr als 35 % der Seite dunkel sind (leere Seite,
+  Foto), der beste Wert unter dem 1,5-Fachen des Medians der groben Werte liegt (keine klaren
+  Zeilen) oder der Winkel unter 0,2° liegt.
+- `straightenedImage()`: in 32 Bit mit `SmoothPixmapTransform` gemalt, um −Winkel um die Mitte
+  gedreht, gleiche Größe, frei werdende Ecken weiß; zurück ins Format der Seite, Auflösung
+  bleibt.
+- Der Winkel kommt über `convertScannedPage(..., &straightenedBy)` zurück und steht im Eintrag
+  (`PageListWidget::kStraightenedRole`); die Beschriftung lautet „Seite 3 · ausgerichtet 2,8°“
+  (`setPageLabel()`, auch beim Neunummerieren), der ganze Text als Tooltip, der Delegate kürzt
+  ihn mit „…“.
+- Gemessen mit künstlichen A4-Seiten mit 300 dpi (Neigung 0,3° … 4,9°, beide Richtungen): Winkel
+  auf 0,025° genau, etwa 60 ms zum Finden und 70 ms zum Drehen. Mit echten Scans noch nicht
+  getestet.
+
 ### Seitenliste (`PageListWidget`, `PageDelegate`)
 
 - ListMode, eine Spalte. Die Seiten füllen die Breite (A4-Verhältnis). Passen sie nicht in die
@@ -320,12 +347,19 @@ Die App hat drei feste Modi; die Namen des Scanners (`Color`, `Colour`, `24bit C
   einem Durchgang). Seitengröße aus der Auflösung in der PNG (`pHYs`, schreibt scanimage, Qt
   behält sie beim Umwandeln und Drehen). Gemessen: Die PDF ist nicht größer als mit `QPdfWriter`,
   etwa 4 s pro A4-Seite mit 300 dpi.
+- tesseract übernimmt eine PNG unverändert in die PDF (Flate), andere Dateien kodiert es selbst
+  (Leptonica: 1 Bit → CCITT G4). Deshalb bekommt es Schwarz/Weiß-Seiten als unkomprimierte
+  1-Bit-TIFF (`PageProcessing::writeBlackWhiteTiff()`, eigener Schreiber mit den
+  Auflösungs-Tags – Qts TIFF-Schreiber ist ein Plugin und kann nur LZW). Gemessen mit zwei echten
+  Textseiten: 110 KB → 70 KB, gleicher Text, gleiches Bild. Kleiner ginge mit JBIG2 (PDFScanner
+  auf dem Mac: 45 KB) – braucht jbig2enc und einen eigenen PDF-Schreiber, später.
 - `writeOcrPdf()` läuft in einer eigenen `QEventLoop`: Das Fenster bleibt bedienbar, die
   Statusmeldung zeigt „Seite n von m“ (aus tesseracts Zeilen `Page n : …`), **Esc** bricht ab.
   Die Seitenliste ist so lange gesperrt (die Bilder dürfen sich nicht ändern), Schließen wartet.
   tesseract schreibt `<ziel>.part.pdf`, das erst am Ende umbenannt wird: Abbruch oder Fehler
   lassen eine vorhandene Datei unberührt.
-- Reihenfolge später: Ausrichten → Beschneiden → OCR → PDF. Vorerst verworfen: OCR gleich nach
+- Ausrichten geschieht gleich nach dem Scan (siehe Ausrichten), Beschneiden ebenso; beim
+  Speichern bleibt dann nur OCR → PDF. Vorerst verworfen: OCR gleich nach
   dem Scan mit markierbarem Text in der Vorschau (Variante B) – Drehen, Ausrichten und
   Beschneiden müssten dann mit erkanntem Text umgehen.
 - Ohne OCR blockiert das Schreiben das Fenster; ein `processEvents()` lässt die Meldung „PDF wird
