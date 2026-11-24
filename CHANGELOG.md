@@ -1,5 +1,15 @@
 # PDFDocumentScannerM – Changelog
 
+## 0.6.0 – Text recognition (November 24, 2026)
+
+- Text recognition (OCR) when saving: the save dialog has the buttons "Save" and "Save with OCR", the PDF becomes searchable and text can be copied (needs tesseract)
+- The OCR language is preset in the settings and can be changed in the save dialog for one save
+- The languages offered are the ones installed for tesseract
+- Saving with text recognition shows the page it is at and can be cancelled with Esc
+- Straighten and crop are grayed out in the settings until they work
+- Rounded combo boxes and more room in the settings
+- Save dialog: rounded fields and lists, more room, no file type row; it remembers its size and view
+
 ## 0.5.4 – Ask before closing, landscape, dark mode (November 23, 2026)
 
 - Scanner options load in well under a second instead of about 10 seconds (measured with the HP M277dw)

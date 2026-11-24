@@ -31,3 +31,7 @@ Dots per inch (dpi). 300 dpi is good for text, higher values for small print and
 **Portrait** or **Landscape**, and the size of the scanned area: A4, A5, A6, Letter or Legal. **Standard** takes A4, or Letter in countries that use it.
 
 The sheet always lies upright on the glass or in the feeder. With **Landscape** the app turns each scanned page 90° counter-clockwise afterwards. If it ends up upside down, turn it with the button with the round arrow. If the format is larger than the scanner can scan (for example Legal on an A4 glass), only the area it can handle is scanned.
+
+## OCR language
+
+The language for text recognition when saving (**Save with OCR**, see **Saving**). The save dialog starts with it. The languages installed for tesseract can be chosen; **Not installed** means tesseract or a language is missing.

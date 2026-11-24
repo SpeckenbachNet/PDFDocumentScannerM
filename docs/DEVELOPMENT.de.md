@@ -24,9 +24,10 @@ Kommandozeilenwerkzeuge `airscan-discover` und `scanimage` auf (`QProcess`).
 | Große Vorschau der aktuellen Seite mit Zoom | fertig |
 | Fenstergröße und Splitter werden gemerkt | fertig |
 | Hilfeseite | Rahmen fertig, Texte meist noch „Folgt.“ |
-| Als PDF speichern (Auswahl / alle Seiten, ohne OCR), drehen, leeren | fertig |
+| Als PDF speichern (Auswahl / alle Seiten), drehen, leeren | fertig |
+| OCR beim Speichern (tesseract, Knöpfe „Speichern“ / „Mit OCR speichern“ und Sprache im Speicherdialog) | fertig |
 | Fake-Duplex | offen (Knopf da, nicht verbunden) |
-| OCR, Begradigen, Zuschneiden (Häkchen in den Einstellungen) | offen (nicht angebunden) |
+| Begradigen, Zuschneiden (Häkchen in den Einstellungen, ausgegraut) | offen |
 
 **Ablauf**
 
@@ -67,13 +68,14 @@ Laufzeit nennen auch andere Distributionen.
 | `scanimage` (Optionen, Scannen) und das `escl`-Backend | 1.4.0 | `sane` | `sane-utils` | `sane-backends` | `sane-backends` |
 | `airscan-discover`, die schnelle Scannersuche | 0.99.38 | `sane-airscan` | `sane-airscan` | `sane-airscan` | `sane-airscan` |
 | mDNS (Dienst `avahi-daemon` läuft), findet die Netzwerkscanner | 0.9rc5 | `avahi` | `avahi-daemon` | `avahi` | `avahi` |
-| OCR – **noch nicht eingebaut**, geplant | 5.5.3 | `tesseract` | `tesseract-ocr` | `tesseract` | `tesseract-ocr` |
+| OCR beim Speichern (optional) | 5.5.4 | `tesseract` | `tesseract-ocr` | `tesseract` | `tesseract-ocr` |
 
 Ohne `sane-airscan` fällt die App auf `scanimage -L` zurück (ca. 10 s, verpasst oft Geräte).
 
-**OCR-Sprachdaten:** ein Paket für jede OCR-Sprache, die man wählen kann (Deutsch und
-Englisch). Unter Arch ist Englisch **nicht** in `tesseract` enthalten (es zieht nur `osd` und
-irgendein Sprachpaket mit).
+**OCR-Sprachdaten:** ein Paket für jede OCR-Sprache; der Speicherdialog bietet an, was
+`tesseract --list-langs` meldet (ohne `osd`). Unter Arch ist Englisch **nicht** in `tesseract`
+enthalten (es zieht nur `osd` und irgendein Sprachpaket mit); Debians `tesseract-ocr` bringt
+Englisch mit. Ohne tesseract oder ohne Sprache ist „Mit OCR speichern“ ausgegraut.
 
 | Sprache | Arch/CachyOS | Debian/Ubuntu | Fedora/RHEL | openSUSE |
 |---|---|---|---|---|
@@ -132,6 +134,8 @@ Hinweise:
 | `pagelistwidget.*` | Seitenliste: eine Spalte, Seitengröße folgt der Breite; auswählen, entfernen, Drag and Drop |
 | `pagedelegate.*` | zeichnet eine Seite: Bild, Beschriftung „Seite N“, Auswahl, × beim Überfahren |
 | `sanedevice.*` | wie scanimage einen Scanner öffnet: escl-Scanner über das airscan-Backend (Abschnitt 4) |
+| `ocr.*` | tesseract: installierte Sprachen und ihre Namen |
+| `pdfsavedialog.*` | Dateidialog zum Speichern, Knöpfe „Speichern“ / „Mit OCR speichern“ und OCR-Sprache |
 | `pageprocessing.*` | Bearbeitung einer gescannten Seite: Drehung bei Querformat, Farbmodus, Schwarz/Weiß-Schwellwert, Drehen (später Ausrichten, Beschneiden) |
 | `previewview.*` | große Vorschau (`QGraphicsView`), passt das Bild in die Ansicht ein |
 | `helppage.*`, `twolinedelegate.*` | Hilfeseite (Markdown in `help/<de\|en>/`, `Help.qrc`); Kopien aus MovieMetaM, an `UiColors` angepasst |
@@ -296,12 +300,35 @@ Die App hat drei feste Modi; die Namen des Scanners (`Color`, `Colour`, `24bit C
   Bild, das Bild füllt die Seite. Die Seitengröße ergibt sich aus Pixeln und Scan-Auflösung
   (`pageLayoutFor()`, `FuzzyMatch` macht aus 209,97 × 297,01 mm A4); Querformat-Seiten bekommen
   ein Querformat-Layout, weil `QPageSize` allein immer hochkant ist.
-- **OCR (geplant) läuft beim Speichern** (Entscheidung: Variante A). Dann schreibt tesseract die
-  PDF aus denselben Bildern statt `QPdfWriter` (`tesseract liste.txt ausgabe -l deu pdf`, Bild und
-  unsichtbarer Text in einem Durchgang). Reihenfolge dann: Ausrichten → Beschneiden → OCR → PDF.
-  Vorerst verworfen: OCR gleich nach dem Scan mit markierbarem Text in der Vorschau (Variante B)
-  – Drehen, Ausrichten und Beschneiden müssten dann mit erkanntem Text umgehen.
-- Das Schreiben blockiert das Fenster; ein `processEvents()` lässt die Meldung „PDF wird
+- Der Dateidialog ist der eigene von Qt (`PdfSaveDialog`, `DontUseNativeDialog`): Nur der nimmt
+  zusätzliche Knöpfe. Qts Buttonleiste (senkrecht, nach den Regeln des Desktops sortiert) ist
+  versteckt; eigene Knöpfe in fester Reihenfolge: **Abbrechen | Mit OCR speichern | Speichern**
+  (Standard, Eingabetaste). Sie folgen Qts verstecktem Speichern-Knopf (`EnabledChange`: ohne
+  Dateinamen aus) und rufen `QFileDialog::accept()` (prüft den Namen, fragt vor dem
+  Überschreiben). Darüber die OCR-Sprache, voreingestellt aus den Einstellungen
+  (`Scanner/OcrLanguage`); eine Änderung dort gilt nur für dieses Speichern und wird nicht
+  gemerkt. Ohne gespeicherte Sprache die des Systems, sonst die erste (`Ocr::fillLanguageCombo`).
+- Aussehen: Die Zeile Dateityp ist ausgeblendet (nur PDF), Ränder 20 px, Dateiname / Ordner /
+  Sprache rund, Seitenleiste und Dateiliste als runde Boxen mit 26 px hohen Zeilen
+  (`UiColors::applyInputStyle`, `applyComboStyle`, `applyBoxStyle`, `listItemRules`, übernommen
+  aus `themecolors.h` von NiriSettingsM). Qts Teile werden über ihren Objektnamen gefunden
+  (`fileNameEdit`, `lookInCombo`, `sidebar`, `listView`, `treeView`); fehlt einer, bleibt Qts
+  Aussehen. Beim Wechsel Hell/Dunkel neu gesetzt (die Stylesheets enthalten feste Farben).
+  Größe und Ansicht werden gemerkt.
+- **OCR läuft beim Speichern** (Variante A): tesseract schreibt die PDF aus denselben Bildern statt
+  `QPdfWriter` (`tesseract liste.txt <ziel>.part -l deu pdf`, Bild und unsichtbarer Text in
+  einem Durchgang). Seitengröße aus der Auflösung in der PNG (`pHYs`, schreibt scanimage, Qt
+  behält sie beim Umwandeln und Drehen). Gemessen: Die PDF ist nicht größer als mit `QPdfWriter`,
+  etwa 4 s pro A4-Seite mit 300 dpi.
+- `writeOcrPdf()` läuft in einer eigenen `QEventLoop`: Das Fenster bleibt bedienbar, die
+  Statusmeldung zeigt „Seite n von m“ (aus tesseracts Zeilen `Page n : …`), **Esc** bricht ab.
+  Die Seitenliste ist so lange gesperrt (die Bilder dürfen sich nicht ändern), Schließen wartet.
+  tesseract schreibt `<ziel>.part.pdf`, das erst am Ende umbenannt wird: Abbruch oder Fehler
+  lassen eine vorhandene Datei unberührt.
+- Reihenfolge später: Ausrichten → Beschneiden → OCR → PDF. Vorerst verworfen: OCR gleich nach
+  dem Scan mit markierbarem Text in der Vorschau (Variante B) – Drehen, Ausrichten und
+  Beschneiden müssten dann mit erkanntem Text umgehen.
+- Ohne OCR blockiert das Schreiben das Fenster; ein `processEvents()` lässt die Meldung „PDF wird
   gespeichert...“ vorher erscheinen.
 
 ### Vorschau (`PreviewView`)
@@ -333,7 +360,8 @@ Aller Zugriff läuft über `SettingsManager`.
 | `Scanner/ScanningUnit`, `Resolution`, `ScanIntent` | Scanner-Optionen |
 | `Scanner/ColorMode` | `Color`, `Gray` oder `BlackWhite` (die Modi der App) |
 | `Scanner/PageOrientation`, `PageFormat` | Seite |
-| `Scanner/OcrLanguage` | tesseract-Code (`deu`, `eng`) |
+| `Scanner/OcrLanguage` | Voreinstellung der OCR-Sprache im Speicherdialog, tesseract-Code (`deu`, `eng`) |
+| `Save/DialogGeometry`, `Save/DialogState` | Größe und Ansicht des Speicherdialogs (`saveGeometry()` / `QFileDialog::saveState()`, geschrieben in `done()`) |
 | `Window/Geometry`, `Window/Splitter` | `saveGeometry()` / `QSplitter::saveState()`, geschrieben in `closeEvent` |
 | `Save/LastFolder` | Ordner der zuletzt gespeicherten PDF |
 
@@ -423,7 +451,7 @@ unter niri) fehlt dort. Das spielt keine Rolle mehr: Die App fragt das Desktop-P
   sie aus `CMakeLists.txt`.
 - `main.cpp` setzt den Desktop-Dateinamen (`net.speckenbach.PDFDocumentScannerM`): Unter Wayland
   verbindet er das Fenster mit dem Startmenü-Eintrag und seinem Icon.
-- `scanimage`, `airscan-discover` (und später `tesseract`) sind **nicht** im Paket; sie kommen vom
+- `scanimage`, `airscan-discover` und `tesseract` sind **nicht** im Paket; sie kommen vom
   System (siehe Voraussetzungen). Noch nicht getestet: ob die App aus dem AppImage sie ohne
   Probleme aufruft.
 

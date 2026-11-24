@@ -18,7 +18,7 @@ void SettingsManager::resetToDefaults() {
     m_pageOrientation = "Portrait";
     m_pageFormat = "Standard";
     m_colorMode = "Color";
-    m_ocrLanguage = "deu";
+    m_ocrLanguage.clear();
     m_intentDocument = false;
 
     resolutionValues = {"75", "100", "200", "300"};
@@ -146,6 +146,20 @@ QByteArray SettingsManager::splitterState() const {
 void SettingsManager::saveWindowLayout(const QByteArray &geometry, const QByteArray &splitter) {
     m_settings->setValue("Window/Geometry", geometry);
     m_settings->setValue("Window/Splitter", splitter);
+    m_settings->sync();
+}
+
+QByteArray SettingsManager::saveDialogGeometry() const {
+    return m_settings->value("Save/DialogGeometry").toByteArray();
+}
+
+QByteArray SettingsManager::saveDialogState() const {
+    return m_settings->value("Save/DialogState").toByteArray();
+}
+
+void SettingsManager::setSaveDialogLayout(const QByteArray &geometry, const QByteArray &state) {
+    m_settings->setValue("Save/DialogGeometry", geometry);
+    m_settings->setValue("Save/DialogState", state);
     m_settings->sync();
 }
 

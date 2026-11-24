@@ -3,15 +3,17 @@
 #include "settingsmanager.h"
 #include "pageprocessing.h"
 #include "sanedevice.h"
+#include "pdfsavedialog.h"
 #include <QCloseEvent>
 #include <QDir>
-#include <QFileDialog>
+#include <QEventLoop>
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QPageLayout>
 #include <QPdfWriter>
 #include <QPushButton>
 #include <QStandardPaths>
+#include <QTemporaryFile>
 #include <QThread>
 #include <QUrl>
 
@@ -706,37 +708,126 @@ void MainWin::refreshScanners() {
 // ====== Pages ======
 
 // Selected or all pages in list order. Without OCR the PDF is written here (QPdfWriter);
-// with OCR (later) tesseract writes it from the same images instead.
-// Returns whether the PDF was written (false: dialog cancelled or error)
+// with OCR tesseract writes it from the same images (image + invisible text).
+// Returns whether the PDF was written (false: dialog cancelled, saving cancelled or error)
 bool MainWin::savePdf(bool selectedOnly) {
     const QList<PageListWidget::Page> pages = ui->pagesListWidget->pages(selectedOnly);
     if (pages.isEmpty()) return false;
 
     SettingsManager &settings = SettingsManager::instance();
     const QString name = "Scan_" + QDateTime::currentDateTime().toString("yyyy-MM-dd_HHmm") + ".pdf";
-    QString filePath = QFileDialog::getSaveFileName(this, tr("Save PDF"),
-                                                    QDir(settings.lastSaveFolder()).filePath(name),
-                                                    tr("PDF files (*.pdf)"));
-    if (filePath.isEmpty()) return false;
+    PdfSaveDialog dialog(this, QDir(settings.lastSaveFolder()).filePath(name));
+    if (dialog.exec() != QDialog::Accepted || dialog.selectedFiles().isEmpty()) return false;
+    QString filePath = dialog.selectedFiles().constFirst();
     if (!filePath.endsWith(".pdf", Qt::CaseInsensitive)) filePath += ".pdf";
     settings.setLastSaveFolder(QFileInfo(filePath).absolutePath());
+    const bool ocr = dialog.ocr();   // "Save with OCR"; its language is for this save only
 
     setBusy(true);
-    m_statusOverlay->showMessage(tr("Saving PDF..."));
-    // Writing blocks the window: let the message appear first
-    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-    const bool saved = writePdf(filePath, pages);
+    bool saved;
+    if (ocr) {
+        QStringList imagePaths;
+        for (const PageListWidget::Page &page : pages) imagePaths << page.filePath;
+        // The page images must stay as they are while tesseract reads them
+        ui->pagesListWidget->setEnabled(false);
+        saved = writeOcrPdf(filePath, imagePaths, dialog.ocrLanguage());
+        ui->pagesListWidget->setEnabled(true);
+    } else {
+        m_statusOverlay->showMessage(tr("Saving PDF..."));
+        // Writing blocks the window: let the message appear first
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+        saved = writePdf(filePath, pages);
+        if (!saved) QFile::remove(filePath);   // no half written file
+    }
     setBusy(false);
 
     if (saved) {
         // All pages are in a PDF now (also "Save selected" with every page selected)
         if (pages.size() == ui->pagesListWidget->count()) m_unsaved = false;
         m_statusOverlay->showMessage(tr("PDF saved: %1").arg(QFileInfo(filePath).fileName()), false, 3000);
+    } else if (m_ocrCancelled) {
+        m_statusOverlay->showMessage(tr("Saving cancelled"), false, 3000);
     } else {
-        QFile::remove(filePath);   // no half written file
-        m_statusOverlay->showMessage(tr("PDF could not be saved"), true, 3000);
+        QString message = tr("PDF could not be saved");
+        if (ocr && !m_ocrErrorOutput.isEmpty()) message += "<br>" + breakableHtml(m_ocrErrorOutput);
+        m_statusOverlay->showMessage(message, true, 6000);
     }
+    m_ocrCancelled = false;
     return saved;
+}
+
+// tesseract reads the images from a list file and writes one PDF. It runs in its own event loop:
+// the window stays responsive (progress, Esc cancels) and the caller gets the result directly.
+// The PDF is written next to the target first, so a cancel or error leaves an existing file as it is.
+bool MainWin::writeOcrPdf(const QString &filePath, const QStringList &imagePaths, const QString &language) {
+    m_ocrCancelled = false;
+    m_ocrErrorOutput.clear();
+
+    QTemporaryFile listFile(QDir(QDir::tempPath()).filePath("PDFDocumentScannerM_ocr_XXXXXX.txt"));
+    if (!listFile.open()) return false;
+    listFile.write((imagePaths.join('\n') + '\n').toUtf8());
+    listFile.flush();
+
+    const QString outputBase = filePath + ".part";   // tesseract appends ".pdf"
+    const QString partFile = outputBase + ".pdf";
+    const int pageCount = imagePaths.size();
+    m_statusOverlay->showMessage(tr("Text recognition: page %1 of %2").arg(1).arg(pageCount));
+
+    QProcess process;
+    process.setProcessChannelMode(QProcess::MergedChannels);
+    // Progress lines "Page 0 : /tmp/.../page_001.png", everything else may be an error message
+    connect(&process, &QProcess::readyRead, this, [this, &process, pageCount]() {
+        while (process.canReadLine()) {
+            const QString line = QString::fromLocal8Bit(process.readLine()).trimmed();
+            static const QRegularExpression pageRegex("^Page (\\d+) :");
+            const QRegularExpressionMatch match = pageRegex.match(line);
+            if (match.hasMatch()) {
+                if (!m_ocrCancelled) {
+                    m_statusOverlay->showMessage(tr("Text recognition: page %1 of %2")
+                                                 .arg(match.captured(1).toInt() + 1).arg(pageCount));
+                }
+            } else if (!line.isEmpty()) {
+                m_ocrErrorOutput = line;
+            }
+        }
+    });
+    QEventLoop loop;
+    connect(&process, &QProcess::finished, &loop, &QEventLoop::quit);
+
+    m_ocrProcess = &process;
+    process.start("tesseract", {listFile.fileName(), outputBase, "-l", language, "pdf"});
+    if (process.waitForStarted(5000)) {
+        loop.exec();
+    } else {
+        m_ocrErrorOutput = tr("tesseract could not be started");
+    }
+    m_ocrProcess = nullptr;
+    m_statusOverlay->hideOverlay();
+
+    const bool ok = !m_ocrCancelled && process.exitStatus() == QProcess::NormalExit
+                    && process.exitCode() == 0 && QFile::exists(partFile);
+    if (!ok) {
+        QFile::remove(partFile);
+        return false;
+    }
+    QFile::remove(filePath);   // the file dialog asked before overwriting
+    if (!QFile::rename(partFile, filePath)) {
+        QFile::remove(partFile);
+        return false;
+    }
+    return true;
+}
+
+// Esc while the text recognition runs: tesseract is stopped, no PDF is written
+void MainWin::cancelOcr() {
+    if (!m_ocrProcess || m_ocrCancelled) return;
+    m_ocrCancelled = true;
+    m_statusOverlay->showMessage(tr("Cancelling..."));
+    QProcess *process = m_ocrProcess;
+    process->terminate();
+    QTimer::singleShot(5000, process, [process]() {
+        if (process->state() != QProcess::NotRunning) process->kill();
+    });
 }
 
 void MainWin::rotatePages() {
@@ -836,6 +927,11 @@ void MainWin::closeEvent(QCloseEvent *event) {
 // Before closing: a running scan is cancelled and unsaved pages are saved or discarded, only
 // if the user agrees. false: the window stays open.
 bool MainWin::confirmClose() {
+    if (m_ocrProcess) {
+        // savePdf() is still waiting for tesseract: closing now would pull the window from under it
+        m_statusOverlay->showMessage(tr("The PDF is being saved. Wait or cancel with Esc."), false, 4000);
+        return false;
+    }
     if (m_scanProcess) {
         QMessageBox box(QMessageBox::Question, tr("Close"),
                         tr("A scan is running. Cancel it and close?"), QMessageBox::NoButton, this);

@@ -1,6 +1,7 @@
 #include "settingsoverlay.h"
 #include "settingsmanager.h"
 #include "uicolors.h"
+#include "ocr.h"
 #include <QApplication>
 
 namespace {
@@ -50,8 +51,8 @@ void SettingsOverlay::initializeOverlay()
     m_layout = new QVBoxLayout(this);
 
     // Space for the nose (m_arrowHeight + buffer)
-    int topSpace = m_arrowHeight + 15;
-    m_layout->setContentsMargins(15, topSpace, 15, 15);
+    int topSpace = m_arrowHeight + 20;
+    m_layout->setContentsMargins(20, topSpace, 20, 20);
     m_layout->setSpacing(5);
 
     // Add Widgets to m_layout
@@ -68,7 +69,7 @@ void SettingsOverlay::initializeOverlay()
     auto *grid = new QGridLayout;
     grid->setColumnStretch(1, 1);
     grid->setHorizontalSpacing(12);
-    grid->setVerticalSpacing(8);
+    grid->setVerticalSpacing(10);
     m_layout->addLayout(grid);
 
     // Scanning unit
@@ -101,7 +102,7 @@ void SettingsOverlay::initializeOverlay()
     grid->addWidget(new QLabel(tr("PAGE_FORMAT")), 5, 0);
     grid->addWidget(m_paperFormatCombo, 5, 1);
 
-    // OCR Language
+    // OCR language: preset of the save dialog (there the buttons decide whether OCR is used)
     m_ocrLanguageCombo = new QComboBox(this);
     grid->addWidget(new QLabel(tr("OCR_LANGUAGE")), 6, 0);
     grid->addWidget(m_ocrLanguageCombo, 6, 1);
@@ -109,11 +110,16 @@ void SettingsOverlay::initializeOverlay()
     m_layout->addSpacing(10);
 
     // --- Checkboxes ---
-    m_layout->addWidget(new QCheckBox(tr("OCR")));
-    m_layout->addWidget(new QCheckBox(tr("STRAIGHTEN_DOCUMENT")));
-    m_layout->addWidget(new QCheckBox(tr("CROP_DOCUMENT")));
+    // Straighten and crop do not work yet: shown, but disabled
+    for (const QString &text : {tr("STRAIGHTEN_DOCUMENT"), tr("CROP_DOCUMENT")}) {
+        auto *check = new QCheckBox(text);
+        check->setEnabled(false);
+        check->setToolTip(tr("Coming in a later version"));
+        m_layout->addWidget(check);
+    }
 
     m_layout->addStretch();
+    applyFieldStyles();
 
     // CUSTOMIZE stylesheet
     // Remove background-color from the stylesheet
@@ -124,6 +130,10 @@ void SettingsOverlay::initializeOverlay()
         "QComboBox { font-size: 12px; }"
         "QCheckBox { font-size: 12px; }"
         );
+}
+
+void SettingsOverlay::applyFieldStyles() {
+    for (QComboBox *combo : findChildren<QComboBox*>()) UiColors::applyComboStyle(combo);
 }
 
 void SettingsOverlay::onDeviceIdChanged(int index) {
@@ -271,12 +281,14 @@ void SettingsOverlay::fillGeneralCombos() {
     setComboBoxValue(m_paperFormatCombo, QVariant::fromValue(SettingsManager::instance().pageFormat()));
     m_paperFormatCombo->blockSignals(false);
 
-    // OCR Languages (tesseract language codes)
+    // OCR languages: the ones installed for tesseract
     m_ocrLanguageCombo->blockSignals(true);
-    m_ocrLanguageCombo->clear();
-    m_ocrLanguageCombo->addItem(tr("ENGLISH"), "eng");
-    m_ocrLanguageCombo->addItem(tr("GERMAN"), "deu");
-    setComboBoxValue(m_ocrLanguageCombo, QVariant::fromValue(SettingsManager::instance().ocrLanguage()));
+    const bool hasLanguages = Ocr::fillLanguageCombo(m_ocrLanguageCombo, SettingsManager::instance().ocrLanguage());
+    if (!hasLanguages) m_ocrLanguageCombo->addItem(tr("Not installed"));
+    m_ocrLanguageCombo->setEnabled(hasLanguages);
+    m_ocrLanguageCombo->setToolTip(hasLanguages ? QString()
+        : tr("Text recognition needs the program tesseract with at least one language "
+             "(e.g. the package tesseract-data-deu or tesseract-ocr-deu)."));
     m_ocrLanguageCombo->blockSignals(false);
 }
 
@@ -375,7 +387,10 @@ void SettingsOverlay::paintEvent(QPaintEvent *event) {
 
 // paintEvent reads the application palette, so repaint when it changes (light/dark switch)
 void SettingsOverlay::changeEvent(QEvent *event) {
-    if (event->type() == QEvent::ApplicationPaletteChange) update();
+    if (event->type() == QEvent::ApplicationPaletteChange) {
+        applyFieldStyles();   // the style sheets hold the colors of the old mode
+        update();
+    }
     QWidget::changeEvent(event);
 }
 

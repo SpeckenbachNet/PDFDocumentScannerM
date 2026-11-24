@@ -2,19 +2,15 @@
 
 Scan documents with your network scanner and save them as PDF – on Linux.
 
-## What's new in 0.5.4
+## What's new in 0.6.0
 
-- Scanner options load in well under a second instead of about 10 seconds (measured with the HP M277dw)
-- Closing asks first if pages are not saved yet (save all, discard, cancel) and stops a running scan
-- The scanned images are deleted from the temporary folder when the app closes
-- The empty preview shows which scanner is used (or why there is none); tooltip on the scan button
-- Help: the text stands in the middle of the page
-- Page list and preview are gray instead of almost white in light mode
-- The entries of "Scan purpose" are translated
-- Light / dark mode follows the desktop at once (XDG desktop portal, also in the AppImage), with Fusion's own light and dark colors
-- Qt's own texts (standard buttons, file dialog) in the language of the app
-- Landscape no longer cuts off A4, Letter and Legal pages: the sheet is scanned upright and turned afterwards
-- The scan area is limited to what the scanner can scan (e.g. Legal on an A4 flatbed)
+- Text recognition (OCR) when saving: the save dialog has the buttons "Save" and "Save with OCR", the PDF becomes searchable and text can be copied (needs tesseract)
+- The OCR language is preset in the settings and can be changed in the save dialog for one save
+- The languages offered are the ones installed for tesseract
+- Saving with text recognition shows the page it is at and can be cancelled with Esc
+- Straighten and crop are grayed out in the settings until they work
+- Rounded combo boxes and more room in the settings
+- Save dialog: rounded fields and lists, more room, no file type row; it remembers its size and view
 
 All changes: [CHANGELOG.md](CHANGELOG.md)
 
@@ -28,6 +24,7 @@ All changes: [CHANGELOG.md](CHANGELOG.md)
 - Pages appear while scanning; select, reorder by drag and drop, rotate, remove
 - Large preview with zoom (Ctrl + mouse wheel, Ctrl + Plus / Minus / 0, double click)
 - Save the selected or all pages as one PDF
+- Text recognition (OCR) with tesseract when saving: searchable PDFs
 - English and German, light and dark themes
 
 ## Requirements
@@ -39,6 +36,8 @@ The app uses the scanner tools of your system:
 | Scanning (`scanimage`) | `sane` | `sane-utils` | `sane-backends` | `sane-backends` |
 | Fast scanner search, all pages from the feeder | `sane-airscan` | `sane-airscan` | `sane-airscan` | `sane-airscan` |
 | Finding network scanners (service running) | `avahi` | `avahi-daemon` | `avahi` | `avahi` |
+| Text recognition (optional) | `tesseract` | `tesseract-ocr` | `tesseract` | `tesseract-ocr` |
+| OCR language, e.g. German | `tesseract-data-deu` | `tesseract-ocr-deu` | `tesseract-langpack-deu` | `tesseract-ocr-traineddata-german` |
 
 Tested on CachyOS; the package names of the other distributions are not tested.
 

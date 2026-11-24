@@ -44,6 +44,12 @@ public:
     QByteArray splitterState() const;
     void saveWindowLayout(const QByteArray &geometry, const QByteArray &splitter);
 
+    // Save dialog: QWidget::saveGeometry / QFileDialog::saveState (view, columns, sidebar),
+    // empty before the first save
+    QByteArray saveDialogGeometry() const;
+    QByteArray saveDialogState() const;
+    void setSaveDialogLayout(const QByteArray &geometry, const QByteArray &state);
+
     // Folder of the last saved PDF; the user's documents folder before the first save
     QString lastSaveFolder() const;
     void setLastSaveFolder(const QString &folder);
@@ -86,7 +92,7 @@ private:
     QString m_scanIntent;
     QString m_pageOrientation;
     QString m_pageFormat;
-    QString m_ocrLanguage = "deu";
+    QString m_ocrLanguage;   // empty: the language of the system (Ocr::fillLanguageCombo)
 
     bool m_ocr = false;
     bool m_straightenDocument = false;

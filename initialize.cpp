@@ -168,7 +168,7 @@ void MainWin::applySurfaceColors() {
 // ====== Connects ======
 
 void MainWin::initializeConnects() {
-    // The scan button cancels while scanning, Esc too
+    // The scan button cancels while scanning, Esc too (and the text recognition while saving)
     connect(m_scanBtn, &QToolButton::clicked, this, [this] {
         if (m_scanProcess) {
             cancelScan();
@@ -177,7 +177,13 @@ void MainWin::initializeConnects() {
         }
     });
     auto *cancelShortcut = new QShortcut(QKeySequence(Qt::Key_Escape), this);
-    connect(cancelShortcut, &QShortcut::activated, this, &MainWin::cancelScan);
+    connect(cancelShortcut, &QShortcut::activated, this, [this] {
+        if (m_ocrProcess) {
+            cancelOcr();   // text recognition while saving
+        } else {
+            cancelScan();
+        }
+    });
     connect(m_settingsBtn, &QToolButton::clicked, this, &MainWin::showSettingsOverlay);
     connect(m_refreshBtn, &QToolButton::clicked, this, &MainWin::refreshScanners);
     connect(ui->pagesListWidget, &QListWidget::currentItemChanged, this, &MainWin::showCurrentPage);

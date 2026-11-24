@@ -48,6 +48,7 @@ private:
     void initializeOverlay();
     void fillScannerCombos();
     void fillGeneralCombos();
+    void applyFieldStyles();   // rounded combos; again after a light / dark switch
 
     // Konstanten für das Design
     const int m_arrowWidth = 20;

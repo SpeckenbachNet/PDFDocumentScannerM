@@ -68,6 +68,8 @@ private:
     bool useStandInScanner();
     void addPageToList(const QString &filePath, int dpi);
     bool savePdf(bool selectedOnly);
+    bool writeOcrPdf(const QString &filePath, const QStringList &imagePaths, const QString &language);
+    void cancelOcr();
     void rotatePages();
     void clearPages();
     void showPage(QWidget *page);
@@ -105,6 +107,9 @@ private:
     bool m_scanCancelled = false;        // the user cancelled the running scan
     bool m_unsaved = false;              // pages changed since the last PDF of all pages
     QStringList m_scanDirs;              // folders of this session's scans in /tmp, removed on close
+    QProcess *m_ocrProcess = nullptr;    // tesseract writing an OCR PDF, nullptr: none
+    bool m_ocrCancelled = false;         // the user cancelled the text recognition
+    QString m_ocrErrorOutput;            // last message of tesseract
 
 private slots:
     void showSettingsOverlay();

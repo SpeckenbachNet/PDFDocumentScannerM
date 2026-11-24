@@ -73,7 +73,7 @@
     </message>
     <message>
         <location filename="../initialize.cpp" line="53"/>
-        <location filename="../mainwin.cpp" line="693"/>
+        <location filename="../mainwin.cpp" line="695"/>
         <source>SCAN</source>
         <translation type="unfinished">Scan</translation>
     </message>
@@ -109,29 +109,29 @@
     </message>
     <message>
         <location filename="../initialize.cpp" line="80"/>
-        <location filename="../mainwin.cpp" line="852"/>
+        <location filename="../mainwin.cpp" line="948"/>
         <source>SAVE_ALL</source>
         <translation type="unfinished">Save all</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="159"/>
+        <location filename="../mainwin.cpp" line="161"/>
         <source>SEARCH_SCANNERS...</source>
         <translation type="unfinished">Searching for scanners...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="170"/>
-        <location filename="../mainwin.cpp" line="178"/>
+        <location filename="../mainwin.cpp" line="172"/>
+        <location filename="../mainwin.cpp" line="180"/>
         <source>ERROR_STARTING_SEARCH.</source>
         <translation type="unfinished">Error starting search.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="193"/>
+        <location filename="../mainwin.cpp" line="195"/>
         <source>NO_SCANNER_HARDWARE_FOUND.</source>
         <translation type="unfinished">No scanner hardware found.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="194"/>
-        <location filename="../mainwin.cpp" line="350"/>
+        <location filename="../mainwin.cpp" line="196"/>
+        <location filename="../mainwin.cpp" line="352"/>
         <source>NO_SCANNERS_DETECTED.</source>
         <translation type="unfinished">No scanners detected.</translation>
     </message>
@@ -141,142 +141,158 @@
         <translation type="unfinished">Load scanner capabilities...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="354"/>
-        <location filename="../mainwin.cpp" line="449"/>
+        <location filename="../mainwin.cpp" line="356"/>
+        <location filename="../mainwin.cpp" line="451"/>
         <source>Scanner capabilities could not be loaded</source>
         <translation type="unfinished">Scanner capabilities could not be loaded.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="466"/>
+        <location filename="../mainwin.cpp" line="468"/>
         <source>SCANNING...</source>
         <translation type="unfinished">Scanning...</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="513"/>
+        <location filename="../mainwin.cpp" line="515"/>
         <source>ERROR_CREATING_TEMP_DIR.</source>
         <translation type="unfinished">Could not create temporary directory.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="609"/>
+        <location filename="../mainwin.cpp" line="611"/>
         <source>ERROR:</source>
         <translation type="unfinished">Error:</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="659"/>
+        <location filename="../mainwin.cpp" line="661"/>
         <source>Scan cancelled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="662"/>
+        <location filename="../mainwin.cpp" line="664"/>
         <source>SCAN_FAILED.</source>
         <translation type="unfinished">Scan failed.</translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="681"/>
+        <location filename="../mainwin.cpp" line="683"/>
         <source>Cancelling scan...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="717"/>
-        <source>Save PDF</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../mainwin.cpp" line="719"/>
-        <source>PDF files (*.pdf)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../mainwin.cpp" line="725"/>
+        <location filename="../mainwin.cpp" line="736"/>
         <source>Saving PDF...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="734"/>
+        <location filename="../mainwin.cpp" line="747"/>
         <source>PDF saved: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="737"/>
-        <source>PDF could not be saved</source>
+        <location filename="../mainwin.cpp" line="749"/>
+        <source>Saving cancelled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwin.cpp" line="751"/>
-        <source>Clear</source>
+        <source>PDF could not be saved</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="752"/>
-        <source>Remove all pages? The scanned images are deleted.</source>
+        <location filename="../mainwin.cpp" line="774"/>
+        <location filename="../mainwin.cpp" line="786"/>
+        <source>Text recognition: page %1 of %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="753"/>
-        <source>Remove</source>
+        <location filename="../mainwin.cpp" line="802"/>
+        <source>tesseract could not be started</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="790"/>
-        <source>Scan with %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../mainwin.cpp" line="798"/>
-        <location filename="../mainwin.cpp" line="801"/>
-        <source>Ready to scan</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../mainwin.cpp" line="799"/>
-        <source>Your scanner (%1) does not answer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../mainwin.cpp" line="803"/>
-        <source>No scanner found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../mainwin.cpp" line="803"/>
-        <source>Search again with the arrow button</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../mainwin.cpp" line="840"/>
-        <location filename="../mainwin.cpp" line="849"/>
-        <source>Close</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../mainwin.cpp" line="841"/>
-        <source>A scan is running. Cancel it and close?</source>
+        <location filename="../mainwin.cpp" line="825"/>
+        <source>Cancelling...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwin.cpp" line="842"/>
-        <source>Cancel scan</source>
+        <source>Clear</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwin.cpp" line="843"/>
+        <source>Remove all pages? The scanned images are deleted.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="844"/>
+        <source>Remove</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="881"/>
+        <source>Scan with %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="889"/>
+        <location filename="../mainwin.cpp" line="892"/>
+        <source>Ready to scan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="890"/>
+        <source>Your scanner (%1) does not answer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="894"/>
+        <source>No scanner found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="894"/>
+        <source>Search again with the arrow button</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="932"/>
+        <source>The PDF is being saved. Wait or cancel with Esc.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="936"/>
+        <location filename="../mainwin.cpp" line="945"/>
+        <source>Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="937"/>
+        <source>A scan is running. Cancel it and close?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="938"/>
+        <source>Cancel scan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="939"/>
         <source>Keep scanning</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="850"/>
+        <location filename="../mainwin.cpp" line="946"/>
         <source>Some pages are not saved as PDF yet. The scanned images are deleted when the app closes.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="853"/>
+        <location filename="../mainwin.cpp" line="949"/>
         <source>Discard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="527"/>
-        <location filename="../mainwin.cpp" line="754"/>
-        <location filename="../mainwin.cpp" line="854"/>
+        <location filename="../mainwin.cpp" line="529"/>
+        <location filename="../mainwin.cpp" line="845"/>
+        <location filename="../mainwin.cpp" line="950"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -296,6 +312,49 @@
             <numerusform>Remove page</numerusform>
             <numerusform>Remove %n pages</numerusform>
         </translation>
+    </message>
+</context>
+<context>
+    <name>PdfSaveDialog</name>
+    <message>
+        <location filename="../pdfsavedialog.cpp" line="14"/>
+        <source>Save PDF</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pdfsavedialog.cpp" line="19"/>
+        <source>PDF files (*.pdf)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pdfsavedialog.cpp" line="31"/>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pdfsavedialog.cpp" line="32"/>
+        <source>Save with OCR</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pdfsavedialog.cpp" line="33"/>
+        <source>Save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pdfsavedialog.cpp" line="72"/>
+        <source>OCR language:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pdfsavedialog.cpp" line="38"/>
+        <source>Makes the text in the PDF searchable and copyable. Takes a few seconds per page.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pdfsavedialog.cpp" line="40"/>
+        <source>Text recognition needs the program tesseract with at least one language (e.g. the package tesseract-data-deu or tesseract-ocr-deu).</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -319,119 +378,131 @@
 <context>
     <name>SettingsOverlay</name>
     <message>
-        <location filename="../settingsoverlay.cpp" line="58"/>
+        <location filename="../settingsoverlay.cpp" line="59"/>
         <source>SCANNER</source>
         <translation type="unfinished">Scanner</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="210"/>
+        <location filename="../settingsoverlay.cpp" line="215"/>
         <source>AUTOMATIC</source>
         <translation type="unfinished">Automatic</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="76"/>
+        <location filename="../settingsoverlay.cpp" line="77"/>
         <source>SCANNING_UNIT</source>
         <translation type="unfinished">Scanning unit</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="81"/>
+        <location filename="../settingsoverlay.cpp" line="82"/>
         <source>COLORMODE</source>
         <translation type="unfinished">Color Mode</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="91"/>
+        <location filename="../settingsoverlay.cpp" line="92"/>
         <source>RESOLUTION</source>
         <translation type="unfinished">Resolution</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="257"/>
+        <location filename="../settingsoverlay.cpp" line="262"/>
         <source>PORTRAIT</source>
         <translation type="unfinished">Portrait</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="258"/>
+        <location filename="../settingsoverlay.cpp" line="263"/>
         <source>LANDSCAPE</source>
         <translation type="unfinished">Landscape</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="96"/>
+        <location filename="../settingsoverlay.cpp" line="97"/>
         <source>PAGE_ORIENTATION</source>
         <translation type="unfinished">Page Orientation</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="265"/>
+        <location filename="../settingsoverlay.cpp" line="270"/>
         <source>STANDARD</source>
         <translation type="unfinished">Standard</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="101"/>
+        <location filename="../settingsoverlay.cpp" line="102"/>
         <source>PAGE_FORMAT</source>
         <translation type="unfinished">Page Format</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="11"/>
+        <location filename="../settingsoverlay.cpp" line="12"/>
         <source>Document</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="12"/>
+        <location filename="../settingsoverlay.cpp" line="13"/>
         <source>Text and graphic</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="13"/>
+        <location filename="../settingsoverlay.cpp" line="14"/>
         <source>Photo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="14"/>
+        <location filename="../settingsoverlay.cpp" line="15"/>
         <source>Preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="86"/>
+        <location filename="../settingsoverlay.cpp" line="87"/>
         <source>SCAN_INTENT</source>
         <translation type="unfinished">Scan intent</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="220"/>
+        <location filename="../settingsoverlay.cpp" line="117"/>
+        <source>Coming in a later version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsoverlay.cpp" line="225"/>
         <source>Color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="221"/>
+        <location filename="../settingsoverlay.cpp" line="226"/>
         <source>Grayscale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="222"/>
+        <location filename="../settingsoverlay.cpp" line="227"/>
         <source>Black/white</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="277"/>
+        <location filename="../settingsoverlay.cpp" line="282"/>
+        <source>Not installed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../settingsoverlay.cpp" line="285"/>
+        <source>Text recognition needs the program tesseract with at least one language (e.g. the package tesseract-data-deu or tesseract-ocr-deu).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>ENGLISH</source>
-        <translation type="unfinished">English</translation>
+        <translation type="obsolete">English</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="278"/>
         <source>GERMAN</source>
-        <translation type="unfinished">German</translation>
+        <translation type="obsolete">German</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="106"/>
+        <location filename="../settingsoverlay.cpp" line="107"/>
         <source>OCR_LANGUAGE</source>
         <translation type="unfinished">OCR Language</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="113"/>
+        <location filename="../settingsoverlay.cpp" line="114"/>
         <source>STRAIGHTEN_DOCUMENT</source>
         <translation type="unfinished">Straighten Document</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="112"/>
         <source>OCR</source>
-        <translation type="unfinished">OCR after scan</translation>
+        <translation type="obsolete">OCR after scan</translation>
     </message>
     <message>
         <location filename="../settingsoverlay.cpp" line="114"/>
@@ -439,7 +510,7 @@
         <translation type="unfinished">Crop Document</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="187"/>
+        <location filename="../settingsoverlay.cpp" line="192"/>
         <source>NO_SCANNERS_FOUND</source>
         <translation type="unfinished">No scanners found</translation>
     </message>

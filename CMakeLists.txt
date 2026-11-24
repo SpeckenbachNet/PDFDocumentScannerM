@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(PROJECT_VERSION "0.5.4")
+set(PROJECT_VERSION "0.6.0")
 set(ORGANIZATION_NAME "SpeckenbachNet")
 
 project(
@@ -49,6 +49,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         pagedelegate.h pagedelegate.cpp
         pageprocessing.h pageprocessing.cpp
         sanedevice.h sanedevice.cpp
+        ocr.h ocr.cpp
+        pdfsavedialog.h pdfsavedialog.cpp
         previewview.h previewview.cpp
         helppage.h helppage.cpp
         twolinedelegate.h twolinedelegate.cpp
