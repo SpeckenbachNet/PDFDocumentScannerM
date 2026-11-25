@@ -1,6 +1,11 @@
 # PDFDocumentScannerM – Changelog
 
-## 0.9.0 – Crop, undo (unreleased)
+## 0.9.1 – Active buttons (November 25, 2026)
+
+- Active buttons stand out in the accent color: Crop while its frame is shown, Settings while the settings are open (in dark mode the active Crop button was as dark as the toolbar)
+- The settings panel is less transparent
+
+## 0.9.0 – Crop, undo (November 25, 2026)
 
 - Crop a page by hand: the new button next to "Rotate" shows a frame in the preview, already around the content of the page (handy for a till receipt on the flatbed); Enter or "Apply" cuts the page, Esc or "Cancel" leaves it
 - Undo and redo with Ctrl+Z / Ctrl+Shift+Z (also in the right-click menu of the page list) for removing, clearing, reordering, rotating and cropping

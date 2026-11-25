@@ -27,6 +27,7 @@ public:
 protected:
     void paintEvent(QPaintEvent *event) override;
     void showEvent(QShowEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
     void extracted(QEvent *&event);
     void changeEvent(QEvent *event) override;
 
@@ -70,4 +71,5 @@ private slots:
 signals:
     void scannerChanged(const QString &deviceId);
     void checkUpdatesChanged(bool enabled);   // setting "Check for updates" toggled
+    void visibilityChanged(bool visible);     // the settings button shows whether it is open
 };

@@ -56,6 +56,7 @@ void MainWin::initializeToolBars() {
 
     ui->toolBarFrame->addButton("settingsBtn","",":icons/settings");
     m_settingsBtn = ui->toolBarFrame->findChild<QToolButton*>("settingsBtn");
+    m_settingsBtn->setCheckable(true);   // on while the settings are open (accent color)
     m_settingsBtn->setEnabled(false);
 
     ui->toolBarFrame->addButton("refreshBtn","",":icons/refresh");
@@ -198,6 +199,7 @@ void MainWin::initializeConnects() {
         }
     });
     connect(m_settingsBtn, &QToolButton::clicked, this, &MainWin::showSettingsOverlay);
+    connect(m_settingsOverlay, &SettingsOverlay::visibilityChanged, m_settingsBtn, &QToolButton::setChecked);
     connect(m_refreshBtn, &QToolButton::clicked, this, &MainWin::refreshScanners);
     connect(ui->pagesListWidget, &QListWidget::currentItemChanged, this, &MainWin::showCurrentPage);
     // Page buttons follow the pages and the selection; a rotated page is shown again

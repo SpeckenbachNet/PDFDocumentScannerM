@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-// ToolbarM 1.7.0 – master copy: ~/Development/QT/libraries/toolbarm (see CHANGELOG.md there)
+// ToolbarM 1.8.0 – master copy: ~/Development/QT/libraries/toolbarm (see CHANGELOG.md there)
 #include "toolbarm.h"
 
 #include <QApplication>
@@ -210,6 +210,8 @@ void ToolbarM::updateColors()
     buttonTextColor   = pal.color(QPalette::ButtonText);
     disabledColor     = pal.color(QPalette::Disabled, QPalette::Button);
     disabledTextColor = pal.color(QPalette::Disabled, QPalette::ButtonText);
+    highlightColor       = pal.color(QPalette::Highlight);
+    highlightedTextColor = pal.color(QPalette::HighlightedText);
 
     // Dark theme: the window is darker than its text (works with every palette, also when
     // the platform does not report a color scheme)
@@ -302,7 +304,10 @@ void ToolbarM::paintButton(QToolButton *btn)
     const bool useSeparator = btn->property("useSeparator").toBool();
     const bool iconRight    = btn->property("iconRight").toBool();
     const bool isEnabled    = btn->isEnabled();
-    const bool isPressed    = btn->isDown() || btn->isChecked();  // checkable buttons stay "pressed"
+    const bool isPressed    = btn->isDown();
+    // A checkable button that is on (a mode is active, a panel is open) shows the accent color:
+    // the pressed fill sinks into the toolbar in dark themes, fine for a click, not for a state
+    const bool isChecked    = btn->isCheckable() && btn->isChecked();
     const bool isHovered    = btn->underMouse();
 
     // --- 1. Colors: everything derived from button + text color -> visible in every theme
@@ -320,7 +325,17 @@ void ToolbarM::paintButton(QToolButton *btn)
     QColor lines = baseText;                                                   // border, separator
     QColor fg    = ownText.isValid() ? ownText.value<QColor>() : baseText;   // icon, text
 
-    if (!isEnabled) {
+    const bool showChecked = isEnabled && isChecked && !ownFill.isValid();
+    if (showChecked) {
+        fill  = highlightColor;
+        lines = highlightedTextColor;
+        fg    = highlightedTextColor;
+        if (isPressed) {
+            fill = mix(highlightColor, highlightedTextColor, -shade.buttonHover);
+        } else if (isHovered) {
+            fill = mix(highlightColor, highlightedTextColor, shade.buttonHover);
+        }
+    } else if (!isEnabled) {
         // Fill from the window color: disabled buttons keep it (dimmed text shows the state),
         // the palette's disabled Button color may not fit the derived toolbar colors
         fill  = shade.buttonFromWindow ? themeFill : disabledColor;

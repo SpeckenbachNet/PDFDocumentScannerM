@@ -2,10 +2,11 @@
 
 Scan documents with your network scanner and save them as PDF – on Linux.
 
-## What's new in 0.9.0
+## What's new in 0.9.1
 
 - Crop a page by hand: a frame in the preview, already around the content of the page (handy for a till receipt on the flatbed)
 - Undo and redo (Ctrl+Z / Ctrl+Shift+Z) for removing, clearing, reordering, rotating and cropping
+- Active buttons (Crop, Settings) stand out in the accent color
 
 All changes: [CHANGELOG.md](CHANGELOG.md)
 

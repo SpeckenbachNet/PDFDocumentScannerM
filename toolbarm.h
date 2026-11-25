@@ -27,12 +27,14 @@
 
 class QLabel;
 
-// ToolbarM 1.7.0 – master copy: ~/Development/QT/libraries/toolbarm (see CHANGELOG.md there).
+// ToolbarM 1.8.0 – master copy: ~/Development/QT/libraries/toolbarm (see CHANGELOG.md there).
 // Projects keep a copy of toolbarm.h/.cpp: change the master copy first, then copy it over.
-inline constexpr const char *ToolbarMVersion = "1.7.0";
+inline constexpr const char *ToolbarMVersion = "1.8.0";
 
 // Toolbar with rounded buttons, painted with QPainter in the colors of the palette
 // (light and dark themes); icons are black drawings tinted in the text color.
+// Checkable buttons that are on (a mode is active, a panel is open) are drawn in the accent
+// color (Highlight / HighlightedText).
 class ToolbarM : public QFrame {
     Q_OBJECT
 
@@ -119,6 +121,8 @@ private:
     QColor buttonTextColor;
     QColor disabledColor;
     QColor disabledTextColor;
+    QColor highlightColor;         // checkable buttons that are on
+    QColor highlightedTextColor;
 
     ShadeFactors shadeDark;
     ShadeFactors shadeLight;

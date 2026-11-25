@@ -140,7 +140,7 @@ Notes:
 | `previewview.*` | large preview (`QGraphicsView`), fits the image into the view, zoom, crop frame |
 | `helppage.*`, `twolinedelegate.*` | help page (Markdown in `help/<de\|en>/`, `Help.qrc`); copies from MovieMetaM, adapted to `UiColors` |
 | `uicolors.h` | surface colors, derived from Window/WindowText only; the app palette (`applyStandardPalette`) |
-| `toolbarm.*` | toolbar; copy from `../libraries/toolbarm` (master there, version 1.7.0) |
+| `toolbarm.*` | toolbar; copy from `../libraries/toolbarm` (master there, version 1.8.0) |
 | `globals.h` | empty (cleanup candidate) |
 | `tools/build-linux.sh` | builds the AppImage and the release files (section 10) |
 | `tools/help-to-html.py` | documentation pages for the website from `help/<de\|en>/*.md` |

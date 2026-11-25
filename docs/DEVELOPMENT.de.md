@@ -142,7 +142,7 @@ Hinweise:
 | `previewview.*` | große Vorschau (`QGraphicsView`), passt das Bild in die Ansicht ein, Zoom, Beschneide-Rahmen |
 | `helppage.*`, `twolinedelegate.*` | Hilfeseite (Markdown in `help/<de\|en>/`, `Help.qrc`); Kopien aus MovieMetaM, an `UiColors` angepasst |
 | `uicolors.h` | Flächenfarben, nur aus Window/WindowText abgeleitet; die Palette der App (`applyStandardPalette`) |
-| `toolbarm.*` | Werkzeugleiste; Kopie aus `../libraries/toolbarm` (Master dort, Version 1.7.0) |
+| `toolbarm.*` | Werkzeugleiste; Kopie aus `../libraries/toolbarm` (Master dort, Version 1.8.0) |
 | `globals.h` | leer (Kandidat zum Aufräumen) |
 | `tools/build-linux.sh` | baut das AppImage und die Release-Dateien (Abschnitt 10) |
 | `tools/help-to-html.py` | Dokumentationsseiten für die Website aus `help/<de\|en>/*.md` |

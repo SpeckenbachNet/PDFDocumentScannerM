@@ -354,6 +354,13 @@ QPixmap SettingsOverlay::getTintedPixmap(const QIcon &icon, const QSize &size, c
 void SettingsOverlay::showEvent(QShowEvent *event) {
     fillComboBoxes();
     QWidget::showEvent(event);
+    emit visibilityChanged(true);
+}
+
+// However it closes (settings button, choosing a scanner, ...)
+void SettingsOverlay::hideEvent(QHideEvent *event) {
+    QWidget::hideEvent(event);
+    emit visibilityChanged(false);
 }
 
 void SettingsOverlay::paintEvent(QPaintEvent *event) {
@@ -364,7 +371,7 @@ void SettingsOverlay::paintEvent(QPaintEvent *event) {
     // the frame vanished there. Application palette like in MainWin/ToolbarM.
     const QPalette appPal = QApplication::palette();
     QColor bgColor = appPal.color(QPalette::Window);
-    bgColor.setAlpha(240);
+    bgColor.setAlpha(250);   // the page behind shimmers through only slightly
     QColor frameColor = UiColors::mix(appPal.color(QPalette::Window),
                                       appPal.color(QPalette::WindowText),
                                       UiColors::overlayFrameShade);

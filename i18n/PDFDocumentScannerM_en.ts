@@ -78,53 +78,53 @@
         <translation type="unfinished">Scan</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="69"/>
+        <location filename="../initialize.cpp" line="70"/>
         <source>Rotate the selected pages 90° clockwise</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="74"/>
+        <location filename="../initialize.cpp" line="75"/>
         <source>Crop the selected page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="78"/>
+        <location filename="../initialize.cpp" line="79"/>
         <source>FAKE_DUPLEX</source>
         <translation type="unfinished">Fake Duplex</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="90"/>
+        <location filename="../initialize.cpp" line="91"/>
         <source>CLEAR</source>
         <translation type="unfinished">Clear</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="97"/>
+        <location filename="../initialize.cpp" line="98"/>
         <source>Update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="102"/>
+        <location filename="../initialize.cpp" line="103"/>
         <source>Buy me a coffee – support PDFDocumentScanner via PayPal</source>
         <translation type="unfinished">Buy me a coffee – support PDFDocumentScanner via PayPal</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="106"/>
+        <location filename="../initialize.cpp" line="107"/>
         <source>Help</source>
         <translation type="unfinished">Help</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="232"/>
+        <location filename="../initialize.cpp" line="234"/>
         <source>Version %1 is available – open its download page</source>
         <extracomment>Tooltip of the update button; %1 is the new version, e.g. 0.8.0</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="82"/>
+        <location filename="../initialize.cpp" line="83"/>
         <source>SAVE_SELECTED</source>
         <translation type="unfinished">Save selected</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="86"/>
+        <location filename="../initialize.cpp" line="87"/>
         <location filename="../mainwin.cpp" line="1003"/>
         <source>SAVE_ALL</source>
         <translation type="unfinished">Save all</translation>
@@ -152,7 +152,7 @@
         <translation type="unfinished">No scanners detected.</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="123"/>
+        <location filename="../initialize.cpp" line="124"/>
         <source>LOAD_SCANNER_CAPABILITIES...</source>
         <translation type="unfinished">Load scanner capabilities...</translation>
     </message>
