@@ -87,6 +87,11 @@ void MainWin::initializeToolBars() {
 
     ui->toolBarFrame->addSpacer();  // Spacer
 
+    // Update: only shown when a newer version is out (UpdateChecker), in the accent color
+    m_updateBtn = ui->toolBarFrame->addButton("updateBtn", tr("Update"), ":icons/update");
+    m_updateBtn->hide();
+    styleUpdateButton();
+
     m_coffeeBtn = ui->toolBarFrame->addButton("coffeeBtn", "", ":icons/coffee");
     m_coffeeBtn->setToolTip(tr("Buy me a coffee – support PDFDocumentScanner via PayPal"));
     ui->toolBarFrame->setButtonColor(m_coffeeBtn, QColor(), QColor(245, 166, 35));
@@ -205,5 +210,25 @@ void MainWin::initializeConnects() {
         QDesktopServices::openUrl(QUrl(QStringLiteral("https://paypal.me/michaelspeckenbach")));
     });
     connect(m_helpBtn, &QToolButton::clicked, this, [this] { showPage(ui->helpPage); });
+
+    // A newer version out? Then the update button shows up and opens its release page
+    m_updateChecker = new UpdateChecker(this);
+    connect(m_updateChecker, &UpdateChecker::updateAvailable, this, [this](const QString &version) {
+        //: Tooltip of the update button; %1 is the new version, e.g. 0.8.0
+        m_updateBtn->setToolTip(tr("Version %1 is available – open its download page").arg(version));
+        m_updateBtn->setProperty("version", version);
+        m_updateBtn->show();
+    });
+    connect(m_updateBtn, &QToolButton::clicked, this, [this] {
+        QDesktopServices::openUrl(UpdateChecker::releaseUrl(m_updateBtn->property("version").toString()));
+    });
+    connect(m_settingsOverlay, &SettingsOverlay::checkUpdatesChanged, this, [this](bool enabled) {
+        if (enabled) {
+            m_updateChecker->check();
+        } else {
+            m_updateBtn->hide();
+        }
+    });
+    m_updateChecker->check();
     connect(ui->helpPage, &HelpPage::backRequested, this, [this] { showPage(ui->mainPage); });
 }

@@ -39,3 +39,9 @@ Die Sprache für die Texterkennung beim Speichern (**Mit OCR speichern**, siehe 
 ## Dokument ausrichten
 
 Liegt ein Blatt leicht schief auf dem Glas oder läuft schräg durch den Einzug (bis 5°), dreht PDFDocumentScannerM die Seite gleich nach dem Scannen gerade. Das Programm richtet sich nach den Textzeilen; Seiten ohne Text, etwa Fotos, und leere Seiten bleiben, wie sie sind. Die frei werdenden Ecken werden weiß. In der Seitenliste steht dann unter der Seite, um wie viel sie ausgerichtet wurde, zum Beispiel **Seite 3 · ausgerichtet 2,8°**. Die Einstellung gilt für die nächsten Scans.
+
+## Nach Updates suchen
+
+Ist **Nach Updates suchen** an (Standard), fragt PDFDocumentScannerM einmal am Tag bei GitHub, ob es eine neue Version gibt. Wenn ja, erscheint in der Werkzeugleiste der Knopf **Update**; ein Klick öffnet die Seite der neuen Version im Browser. Dort steht, was neu ist, und das AppImage zum Herunterladen.
+
+> Für diese Prüfung wird nur deine IP-Adresse an GitHub übertragen, nichts über dich oder deine Dokumente. Ausgeschaltet fragt PDFDocumentScannerM gar nicht.

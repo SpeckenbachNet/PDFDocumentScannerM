@@ -130,7 +130,7 @@ void MainWin::showSettingsOverlay() {
         int y = globalBtnPos.y();
 
         int width = 400;
-        int height = 420;
+        int height = 445;
 
         m_settingsOverlay->setGeometry(x, y, width, height);
         m_settingsOverlay->show();
@@ -915,6 +915,12 @@ void MainWin::updateScannerHint() {
     }
 }
 
+// The update button in the accent color of the system (not orange like the coffee cup)
+void MainWin::styleUpdateButton() {
+    const QPalette pal = palette();
+    ui->toolBarFrame->setButtonColor(m_updateBtn, pal.color(QPalette::Highlight), pal.color(QPalette::HighlightedText));
+}
+
 // ====== Events ======
 
 void MainWin::resizeEvent(QResizeEvent *event) {
@@ -927,6 +933,7 @@ void MainWin::changeEvent(QEvent *event) {
     case QEvent::PaletteChange:
     case QEvent::ApplicationPaletteChange:
         if (m_statusOverlay) applySurfaceColors();  // not before initializeForm() has run
+        if (m_updateBtn) styleUpdateButton();
         break;
     default:
         break;

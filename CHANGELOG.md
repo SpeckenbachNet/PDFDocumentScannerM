@@ -1,5 +1,9 @@
 # PDFDocumentScannerM – Changelog
 
+## 0.8.0 – Update notice (November 25, 2026)
+
+- Tells you when a new version is out: the button "Update" opens its download page (setting "Check for updates", on by default)
+
 ## 0.7.0 – Straighten, smaller PDFs (November 24, 2026)
 
 - Straighten Document: pages that lie slightly askew (up to 5°) are turned straight right after scanning (setting, off by default); the page list shows the angle below the page

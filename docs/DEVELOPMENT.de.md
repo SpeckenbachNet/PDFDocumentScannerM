@@ -128,6 +128,7 @@ Hinweise:
 |---|---|
 | `main.cpp` | Programm- und Organisationsname, Fusion-Stil, Hell/Dunkel, INI-Format, Übersetzer, Hauptfenster |
 | `colorschemewatcher.*` | Hell/Dunkel-Einstellung des Desktops über das XDG-Desktop-Portal, meldet Änderungen (Kopie aus NiriSettingsM) |
+| `updatechecker.*` | Update-Prüfung: neuestes Release über die GitHub-API (`releases/latest`, Tag gegen `PROJECT_VERSION`), höchstens einmal am Tag; der Knopf „Update“ öffnet die Release-Seite (der AppImage-Name trägt die Version, daher kein fester Download-Link). Aus MovieMetaM |
 | `mainwin.*`, `initialize.cpp` | Hauptfenster: Scannersuche, Optionen, Scannen, Knopfzustände; `initialize.cpp` baut Werkzeugleisten, Formular, Verbindungen und stellt das Fensterlayout wieder her |
 | `settingsmanager.*` | Singleton: alle Einstellungen (INI) und die Optionen des aktuellen Scanners |
 | `settingsoverlay.*` | Einstellungs-Popup mit Nase unter dem Einstellungsknopf |
@@ -386,7 +387,8 @@ danach mit dem Schwellwert umgewandelt (ein gedrehtes 1-Bit-Bild bekommt ausgefr
 
 `main.cpp` setzt die Organisation `SpeckenbachNet` (`ORGANIZATION_NAME` in `CMakeLists.txt`),
 den Programmnamen und das INI-Format. Datei: `~/.config/SpeckenbachNet/PDFDocumentScannerM.ini`.
-Aller Zugriff läuft über `SettingsManager`.
+Aller Zugriff läuft über `SettingsManager`, außer den Update-Schlüsseln (`UpdateChecker`, wie in
+MovieMetaM).
 
 | Schlüssel | Inhalt |
 |---|---|
@@ -398,6 +400,9 @@ Aller Zugriff läuft über `SettingsManager`.
 | `Save/DialogGeometry`, `Save/DialogState` | Größe und Ansicht des Speicherdialogs (`saveGeometry()` / `QFileDialog::saveState()`, geschrieben in `done()`) |
 | `Window/Geometry`, `Window/Splitter` | `saveGeometry()` / `QSplitter::saveState()`, geschrieben in `closeEvent` |
 | `Save/LastFolder` | Ordner der zuletzt gespeicherten PDF |
+| `Scanner/Straighten` | neue Scans ausrichten (Häkchen „Dokument ausrichten“) |
+| `General/CheckUpdates` | bei GitHub nach einer neuen Version fragen (Standard an) |
+| `General/LastUpdateCheck`, `General/LatestVersion` | Tag der letzten Anfrage und die gefundene Version: höchstens eine Anfrage am Tag, eine neuere Version erscheint beim nächsten Start wieder ohne Anfrage |
 
 Erster Start ohne gespeichertes Fenster: 900 × 600 (`kDefaultSize` in `restoreWindowLayout()`,
 passt auf Laptops mit 150 % Skalierung), Seitenliste 180 px. Braucht die Werkzeugleiste mehr
@@ -485,6 +490,9 @@ unter niri) fehlt dort. Das spielt keine Rolle mehr: Die App fragt das Desktop-P
   sie aus `CMakeLists.txt`.
 - `main.cpp` setzt den Desktop-Dateinamen (`net.speckenbach.PDFDocumentScannerM`): Unter Wayland
   verbindet er das Fenster mit dem Startmenü-Eintrag und seinem Icon.
+- Die Update-Prüfung braucht HTTPS: Qts TLS-Plugin (`plugins/tls`, OpenSSL-Backend) muss im
+  AppImage sein. Nach dem ersten Build damit (0.8.0) prüfen, ob der Knopf auch im AppImage
+  erscheint.
 - `scanimage`, `airscan-discover` und `tesseract` sind **nicht** im Paket; sie kommen vom
   System (siehe Voraussetzungen). Noch nicht getestet: ob die App aus dem AppImage sie ohne
   Probleme aufruft.

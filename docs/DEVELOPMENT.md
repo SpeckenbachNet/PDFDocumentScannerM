@@ -126,6 +126,7 @@ Notes:
 |---|---|
 | `main.cpp` | application and organization name, Fusion style, light / dark mode, INI format, translators, main window |
 | `colorschemewatcher.*` | light / dark setting of the desktop from the XDG desktop portal, reports changes (copy from NiriSettingsM) |
+| `updatechecker.*` | update check: latest release from the GitHub API (`releases/latest`, tag vs. `PROJECT_VERSION`), at most once a day; the button "Update" opens the release page (the AppImage name carries the version, so no fixed download link). From MovieMetaM |
 | `mainwin.*`, `initialize.cpp` | main window: scanner search, options, scanning, button states; `initialize.cpp` builds toolbars, form, connections and restores the window layout |
 | `settingsmanager.*` | singleton: all settings (INI) and the options of the current scanner |
 | `settingsoverlay.*` | settings popup with the nose below the settings button |
@@ -369,7 +370,8 @@ straighten → color mode. Black/white pages are straightened in gray and thresh
 
 `main.cpp` sets organization `SpeckenbachNet` (`ORGANIZATION_NAME` in `CMakeLists.txt`), the
 application name and the INI format. File: `~/.config/SpeckenbachNet/PDFDocumentScannerM.ini`.
-All access goes through `SettingsManager`.
+All access goes through `SettingsManager`, except the update keys (`UpdateChecker`, as in
+MovieMetaM).
 
 | Key | Content |
 |---|---|
@@ -381,6 +383,9 @@ All access goes through `SettingsManager`.
 | `Save/DialogGeometry`, `Save/DialogState` | size and view of the save dialog (`saveGeometry()` / `QFileDialog::saveState()`, written in `done()`) |
 | `Window/Geometry`, `Window/Splitter` | `saveGeometry()` / `QSplitter::saveState()`, written in `closeEvent` |
 | `Save/LastFolder` | folder of the last saved PDF |
+| `Scanner/Straighten` | straighten new scans (check box "Straighten Document") |
+| `General/CheckUpdates` | ask GitHub for a new version (default on) |
+| `General/LastUpdateCheck`, `General/LatestVersion` | day of the last request and the version found: at most one request a day, a newer version is shown again on the next start without a request |
 
 First start without saved window: 900 × 600 (`kDefaultSize` in `restoreWindowLayout()`, fits
 laptops with 150 % scaling), page list 180 px. Qt widens the window by itself if the toolbar
@@ -464,6 +469,9 @@ translations (`qtbase_*.qm`) are put into the package by linuxdeploy (`usr/trans
   script reads it from `CMakeLists.txt`.
 - `main.cpp` sets the desktop file name (`net.speckenbach.PDFDocumentScannerM`): under Wayland it
   ties the window to the start menu entry and its icon.
+- The update check needs HTTPS: Qt's TLS plugin (`plugins/tls`, OpenSSL backend) must be in the
+  AppImage. Check after the first build with it (0.8.0) that the button appears in the AppImage
+  too (e.g. with an older `General/LatestVersion` removed and the date reset).
 - `scanimage`, `airscan-discover` and `tesseract` are **not** in the package; they come
   from the system (see Prerequisites). Not tested yet: whether the app started from the AppImage
   runs them without problems.

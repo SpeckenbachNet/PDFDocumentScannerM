@@ -2,6 +2,7 @@
 #include "settingsmanager.h"
 #include "uicolors.h"
 #include "ocr.h"
+#include "updatechecker.h"
 #include <QApplication>
 
 namespace {
@@ -45,6 +46,10 @@ SettingsOverlay::SettingsOverlay(QWidget *parent) : QWidget(parent) {
             this, &SettingsOverlay::onOcrLanguageChanged);
     connect(m_straightenCheck, &QCheckBox::toggled,
             this, [](bool checked) { SettingsManager::instance().setStraighten(checked); });
+    connect(m_checkUpdatesCheck, &QCheckBox::toggled, this, [this](bool checked) {
+        UpdateChecker::setEnabled(checked);
+        emit checkUpdatesChanged(checked);
+    });
 }
 
 void SettingsOverlay::initializeOverlay()
@@ -122,6 +127,12 @@ void SettingsOverlay::initializeOverlay()
     cropCheck->setEnabled(false);
     cropCheck->setToolTip(tr("Coming in a later version"));
     m_layout->addWidget(cropCheck);
+
+    // Asks GitHub once a day whether there is a newer version (UpdateChecker)
+    m_checkUpdatesCheck = new QCheckBox(tr("Check for updates"));
+    m_checkUpdatesCheck->setToolTip(tr("Once a day the app asks GitHub whether there is a new version. "
+                                       "Only your IP address is sent."));
+    m_layout->addWidget(m_checkUpdatesCheck);
 
     m_layout->addStretch();
     applyFieldStyles();
@@ -299,6 +310,10 @@ void SettingsOverlay::fillGeneralCombos() {
     m_straightenCheck->blockSignals(true);
     m_straightenCheck->setChecked(SettingsManager::instance().straighten());
     m_straightenCheck->blockSignals(false);
+
+    m_checkUpdatesCheck->blockSignals(true);
+    m_checkUpdatesCheck->setChecked(UpdateChecker::isEnabled());
+    m_checkUpdatesCheck->blockSignals(false);
 }
 
 bool SettingsOverlay::setComboBoxValue(QComboBox* box, const QVariant& value)

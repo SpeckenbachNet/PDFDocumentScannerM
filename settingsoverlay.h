@@ -43,6 +43,7 @@ private:
     QComboBox   *m_scanningUnitCombo;
     QComboBox   *m_scanIntentCombo;
     QCheckBox   *m_straightenCheck;
+    QCheckBox   *m_checkUpdatesCheck;
     QPixmap getTintedPixmap(const QIcon &icon, const QSize &size, const QColor &color);
     bool setComboBoxValue(QComboBox* box, const QVariant& value);
     void updateScannerList();
@@ -68,4 +69,5 @@ private slots:
 
 signals:
     void scannerChanged(const QString &deviceId);
+    void checkUpdatesChanged(bool enabled);   // setting "Check for updates" toggled
 };

@@ -39,3 +39,9 @@ The language for text recognition when saving (**Save with OCR**, see **Saving**
 ## Straighten Document
 
 If a sheet lies slightly askew on the glass or runs through the feeder at a slant (up to 5°), PDFDocumentScannerM turns the page straight right after scanning. The app goes by the lines of text; pages without text, such as photos, and blank pages stay as they are. The uncovered corners become white. The page list then shows below the page how much it was straightened, for example **Page 3 · straightened 2.8°**. The setting applies to the next scans.
+
+## Check for updates
+
+With **Check for updates** on (the default), PDFDocumentScannerM asks GitHub once a day whether there is a new version. If there is, the button **Update** appears in the toolbar; a click opens the page of the new version in your browser. It says what is new and has the AppImage to download.
+
+> For this check only your IP address is sent to GitHub, nothing about you or your documents. Switched off, PDFDocumentScannerM does not ask at all.

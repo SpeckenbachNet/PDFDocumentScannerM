@@ -2,11 +2,9 @@
 
 Scan documents with your network scanner and save them as PDF – on Linux.
 
-## What's new in 0.7.0
+## What's new in 0.8.0
 
-- Straighten Document: pages that lie slightly askew (up to 5°) are turned straight right after scanning (setting, off by default); the page list shows the angle below the page
-- Smaller PDFs with text recognition: black/white pages are stored as CCITT G4 (2 text pages: 110 KB → 70 KB)
-- Crop stays grayed out in the settings until it works
+- Tells you when a new version is out: the button "Update" opens its download page (setting "Check for updates", on by default)
 
 All changes: [CHANGELOG.md](CHANGELOG.md)
 
@@ -20,6 +18,7 @@ All changes: [CHANGELOG.md](CHANGELOG.md)
 - Pages appear while scanning; select, reorder by drag and drop, rotate, remove
 - Large preview with zoom (Ctrl + mouse wheel, Ctrl + Plus / Minus / 0, double click)
 - Straightens pages that lie slightly askew, right after scanning
+- Tells you when a new version is out (once a day, can be switched off)
 - Save the selected or all pages as one PDF
 - Text recognition (OCR) with tesseract when saving: searchable PDFs
 - English and German, light and dark themes

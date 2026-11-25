@@ -20,6 +20,7 @@
 #include <QMovie>
 #include "settingsoverlay.h"
 #include "statusoverlay.h"
+#include "updatechecker.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -79,6 +80,7 @@ private:
     void setBusy(bool busy);
     void updateButtons();
     void updateScannerHint();
+    void styleUpdateButton();
 
     QString getPageFormat();
     QStringList m_processedFiles;
@@ -93,6 +95,7 @@ private:
     QToolButton *m_fakeDplxBtn = nullptr;
     QToolButton *m_saveSelBtn = nullptr;
     QToolButton *m_saveAllBtn = nullptr;
+    QToolButton *m_updateBtn = nullptr;   // only there when a newer version is out (UpdateChecker)
     QToolButton *m_coffeeBtn = nullptr;
     QToolButton *m_helpBtn = nullptr;
 
@@ -107,6 +110,7 @@ private:
     bool m_scanCancelled = false;        // the user cancelled the running scan
     bool m_unsaved = false;              // pages changed since the last PDF of all pages
     QStringList m_scanDirs;              // folders of this session's scans in /tmp, removed on close
+    UpdateChecker *m_updateChecker = nullptr;
     QProcess *m_ocrProcess = nullptr;    // tesseract writing an OCR PDF, nullptr: none
     bool m_ocrCancelled = false;         // the user cancelled the text recognition
     QString m_ocrErrorOutput;            // last message of tesseract
