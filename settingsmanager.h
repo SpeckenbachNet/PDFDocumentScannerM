@@ -98,7 +98,6 @@ private:
 
     bool m_ocr = false;
     bool m_straightenDocument = false;
-    bool m_cropDocument = false;
     bool m_intentDocument = false;
     int m_resolution = 300;
 };

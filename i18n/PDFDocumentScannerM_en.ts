@@ -83,44 +83,49 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="72"/>
+        <location filename="../initialize.cpp" line="74"/>
+        <source>Crop the selected page</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../initialize.cpp" line="78"/>
         <source>FAKE_DUPLEX</source>
         <translation type="unfinished">Fake Duplex</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="84"/>
+        <location filename="../initialize.cpp" line="90"/>
         <source>CLEAR</source>
         <translation type="unfinished">Clear</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="91"/>
+        <location filename="../initialize.cpp" line="97"/>
         <source>Update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="96"/>
+        <location filename="../initialize.cpp" line="102"/>
         <source>Buy me a coffee – support PDFDocumentScanner via PayPal</source>
         <translation type="unfinished">Buy me a coffee – support PDFDocumentScanner via PayPal</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="100"/>
+        <location filename="../initialize.cpp" line="106"/>
         <source>Help</source>
         <translation type="unfinished">Help</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="218"/>
+        <location filename="../initialize.cpp" line="232"/>
         <source>Version %1 is available – open its download page</source>
         <extracomment>Tooltip of the update button; %1 is the new version, e.g. 0.8.0</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="76"/>
+        <location filename="../initialize.cpp" line="82"/>
         <source>SAVE_SELECTED</source>
         <translation type="unfinished">Save selected</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="80"/>
-        <location filename="../mainwin.cpp" line="975"/>
+        <location filename="../initialize.cpp" line="86"/>
+        <location filename="../mainwin.cpp" line="1003"/>
         <source>SAVE_ALL</source>
         <translation type="unfinished">Save all</translation>
     </message>
@@ -147,7 +152,7 @@
         <translation type="unfinished">No scanners detected.</translation>
     </message>
     <message>
-        <location filename="../initialize.cpp" line="117"/>
+        <location filename="../initialize.cpp" line="123"/>
         <source>LOAD_SCANNER_CAPABILITIES...</source>
         <translation type="unfinished">Load scanner capabilities...</translation>
     </message>
@@ -224,86 +229,91 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="862"/>
+        <location filename="../mainwin.cpp" line="875"/>
+        <source>The page could not be cropped</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwin.cpp" line="881"/>
         <source>Clear</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="863"/>
-        <source>Remove all pages? The scanned images are deleted.</source>
+        <location filename="../mainwin.cpp" line="882"/>
+        <source>Remove all pages? Ctrl+Z brings them back.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="864"/>
+        <location filename="../mainwin.cpp" line="883"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="901"/>
+        <location filename="../mainwin.cpp" line="929"/>
         <source>Scan with %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="909"/>
-        <location filename="../mainwin.cpp" line="912"/>
+        <location filename="../mainwin.cpp" line="937"/>
+        <location filename="../mainwin.cpp" line="940"/>
         <source>Ready to scan</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="910"/>
+        <location filename="../mainwin.cpp" line="938"/>
         <source>Your scanner (%1) does not answer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="914"/>
+        <location filename="../mainwin.cpp" line="942"/>
         <source>No scanner found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="914"/>
+        <location filename="../mainwin.cpp" line="942"/>
         <source>Search again with the arrow button</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="959"/>
+        <location filename="../mainwin.cpp" line="987"/>
         <source>The PDF is being saved. Wait or cancel with Esc.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="963"/>
-        <location filename="../mainwin.cpp" line="972"/>
+        <location filename="../mainwin.cpp" line="991"/>
+        <location filename="../mainwin.cpp" line="1000"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="964"/>
+        <location filename="../mainwin.cpp" line="992"/>
         <source>A scan is running. Cancel it and close?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="965"/>
+        <location filename="../mainwin.cpp" line="993"/>
         <source>Cancel scan</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="966"/>
+        <location filename="../mainwin.cpp" line="994"/>
         <source>Keep scanning</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="973"/>
+        <location filename="../mainwin.cpp" line="1001"/>
         <source>Some pages are not saved as PDF yet. The scanned images are deleted when the app closes.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwin.cpp" line="976"/>
+        <location filename="../mainwin.cpp" line="1004"/>
         <source>Discard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwin.cpp" line="531"/>
-        <location filename="../mainwin.cpp" line="865"/>
-        <location filename="../mainwin.cpp" line="977"/>
+        <location filename="../mainwin.cpp" line="884"/>
+        <location filename="../mainwin.cpp" line="1005"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -311,27 +321,87 @@
 <context>
     <name>PageListWidget</name>
     <message>
-        <location filename="../pagelistwidget.cpp" line="204"/>
+        <location filename="../pagelistwidget.cpp" line="147"/>
+        <source>Rotate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="174"/>
+        <source>Crop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="184"/>
+        <source>Clear</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="272"/>
+        <location filename="../pagelistwidget.cpp" line="344"/>
+        <source>Remove pages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="286"/>
         <source>PAGE %1</source>
         <translation type="unfinished">Page %1</translation>
     </message>
     <message>
-        <location filename="../pagelistwidget.cpp" line="209"/>
+        <location filename="../pagelistwidget.cpp" line="291"/>
         <source>PAGE %1 · straightened %2°</source>
         <translation type="unfinished">Page %1 · straightened %2°</translation>
     </message>
     <message>
-        <location filename="../pagelistwidget.cpp" line="210"/>
+        <location filename="../pagelistwidget.cpp" line="292"/>
         <source>Straightened by %1° after scanning</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="../pagelistwidget.cpp" line="293"/>
+        <location filename="../pagelistwidget.cpp" line="377"/>
         <source>REMOVE_PAGES %n</source>
         <translation type="unfinished">
             <numerusform>Remove page</numerusform>
             <numerusform>Remove %n pages</numerusform>
         </translation>
+    </message>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="381"/>
+        <source>Undo %1</source>
+        <extracomment>Context menu; %1 is the step, e.g. &quot;Crop&quot;</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="381"/>
+        <source>Undo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="385"/>
+        <source>Redo %1</source>
+        <extracomment>Context menu; %1 is the step, e.g. &quot;Crop&quot;</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="385"/>
+        <source>Redo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="420"/>
+        <source>Move pages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="435"/>
+        <source>Undone: %1</source>
+        <extracomment>Status message after Ctrl+Z; %1 is the step, e.g. &quot;Crop&quot;</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pagelistwidget.cpp" line="443"/>
+        <source>Redone: %1</source>
+        <extracomment>Status message after Ctrl+Shift+Z; %1 is the step, e.g. &quot;Crop&quot;</extracomment>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -380,18 +450,38 @@
 <context>
     <name>PreviewView</name>
     <message>
-        <location filename="../previewview.cpp" line="78"/>
+        <location filename="../previewview.cpp" line="88"/>
+        <source>Apply</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../previewview.cpp" line="89"/>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../previewview.cpp" line="116"/>
         <source>Zoom out (Ctrl + Minus)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../previewview.cpp" line="79"/>
+        <location filename="../previewview.cpp" line="117"/>
         <source>Whole page (Ctrl + 0)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../previewview.cpp" line="80"/>
+        <location filename="../previewview.cpp" line="118"/>
         <source>Zoom in (Ctrl + Plus)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../previewview.cpp" line="136"/>
+        <source>Cut the page to the frame (Enter)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../previewview.cpp" line="137"/>
+        <source>Leave the page as it is (Esc)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -403,7 +493,7 @@
         <translation type="unfinished">Scanner</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="236"/>
+        <location filename="../settingsoverlay.cpp" line="230"/>
         <source>AUTOMATIC</source>
         <translation type="unfinished">Automatic</translation>
     </message>
@@ -423,12 +513,12 @@
         <translation type="unfinished">Resolution</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="283"/>
+        <location filename="../settingsoverlay.cpp" line="277"/>
         <source>PORTRAIT</source>
         <translation type="unfinished">Portrait</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="284"/>
+        <location filename="../settingsoverlay.cpp" line="278"/>
         <source>LANDSCAPE</source>
         <translation type="unfinished">Landscape</translation>
     </message>
@@ -438,7 +528,7 @@
         <translation type="unfinished">Page Orientation</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="291"/>
+        <location filename="../settingsoverlay.cpp" line="285"/>
         <source>STANDARD</source>
         <translation type="unfinished">Standard</translation>
     </message>
@@ -478,42 +568,37 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="128"/>
-        <source>Coming in a later version</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../settingsoverlay.cpp" line="132"/>
+        <location filename="../settingsoverlay.cpp" line="126"/>
         <source>Check for updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="133"/>
+        <location filename="../settingsoverlay.cpp" line="127"/>
         <source>Once a day the app asks GitHub whether there is a new version. Only your IP address is sent.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="246"/>
+        <location filename="../settingsoverlay.cpp" line="240"/>
         <source>Color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="247"/>
+        <location filename="../settingsoverlay.cpp" line="241"/>
         <source>Grayscale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="248"/>
+        <location filename="../settingsoverlay.cpp" line="242"/>
         <source>Black/white</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="303"/>
+        <location filename="../settingsoverlay.cpp" line="297"/>
         <source>Not installed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="306"/>
+        <location filename="../settingsoverlay.cpp" line="300"/>
         <source>Text recognition needs the program tesseract with at least one language (e.g. the package tesseract-data-deu or tesseract-ocr-deu).</source>
         <translation type="unfinished"></translation>
     </message>
@@ -540,12 +625,11 @@
         <translation type="obsolete">OCR after scan</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="126"/>
         <source>CROP_DOCUMENT</source>
-        <translation type="unfinished">Crop Document</translation>
+        <translation type="obsolete">Crop Document</translation>
     </message>
     <message>
-        <location filename="../settingsoverlay.cpp" line="213"/>
+        <location filename="../settingsoverlay.cpp" line="207"/>
         <source>NO_SCANNERS_FOUND</source>
         <translation type="unfinished">No scanners found</translation>
     </message>

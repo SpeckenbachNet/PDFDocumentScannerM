@@ -5,6 +5,7 @@
 #include <QFileInfo>
 #include <QPainter>
 #include <QPoint>
+#include <QRect>
 #include <QStringList>
 #include <QTransform>
 #include <QVector>
@@ -165,6 +166,67 @@ QImage rotatedImage(const QImage &image, int degrees) {
         rotated.setDotsPerMeterY(image.dotsPerMeterX());
     }
     return rotated;
+}
+
+namespace {
+// Darker than this counts as content (print, the shadow of a paper edge); light enough for the
+// gray print of a till receipt, dark enough for the paper grain and a white lid
+constexpr int kContentThreshold = 160;
+constexpr double kContentEdgeMm = 3.0;     // edge strip of the scan that is ignored (lid shadow)
+constexpr double kContentMarginMm = 4.0;   // room left around the content
+constexpr int kContentMinPixels = 3;       // dark pixels a row / column needs (single specks)
+}
+
+QRect contentRect(const QImage &image) {
+    if (image.isNull()) return QRect();
+    const QRect whole = image.rect();
+    const QImage gray = image.convertToFormat(QImage::Format_Grayscale8);
+
+    int dpi = qRound(image.dotsPerMeterX() * 0.0254);
+    if (dpi <= 0) dpi = 300;
+    const int edge = qRound(kContentEdgeMm * dpi / 25.4);
+    const int margin = qRound(kContentMarginMm * dpi / 25.4);
+    const QRect inner = whole.adjusted(edge, edge, -edge, -edge);
+    if (inner.width() <= 0 || inner.height() <= 0) return whole;
+
+    // Dark pixels per row and per column
+    QVector<int> rows(gray.height(), 0);
+    QVector<int> columns(gray.width(), 0);
+    for (int y = inner.top(); y <= inner.bottom(); ++y) {
+        const uchar *line = gray.constScanLine(y);
+        for (int x = inner.left(); x <= inner.right(); ++x) {
+            if (line[x] < kContentThreshold) {
+                ++rows[y];
+                ++columns[x];
+            }
+        }
+    }
+    auto first = [](const QVector<int> &counts) {
+        for (int i = 0; i < counts.size(); ++i) {
+            if (counts[i] >= kContentMinPixels) return i;
+        }
+        return -1;
+    };
+    auto last = [](const QVector<int> &counts) {
+        for (int i = counts.size() - 1; i >= 0; --i) {
+            if (counts[i] >= kContentMinPixels) return i;
+        }
+        return -1;
+    };
+    const int top = first(rows);
+    const int left = first(columns);
+    if (top < 0 || left < 0) return whole;   // blank page
+    const QRect content(QPoint(left, top), QPoint(last(columns), last(rows)));
+    return content.adjusted(-margin, -margin, margin, margin).intersected(whole);
+}
+
+QImage croppedImage(const QImage &image, const QRect &rect) {
+    const QRect area = rect.intersected(image.rect());
+    if (image.isNull() || area.isEmpty()) return QImage();
+    QImage cropped = image.copy(area);
+    cropped.setDotsPerMeterX(image.dotsPerMeterX());   // the size in mm follows from it (PDF page)
+    cropped.setDotsPerMeterY(image.dotsPerMeterY());
+    return cropped;
 }
 
 double skewAngle(const QImage &image) {

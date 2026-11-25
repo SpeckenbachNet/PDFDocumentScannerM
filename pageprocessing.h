@@ -1,10 +1,11 @@
 #pragma once
 
 #include <QImage>
+#include <QRect>
 #include <QString>
 
-// Processing of a scanned page right after it arrives (landscape turn, straighten, color mode;
-// crop later). Color modes of the app, stored in Scanner/ColorMode: "Color", "Gray", "BlackWhite".
+// Processing of a scanned page right after it arrives (landscape turn, straighten, color mode)
+// and later by the user (rotate, crop). Color modes of the app, stored in Scanner/ColorMode: "Color", "Gray", "BlackWhite".
 namespace PageProcessing {
 
 // Scanner value (--mode) to scan with for the app's color mode: "Color" in color, "Gray" and
@@ -33,6 +34,14 @@ QImage straightenedImage(const QImage &image, double angle);
 // Turned by a multiple of 90° (90 = clockwise) in the same format: Qt turns a 1 bit image into
 // 32 bit while rotating, the black/white page would lose its small size
 QImage rotatedImage(const QImage &image, int degrees = 90);
+
+// Part of the page with content (print, a paper edge) plus a few millimeters of room, as the
+// first suggestion for cropping: a till receipt on the flatbed gets a frame around it.
+// The whole page if nothing is found.
+QRect contentRect(const QImage &image);
+
+// The part rect of the image, same format and resolution. Null if rect lies outside.
+QImage croppedImage(const QImage &image, const QRect &rect);
 
 // Gray original of a black/white page: gray_page_001.png next to page_001.png
 // (the prefix keeps it out of the scan's "page_*.png" filter)

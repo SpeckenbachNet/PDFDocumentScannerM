@@ -1,4 +1,5 @@
 #include "previewview.h"
+#include "pageprocessing.h"
 #include "uicolors.h"
 
 #include <QApplication>
@@ -7,6 +8,7 @@
 #include <QGraphicsScene>
 #include <QHBoxLayout>
 #include <QPainter>
+#include <QPainterPath>
 #include <QShortcut>
 #include <QToolButton>
 #include <QWheelEvent>
@@ -23,25 +25,16 @@ qreal maxScaleFor(qreal fitScale) {
 }
 }
 
-// Small bar in the lower right corner: − / zoom level (click: whole page) / +.
-// Paints its own rounded background like the settings overlay.
-class ZoomBar : public QWidget
+// Small floating bar with flat buttons. Paints its own rounded background like the settings
+// overlay.
+class FloatingBar : public QWidget
 {
 public:
-    explicit ZoomBar(QWidget *parent) : QWidget(parent) {
-        auto *layout = new QHBoxLayout(this);
-        layout->setContentsMargins(4, 4, 4, 4);
-        layout->setSpacing(2);
-        outButton = addButton(layout, QStringLiteral("−"));
-        levelButton = addButton(layout, QString());
-        // Room for "8000 %", so the bar does not change its width while zooming
-        levelButton->setMinimumWidth(levelButton->fontMetrics().horizontalAdvance("8000 %") + 12);
-        inButton = addButton(layout, QStringLiteral("+"));
+    explicit FloatingBar(QWidget *parent) : QWidget(parent) {
+        m_layout = new QHBoxLayout(this);
+        m_layout->setContentsMargins(4, 4, 4, 4);
+        m_layout->setSpacing(2);
     }
-
-    QToolButton *outButton = nullptr;
-    QToolButton *levelButton = nullptr;
-    QToolButton *inButton = nullptr;
 
 protected:
     void paintEvent(QPaintEvent *) override {
@@ -57,16 +50,61 @@ protected:
         painter.drawRoundedRect(QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5), 8, 8);
     }
 
-private:
-    QToolButton *addButton(QHBoxLayout *layout, const QString &text) {
+    QToolButton *addButton(const QString &text) {
         auto *button = new QToolButton(this);
         button->setText(text);
         button->setAutoRaise(true);
         button->setFocusPolicy(Qt::NoFocus);
-        layout->addWidget(button);
+        m_layout->addWidget(button);
         return button;
     }
+
+private:
+    QHBoxLayout *m_layout = nullptr;
 };
+
+// Lower right corner, while the mouse is over the view: − / zoom level (click: whole page) / +
+class ZoomBar : public FloatingBar
+{
+public:
+    explicit ZoomBar(QWidget *parent) : FloatingBar(parent) {
+        outButton = addButton(QStringLiteral("−"));
+        levelButton = addButton(QString());
+        // Room for "8000 %", so the bar does not change its width while zooming
+        levelButton->setMinimumWidth(levelButton->fontMetrics().horizontalAdvance("8000 %") + 12);
+        inButton = addButton(QStringLiteral("+"));
+    }
+
+    QToolButton *outButton = nullptr;
+    QToolButton *levelButton = nullptr;
+    QToolButton *inButton = nullptr;
+};
+
+// Lower left corner, while cropping: Apply / Cancel
+class CropBar : public FloatingBar
+{
+public:
+    explicit CropBar(QWidget *parent) : FloatingBar(parent) {
+        applyButton = addButton(PreviewView::tr("Apply"));
+        cancelButton = addButton(PreviewView::tr("Cancel"));
+    }
+
+    QToolButton *applyButton = nullptr;
+    QToolButton *cancelButton = nullptr;
+};
+
+namespace {
+// Crop frame: which edges a drag moves
+enum CropHandle {
+    CropLeft = 1, CropRight = 2, CropTop = 4, CropBottom = 8,
+    CropMove = 16,   // inside: the whole frame
+    CropNew = 32     // outside: a new frame from the press position
+};
+constexpr int kCropGrip = 8;          // view pixels around an edge or corner that grab it
+constexpr int kCropHandleSize = 10;   // view pixels, the squares on corners and edges
+constexpr qreal kCropMinSize = 16;    // image pixels, the frame does not get smaller
+constexpr int kCropNewStart = 4;      // view pixels the mouse moves before a new frame starts
+}
 
 PreviewView::PreviewView(QWidget *parent) : QGraphicsView(parent) {
     m_scene = new QGraphicsScene(this);
@@ -93,6 +131,21 @@ PreviewView::PreviewView(QWidget *parent) : QGraphicsView(parent) {
     addShortcut(QKeySequence::ZoomIn, &PreviewView::zoomIn);
     addShortcut(QKeySequence::ZoomOut, &PreviewView::zoomOut);
     addShortcut(QKeySequence(Qt::CTRL | Qt::Key_0), &PreviewView::fitPage);
+
+    m_cropBar = new CropBar(this);
+    m_cropBar->applyButton->setToolTip(tr("Cut the page to the frame (Enter)"));
+    m_cropBar->cancelButton->setToolTip(tr("Leave the page as it is (Esc)"));
+    connect(m_cropBar->applyButton, &QToolButton::clicked, this, &PreviewView::acceptCrop);
+    connect(m_cropBar->cancelButton, &QToolButton::clicked, this, &PreviewView::cancelCrop);
+    m_cropBar->hide();
+    // Enter applies; only while cropping, so it takes the key from nobody else
+    for (const QKeySequence &keys : {QKeySequence(Qt::Key_Return), QKeySequence(Qt::Key_Enter)}) {
+        auto *shortcut = new QShortcut(keys, this);
+        shortcut->setContext(Qt::WindowShortcut);
+        shortcut->setEnabled(false);
+        connect(shortcut, &QShortcut::activated, this, &PreviewView::acceptCrop);
+        m_cropShortcuts.append(shortcut);
+    }
 }
 
 bool PreviewView::setImage(const QString &imagePath) {
@@ -102,6 +155,8 @@ bool PreviewView::setImage(const QString &imagePath) {
         return false;
     }
 
+    endCrop();   // a new page (or the cropped one again) ends the crop mode
+    m_imagePath = imagePath;
     m_scene->clear();
     m_item = m_scene->addPixmap(pixmap);
     m_item->setTransformationMode(Qt::SmoothTransformation);   // zoomed out it would flicker
@@ -112,6 +167,8 @@ bool PreviewView::setImage(const QString &imagePath) {
 }
 
 void PreviewView::clearImage() {
+    endCrop();
+    m_imagePath.clear();
     m_scene->clear();
     m_scene->setSceneRect(QRectF(0, 0, 1, 1));   // the old page's size would keep the scroll bars
     m_item = nullptr;
@@ -247,7 +304,8 @@ void PreviewView::setScale(qreal scale, bool atMouse) {
     const qreal factor = scale / currentScale();
     QGraphicsView::scale(factor, factor);
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-    setDragMode(QGraphicsView::ScrollHandDrag);   // drag moves the zoomed page
+    // Drag moves the zoomed page, while cropping it changes the frame
+    setDragMode(m_cropping ? QGraphicsView::NoDrag : QGraphicsView::ScrollHandDrag);
     updateZoomBar();
 }
 
@@ -288,6 +346,7 @@ void PreviewView::resizeEvent(QResizeEvent *event) {
     } else {
         updateZoomBar();
     }
+    if (m_cropping) placeCropBar();
 }
 
 // Ctrl + wheel zooms at the mouse, the wheel alone scrolls (zoomed)
@@ -327,4 +386,180 @@ void PreviewView::enterEvent(QEnterEvent *event) {
 void PreviewView::leaveEvent(QEvent *event) {
     QGraphicsView::leaveEvent(event);
     m_zoomBar->hide();
+}
+
+// ====== Crop ======
+
+bool PreviewView::startCrop() {
+    if (!m_item || m_cropping) return m_cropping;
+    const QImage image(m_imagePath);
+    if (image.isNull()) return false;
+    m_cropRect = QRectF(PageProcessing::contentRect(image));
+    m_cropping = true;
+    m_cropHandle = 0;
+    setDragMode(QGraphicsView::NoDrag);
+    for (QShortcut *shortcut : m_cropShortcuts) shortcut->setEnabled(true);
+    placeCropBar();
+    m_cropBar->show();
+    viewport()->update();
+    emit croppingChanged(true);
+    return true;
+}
+
+void PreviewView::cancelCrop() {
+    endCrop();
+}
+
+void PreviewView::acceptCrop() {
+    if (!m_cropping) return;
+    const QString path = m_imagePath;
+    const QRect rect = m_cropRect.toRect().intersected(m_item->pixmap().rect());
+    const bool whole = rect == m_item->pixmap().rect();
+    endCrop();
+    if (!whole && !rect.isEmpty()) emit cropAccepted(path, rect);
+}
+
+void PreviewView::endCrop() {
+    if (!m_cropping) return;
+    m_cropping = false;
+    m_cropHandle = 0;
+    for (QShortcut *shortcut : m_cropShortcuts) shortcut->setEnabled(false);
+    m_cropBar->hide();
+    viewport()->unsetCursor();
+    setDragMode(m_fitMode ? QGraphicsView::NoDrag : QGraphicsView::ScrollHandDrag);
+    viewport()->update();
+    emit croppingChanged(false);
+}
+
+void PreviewView::placeCropBar() {
+    m_cropBar->adjustSize();
+    const QRect area = viewport()->geometry();
+    m_cropBar->move(area.left() + kZoomBarMargin, area.bottom() - m_cropBar->height() - kZoomBarMargin);
+    m_cropBar->raise();
+}
+
+// Corners before edges, edges before the inside; measured in the view, so the grip stays the
+// same size at every zoom level
+int PreviewView::cropHandleAt(const QPoint &viewPos) const {
+    const QRect frame = mapFromScene(m_cropRect).boundingRect();
+    const QRect grab = frame.adjusted(-kCropGrip, -kCropGrip, kCropGrip, kCropGrip);
+    if (!grab.contains(viewPos)) return 0;
+    int handle = 0;
+    if (qAbs(viewPos.x() - frame.left()) <= kCropGrip) handle |= CropLeft;
+    else if (qAbs(viewPos.x() - frame.right()) <= kCropGrip) handle |= CropRight;
+    if (qAbs(viewPos.y() - frame.top()) <= kCropGrip) handle |= CropTop;
+    else if (qAbs(viewPos.y() - frame.bottom()) <= kCropGrip) handle |= CropBottom;
+    if (handle) return handle;
+    return frame.contains(viewPos) ? CropMove : 0;
+}
+
+void PreviewView::updateCropCursor(int handle) {
+    Qt::CursorShape shape = Qt::CrossCursor;   // outside: draws a new frame
+    if (handle == CropMove) shape = Qt::SizeAllCursor;
+    else if (handle == (CropLeft | CropTop) || handle == (CropRight | CropBottom)) shape = Qt::SizeFDiagCursor;
+    else if (handle == (CropRight | CropTop) || handle == (CropLeft | CropBottom)) shape = Qt::SizeBDiagCursor;
+    else if (handle & (CropLeft | CropRight)) shape = Qt::SizeHorCursor;
+    else if (handle & (CropTop | CropBottom)) shape = Qt::SizeVerCursor;
+    viewport()->setCursor(shape);
+}
+
+void PreviewView::mousePressEvent(QMouseEvent *event) {
+    if (!m_cropping || event->button() != Qt::LeftButton) {
+        QGraphicsView::mousePressEvent(event);
+        return;
+    }
+    const QPoint pos = event->position().toPoint();
+    m_cropHandle = cropHandleAt(pos);
+    if (!m_cropHandle) m_cropHandle = CropNew;
+    m_cropPressViewPos = pos;
+    m_cropPressPos = mapToScene(pos);
+    m_cropPressRect = m_cropRect;
+    event->accept();
+}
+
+void PreviewView::mouseMoveEvent(QMouseEvent *event) {
+    if (!m_cropping) {
+        QGraphicsView::mouseMoveEvent(event);
+        return;
+    }
+    const QPoint pos = event->position().toPoint();
+    if (!m_cropHandle) {   // hover
+        updateCropCursor(cropHandleAt(pos));
+        return;
+    }
+
+    const QRectF bounds = m_item->boundingRect();
+    auto clampX = [&](qreal x) { return qBound(bounds.left(), qreal(qRound(x)), bounds.right()); };
+    auto clampY = [&](qreal y) { return qBound(bounds.top(), qreal(qRound(y)), bounds.bottom()); };
+    const QPointF scenePos = mapToScene(pos);
+    const QPointF delta = scenePos - m_cropPressPos;
+    QRectF r = m_cropPressRect;
+
+    if (m_cropHandle == CropNew) {
+        if ((pos - m_cropPressViewPos).manhattanLength() < kCropNewStart) return;
+        const QPointF a(clampX(m_cropPressPos.x()), clampY(m_cropPressPos.y()));
+        const QPointF b(clampX(scenePos.x()), clampY(scenePos.y()));
+        r = QRectF(a, b).normalized();
+        if (r.width() < kCropMinSize || r.height() < kCropMinSize) return;
+    } else if (m_cropHandle == CropMove) {
+        const qreal dx = qBound(bounds.left() - r.left(), qreal(qRound(delta.x())), bounds.right() - r.right());
+        const qreal dy = qBound(bounds.top() - r.top(), qreal(qRound(delta.y())), bounds.bottom() - r.bottom());
+        r.translate(dx, dy);
+    } else {
+        if (m_cropHandle & CropLeft)   r.setLeft(qMin(clampX(r.left() + delta.x()), r.right() - kCropMinSize));
+        if (m_cropHandle & CropRight)  r.setRight(qMax(clampX(r.right() + delta.x()), r.left() + kCropMinSize));
+        if (m_cropHandle & CropTop)    r.setTop(qMin(clampY(r.top() + delta.y()), r.bottom() - kCropMinSize));
+        if (m_cropHandle & CropBottom) r.setBottom(qMax(clampY(r.bottom() + delta.y()), r.top() + kCropMinSize));
+    }
+    m_cropRect = r;
+    viewport()->update();
+    event->accept();
+}
+
+void PreviewView::mouseReleaseEvent(QMouseEvent *event) {
+    if (!m_cropping || event->button() != Qt::LeftButton) {
+        QGraphicsView::mouseReleaseEvent(event);
+        return;
+    }
+    m_cropHandle = 0;
+    updateCropCursor(cropHandleAt(event->position().toPoint()));
+    event->accept();
+}
+
+// Outside the frame darkened, the frame and its handles in the accent color; sizes in view
+// pixels, so they look the same at every zoom level
+void PreviewView::drawForeground(QPainter *painter, const QRectF &rect) {
+    QGraphicsView::drawForeground(painter, rect);
+    if (!m_cropping || !m_item) return;
+
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing);
+    QPainterPath outside;
+    outside.addRect(m_item->boundingRect());
+    QPainterPath inside;
+    inside.addRect(m_cropRect);
+    painter->fillPath(outside.subtracted(inside), QColor(0, 0, 0, 120));
+
+    const QColor accent = QApplication::palette().color(QPalette::Highlight);
+    QPen pen(accent, 2);
+    pen.setCosmetic(true);
+    painter->setPen(pen);
+    painter->setBrush(Qt::NoBrush);
+    painter->drawRect(m_cropRect);
+
+    const qreal size = kCropHandleSize / currentScale();
+    const QRectF r = m_cropRect;
+    const QList<QPointF> points = {
+        r.topLeft(), r.topRight(), r.bottomLeft(), r.bottomRight(),
+        QPointF(r.center().x(), r.top()), QPointF(r.center().x(), r.bottom()),
+        QPointF(r.left(), r.center().y()), QPointF(r.right(), r.center().y())
+    };
+    QPen handlePen(accent, 1.5);
+    handlePen.setCosmetic(true);
+    painter->setPen(handlePen);
+    painter->setBrush(Qt::white);
+    for (const QPointF &p : points) {
+        painter->drawRect(QRectF(p.x() - size / 2, p.y() - size / 2, size, size));
+    }
+    painter->restore();
 }

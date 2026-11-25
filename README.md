@@ -2,9 +2,10 @@
 
 Scan documents with your network scanner and save them as PDF – on Linux.
 
-## What's new in 0.8.0
+## What's new in 0.9.0
 
-- Tells you when a new version is out: the button "Update" opens its download page (setting "Check for updates", on by default)
+- Crop a page by hand: a frame in the preview, already around the content of the page (handy for a till receipt on the flatbed)
+- Undo and redo (Ctrl+Z / Ctrl+Shift+Z) for removing, clearing, reordering, rotating and cropping
 
 All changes: [CHANGELOG.md](CHANGELOG.md)
 
@@ -15,7 +16,7 @@ All changes: [CHANGELOG.md](CHANGELOG.md)
 - A4, A5, A6, Letter and Legal, portrait or landscape
 - Color, grayscale and black/white – black/white is made by the app for every scanner, so text
   pages stay small (about 60 KB per page in the PDF)
-- Pages appear while scanning; select, reorder by drag and drop, rotate, remove
+- Pages appear while scanning; select, reorder by drag and drop, rotate, crop, remove – with undo
 - Large preview with zoom (Ctrl + mouse wheel, Ctrl + Plus / Minus / 0, double click)
 - Straightens pages that lie slightly askew, right after scanning
 - Tells you when a new version is out (once a day, can be switched off)

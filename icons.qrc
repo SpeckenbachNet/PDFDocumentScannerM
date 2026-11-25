@@ -7,6 +7,7 @@
         <file alias="document_portrait">ressources/icons/document_portrait.svg</file>
         <file alias="document_landscape">ressources/icons/document_landscape.svg</file>
         <file alias="rotate">ressources/icons/rotate.svg</file>
+        <file alias="crop">ressources/icons/crop.svg</file>
         <file alias="refresh">ressources/icons/refresh.svg</file>
         <file alias="coffee">ressources/icons/coffee.svg</file>
         <file alias="help">ressources/icons/help.svg</file>

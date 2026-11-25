@@ -69,6 +69,12 @@ void MainWin::initializeToolBars() {
     m_rotateBtn->setToolTip(tr("Rotate the selected pages 90° clockwise"));
     m_rotateBtn->setEnabled(false);
 
+    // Checkable: stays pressed while the crop frame is shown, a second click cancels
+    m_cropBtn = ui->toolBarFrame->addButton("cropBtn", "", ":icons/crop");
+    m_cropBtn->setToolTip(tr("Crop the selected page"));
+    m_cropBtn->setCheckable(true);
+    m_cropBtn->setEnabled(false);
+
     ui->toolBarFrame->addButton("fakeDplxBtn",tr("FAKE_DUPLEX"),"");
     m_fakeDplxBtn = ui->toolBarFrame->findChild<QToolButton*>("fakeDplxBtn");
     m_fakeDplxBtn->setEnabled(false);
@@ -183,7 +189,9 @@ void MainWin::initializeConnects() {
     });
     auto *cancelShortcut = new QShortcut(QKeySequence(Qt::Key_Escape), this);
     connect(cancelShortcut, &QShortcut::activated, this, [this] {
-        if (m_ocrProcess) {
+        if (ui->previewGraphicsView->isCropping()) {
+            ui->previewGraphicsView->cancelCrop();
+        } else if (m_ocrProcess) {
             cancelOcr();   // text recognition while saving
         } else {
             cancelScan();
@@ -201,6 +209,12 @@ void MainWin::initializeConnects() {
     connect(ui->pagesListWidget, &PageListWidget::pageImagesChanged, this, &MainWin::showCurrentPage);
     connect(ui->pagesListWidget, &QListWidget::itemSelectionChanged, this, &MainWin::updateButtons);
     connect(m_rotateBtn, &QToolButton::clicked, this, &MainWin::rotatePages);
+    connect(m_cropBtn, &QToolButton::clicked, this, &MainWin::toggleCrop);
+    connect(ui->pagesListWidget, &PageListWidget::undoMessage, this, [this](const QString &message) {
+        m_statusOverlay->showMessage(message, false, 2000);
+    });
+    connect(ui->previewGraphicsView, &PreviewView::cropAccepted, this, &MainWin::cropPage);
+    connect(ui->previewGraphicsView, &PreviewView::croppingChanged, this, &MainWin::updateButtons);
     connect(m_clearBtn, &QToolButton::clicked, this, &MainWin::clearPages);
     connect(m_saveSelBtn, &QToolButton::clicked, this, [this] { savePdf(true); });
     connect(m_saveAllBtn, &QToolButton::clicked, this, [this] { savePdf(false); });

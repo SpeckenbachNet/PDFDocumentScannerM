@@ -28,7 +28,7 @@ tools `airscan-discover` and `scanimage` (`QProcess`).
 | OCR when saving (tesseract, buttons "Save" / "Save with OCR" and language in the save dialog) | done |
 | Fake duplex | open (button exists, not connected) |
 | Straighten right after scanning (check box in the settings) | done |
-| Crop (check box in the settings, disabled) | open |
+| Crop by hand (button next to rotate, frame in the preview) | done |
 
 **Flow**
 
@@ -136,8 +136,8 @@ Notes:
 | `sanedevice.*` | how scanimage opens a scanner: escl scanners through the airscan backend (section 4) |
 | `ocr.*` | tesseract: installed languages and their names |
 | `pdfsavedialog.*` | file dialog for saving, buttons "Save" / "Save with OCR" and OCR language |
-| `pageprocessing.*` | processing of a scanned page: landscape turn, straighten, color mode, black/white threshold, rotating (later crop) |
-| `previewview.*` | large preview (`QGraphicsView`), fits the image into the view |
+| `pageprocessing.*` | processing of a scanned page: landscape turn, straighten, color mode, black/white threshold, rotating, content rectangle and cropping |
+| `previewview.*` | large preview (`QGraphicsView`), fits the image into the view, zoom, crop frame |
 | `helppage.*`, `twolinedelegate.*` | help page (Markdown in `help/<de\|en>/`, `Help.qrc`); copies from MovieMetaM, adapted to `UiColors` |
 | `uicolors.h` | surface colors, derived from Window/WindowText only; the app palette (`applyStandardPalette`) |
 | `toolbarm.*` | toolbar; copy from `../libraries/toolbarm` (master there, version 1.7.0) |
@@ -285,12 +285,33 @@ straighten → color mode. Black/white pages are straightened in gray and thresh
 - Measured with synthetic A4 pages at 300 dpi (tilt 0.3° … 4.9°, both directions): angle found to
   0.025°, about 60 ms to find and 70 ms to turn. Not yet tested with real scans.
 
+
+### Crop (`previewview.*`, `pageprocessing.*`)
+
+By hand, one page at a time: the checkable toolbar button `cropBtn` (next to rotate) calls
+`PreviewView::startCrop()` for the page in the preview. Enabled for exactly one selected page that
+is also the current one; while the frame is shown the other page buttons are disabled.
+
+- Start frame: `PageProcessing::contentRect()` – pixels darker than 160 (also the gray print of a
+  till receipt), an edge strip of 3 mm left out (lid shadow), rows / columns with at least
+  3 dark pixels; the box around them plus 4 mm, the whole page if nothing is found.
+- `PreviewView` draws the frame in `drawForeground()` (scene = image pixels; outside darkened,
+  frame and handles in the accent color, sizes in view pixels). Corners and edges resize
+  (grip 8 px), inside moves, outside draws a new frame; minimum 16 image pixels, clamped to the
+  page. While cropping the drag mode is `NoDrag`, zoom stays.
+- Enter (shortcut only enabled while cropping) or "Apply" in the `CropBar` (lower left) emits
+  `cropAccepted(path, rect)`; Esc (MainWin's shortcut, before scan / OCR cancel), "Cancel", the
+  button again, a new page or an empty preview end it. A frame over the whole page cuts nothing.
+- `PageListWidget::cropPage()` cuts the file (`croppedImage()`, format and resolution kept) and
+  the gray original of a black/white page, like rotating; the PDF page gets the size of the cut
+  from the pixels and the resolution.
+
 ### Page list (`PageListWidget`, `PageDelegate`)
 
 - ListMode, one column. Pages fill the width (A4 ratio). If they do not fit the height, they
   shrink at most by the width of the scroll bar before the bar appears (`updateItemSizes`).
 - Select: click, Ctrl/Shift + click, Ctrl+A. Remove: × on hover, Delete/Backspace, context
-  menu "Remove n pages" – **the image file is deleted too**. Labels are renumbered.
+  menu "Remove n pages" – the image file stays until the app closes (undo). Labels are renumbered.
 - Reorder: drag and drop (`InternalMove`). ListMode, because IconMode places dropped items freely.
 - **Auto scroll while dragging is our own:** Qt's reads `QCursor::pos()`, which does not move
   during a drag under Wayland. A timer scrolls while the drag position (from the drag events) is
@@ -303,7 +324,21 @@ straighten → color mode. Black/white pages are straightened in gray and thresh
   change between two scans, the PDF page size needs the right one.
 - Rotate: the selected pages 90° clockwise; the PNG file itself is rewritten, so list, preview
   and PDF need no extra state.
-- Clear: all pages, after a question (the image files are deleted).
+- Clear: all pages, after a question (undoable like removing).
+- **Undo / redo** (`QUndoStack` in `PageListWidget`, Ctrl+Z / Ctrl+Shift+Z as window shortcuts of
+  the list, entries in the context menu, also on the empty list): one `PageCommand` (two
+  functions) per step. Pages are known by their file path.
+  - Remove, clear, reorder: the order before and after; `applyOrder()` takes pages out into
+    `m_takenOut` (kept, deleted with the list) or puts them back. Pages scanned meanwhile are in
+    neither order and stay behind the restored ones. Removed image files stay until
+    `MainWin::removeScanDirs()` at closing.
+  - Rotate, crop: copies of the page image and its gray original before and after the change,
+    `undo_<n>_b_page_001.png` / `undo_<n>_a_…` next to the page (not `page_*`: the scan watches
+    for those); undo / redo copy them back and reload the icon.
+  - After a step the affected pages are selected, the first one is shown; the status overlay
+    says "Undone: Crop" (`undoMessage()`).
+  - Not while scanning, saving with OCR (list disabled) or cropping (`setUndoAllowed()` from
+    `MainWin::updateButtons()`). Adding a scanned page is no step.
 
 ### Saving as PDF (`MainWin::savePdf()`)
 
@@ -342,8 +377,8 @@ straighten → color mode. Black/white pages are straightened in gray and thresh
   shows "page n of m" (from tesseract's lines `Page n : …`), **Esc** cancels. The page list is
   locked meanwhile (the images must not change), closing waits. tesseract writes
   `<target>.part.pdf`, renamed only at the end: a cancel or error leaves an existing file as it is.
-- Straightening happens right after scanning (see Straighten), crop will too; saving then only
-  does OCR → PDF. Rejected for now: OCR right after scanning with
+- Straightening happens right after scanning (see Straighten), cropping by hand on the image file;
+  saving then only does OCR → PDF. Rejected for now: OCR right after scanning with
   selectable text in the preview (variant B) – rotating, straightening and cropping would have to
   work on recognized text.
 - Without OCR writing blocks the window; a `processEvents()` lets the message "Saving PDF..."

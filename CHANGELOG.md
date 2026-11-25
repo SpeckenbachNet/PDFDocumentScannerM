@@ -1,5 +1,11 @@
 # PDFDocumentScannerM – Changelog
 
+## 0.9.0 – Crop, undo (unreleased)
+
+- Crop a page by hand: the new button next to "Rotate" shows a frame in the preview, already around the content of the page (handy for a till receipt on the flatbed); Enter or "Apply" cuts the page, Esc or "Cancel" leaves it
+- Undo and redo with Ctrl+Z / Ctrl+Shift+Z (also in the right-click menu of the page list) for removing, clearing, reordering, rotating and cropping
+- The grayed out check box "Crop Document" is gone from the settings
+
 ## 0.8.0 – Update notice (November 25, 2026)
 
 - Tells you when a new version is out: the button "Update" opens its download page (setting "Check for updates", on by default)

@@ -28,7 +28,7 @@ Kommandozeilenwerkzeuge `airscan-discover` und `scanimage` auf (`QProcess`).
 | OCR beim Speichern (tesseract, Knöpfe „Speichern“ / „Mit OCR speichern“ und Sprache im Speicherdialog) | fertig |
 | Fake-Duplex | offen (Knopf da, nicht verbunden) |
 | Ausrichten gleich nach dem Scan (Häkchen in den Einstellungen) | fertig |
-| Beschneiden (Häkchen in den Einstellungen, ausgegraut) | offen |
+| Beschneiden von Hand (Knopf neben Drehen, Rahmen in der Vorschau) | fertig |
 
 **Ablauf**
 
@@ -138,8 +138,8 @@ Hinweise:
 | `sanedevice.*` | wie scanimage einen Scanner öffnet: escl-Scanner über das airscan-Backend (Abschnitt 4) |
 | `ocr.*` | tesseract: installierte Sprachen und ihre Namen |
 | `pdfsavedialog.*` | Dateidialog zum Speichern, Knöpfe „Speichern“ / „Mit OCR speichern“ und OCR-Sprache |
-| `pageprocessing.*` | Bearbeitung einer gescannten Seite: Drehung bei Querformat, Ausrichten, Farbmodus, Schwarz/Weiß-Schwellwert, Drehen (später Beschneiden) |
-| `previewview.*` | große Vorschau (`QGraphicsView`), passt das Bild in die Ansicht ein |
+| `pageprocessing.*` | Bearbeitung einer gescannten Seite: Drehung bei Querformat, Ausrichten, Farbmodus, Schwarz/Weiß-Schwellwert, Drehen, Inhaltsrechteck und Beschneiden |
+| `previewview.*` | große Vorschau (`QGraphicsView`), passt das Bild in die Ansicht ein, Zoom, Beschneide-Rahmen |
 | `helppage.*`, `twolinedelegate.*` | Hilfeseite (Markdown in `help/<de\|en>/`, `Help.qrc`); Kopien aus MovieMetaM, an `UiColors` angepasst |
 | `uicolors.h` | Flächenfarben, nur aus Window/WindowText abgeleitet; die Palette der App (`applyStandardPalette`) |
 | `toolbarm.*` | Werkzeugleiste; Kopie aus `../libraries/toolbarm` (Master dort, Version 1.7.0) |
@@ -296,14 +296,38 @@ danach mit dem Schwellwert umgewandelt (ein gedrehtes 1-Bit-Bild bekommt ausgefr
   auf 0,025° genau, etwa 60 ms zum Finden und 70 ms zum Drehen. Mit echten Scans noch nicht
   getestet.
 
+
+### Beschneiden (`previewview.*`, `pageprocessing.*`)
+
+Von Hand, eine Seite nach der anderen: Der umschaltbare Knopf `cropBtn` (neben Drehen) ruft
+`PreviewView::startCrop()` für die Seite in der Vorschau auf. Aktiv bei genau einer ausgewählten
+Seite, die auch die aktuelle ist; solange der Rahmen zu sehen ist, sind die übrigen Seiten-Knöpfe
+gesperrt.
+
+- Start-Rahmen: `PageProcessing::contentRect()` – Pixel dunkler als 160 (auch der graue Druck
+  eines Kassenbons), ein Randstreifen von 3 mm ausgelassen (Deckelschatten), Zeilen / Spalten mit
+  mindestens 3 dunklen Pixeln; das Rechteck darum plus 4 mm, die ganze Seite, wenn nichts
+  gefunden wird.
+- `PreviewView` malt den Rahmen in `drawForeground()` (Szene = Bildpixel; außen abgedunkelt,
+  Rahmen und Griffe in der Akzentfarbe, Größen in Ansichtspixeln). Ecken und Kanten ändern die
+  Größe (Griff 8 px), innen verschiebt, außen zieht einen neuen Rahmen auf; mindestens 16
+  Bildpixel, auf die Seite begrenzt. Beim Beschneiden ist der Ziehmodus `NoDrag`, Zoom bleibt.
+- Enter (Kürzel nur beim Beschneiden aktiv) oder „Übernehmen“ in der `CropBar` (unten links)
+  sendet `cropAccepted(path, rect)`; Esc (Kürzel des MainWin, vor Scan-/OCR-Abbruch),
+  „Abbrechen“, der Knopf noch einmal, eine neue Seite oder eine leere Vorschau beenden es. Ein
+  Rahmen über die ganze Seite schneidet nichts.
+- `PageListWidget::cropPage()` schneidet die Datei zu (`croppedImage()`, Format und Auflösung
+  bleiben) und das graue Original einer Schwarz/Weiß-Seite, wie beim Drehen; die PDF-Seite
+  bekommt die Größe des Ausschnitts aus Pixeln und Auflösung.
+
 ### Seitenliste (`PageListWidget`, `PageDelegate`)
 
 - ListMode, eine Spalte. Die Seiten füllen die Breite (A4-Verhältnis). Passen sie nicht in die
   Höhe, schrumpfen sie höchstens um die Breite des Rollbalkens, bevor der Balken erscheint
   (`updateItemSizes`).
 - Auswählen: Klick, Strg/Umschalt + Klick, Strg+A. Entfernen: × beim Überfahren, Entf/Rücktaste,
-  Kontextmenü „n Seiten entfernen“ – **die Bilddatei wird mit gelöscht**. Die Beschriftungen
-  werden neu nummeriert.
+  Kontextmenü „n Seiten entfernen“ – die Bilddatei bleibt bis zum Schließen (Rückgängig). Die
+  Beschriftungen werden neu nummeriert.
 - Umsortieren: Drag and Drop (`InternalMove`). ListMode, weil IconMode abgelegte Einträge frei
   platziert.
 - **Das automatische Rollen beim Ziehen ist unser eigenes:** Das von Qt liest `QCursor::pos()`,
@@ -317,7 +341,21 @@ danach mit dem Schwellwert umgewandelt (ein gedrehtes 1-Bit-Bild bekommt ausgefr
   kann sich zwischen zwei Scans ändern, die Seitengröße der PDF braucht die richtige.
 - Drehen: die ausgewählten Seiten um 90° im Uhrzeigersinn; die PNG-Datei selbst wird neu
   geschrieben, so brauchen Liste, Vorschau und PDF keinen zusätzlichen Zustand.
-- Leeren: alle Seiten, nach einer Rückfrage (die Bilddateien werden gelöscht).
+- Leeren: alle Seiten, nach einer Rückfrage (rückgängig zu machen wie Entfernen).
+- **Rückgängig / Wiederherstellen** (`QUndoStack` in `PageListWidget`, Strg+Z / Strg+Umschalt+Z
+  als Fenster-Kürzel der Liste, Einträge im Kontextmenü, auch in der leeren Liste): ein
+  `PageCommand` (zwei Funktionen) pro Schritt. Seiten werden an ihrem Dateipfad erkannt.
+  - Entfernen, Leeren, Umsortieren: die Reihenfolge davor und danach; `applyOrder()` nimmt
+    Seiten heraus nach `m_takenOut` (aufgehoben, mit der Liste gelöscht) oder setzt sie zurück.
+    Inzwischen gescannte Seiten stehen in keiner der beiden und bleiben hinter den
+    zurückgeholten. Entfernte Bilddateien bleiben bis `MainWin::removeScanDirs()` beim Schließen.
+  - Drehen, Beschneiden: Kopien des Seitenbilds und seines grauen Originals vor und nach der
+    Änderung, `undo_<n>_b_page_001.png` / `undo_<n>_a_…` neben der Seite (nicht `page_*`: danach
+    sucht der Scan); Rückgängig / Wiederherstellen kopieren sie zurück und laden das Vorschaubild.
+  - Nach einem Schritt sind die betroffenen Seiten ausgewählt, die erste wird gezeigt; das
+    Status-Overlay meldet „Rückgängig: Beschneiden“ (`undoMessage()`).
+  - Nicht während Scan, Speichern mit OCR (Liste gesperrt) oder Beschneiden (`setUndoAllowed()`
+    aus `MainWin::updateButtons()`). Eine neu gescannte Seite ist kein Schritt.
 
 ### Als PDF speichern (`MainWin::savePdf()`)
 
@@ -359,8 +397,8 @@ danach mit dem Schwellwert umgewandelt (ein gedrehtes 1-Bit-Bild bekommt ausgefr
   Die Seitenliste ist so lange gesperrt (die Bilder dürfen sich nicht ändern), Schließen wartet.
   tesseract schreibt `<ziel>.part.pdf`, das erst am Ende umbenannt wird: Abbruch oder Fehler
   lassen eine vorhandene Datei unberührt.
-- Ausrichten geschieht gleich nach dem Scan (siehe Ausrichten), Beschneiden ebenso; beim
-  Speichern bleibt dann nur OCR → PDF. Vorerst verworfen: OCR gleich nach
+- Ausrichten geschieht gleich nach dem Scan (siehe Ausrichten), Beschneiden von Hand an der
+  Bilddatei; beim Speichern bleibt dann nur OCR → PDF. Vorerst verworfen: OCR gleich nach
   dem Scan mit markierbarem Text in der Vorschau (Variante B) – Drehen, Ausrichten und
   Beschneiden müssten dann mit erkanntem Text umgehen.
 - Ohne OCR blockiert das Schreiben das Fenster; ein `processEvents()` lässt die Meldung „PDF wird

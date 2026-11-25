@@ -122,12 +122,6 @@ void SettingsOverlay::initializeOverlay()
                                      "right after scanning."));
     m_layout->addWidget(m_straightenCheck);
 
-    // Crop does not work yet: shown, but disabled
-    auto *cropCheck = new QCheckBox(tr("CROP_DOCUMENT"));
-    cropCheck->setEnabled(false);
-    cropCheck->setToolTip(tr("Coming in a later version"));
-    m_layout->addWidget(cropCheck);
-
     // Asks GitHub once a day whether there is a newer version (UpdateChecker)
     m_checkUpdatesCheck = new QCheckBox(tr("Check for updates"));
     m_checkUpdatesCheck->setToolTip(tr("Once a day the app asks GitHub whether there is a new version. "

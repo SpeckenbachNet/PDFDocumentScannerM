@@ -8,9 +8,14 @@
 #include <QImage>
 #include <QLocale>
 #include <QMenu>
+#include <QDir>
+#include <QFileInfo>
 #include <QScrollBar>
+#include <QShortcut>
 #include <QTimer>
+#include <QUndoStack>
 #include <algorithm>
+#include <functional>
 
 namespace {
 constexpr int kDragScrollZone = 40;      // height of the edge zones that scroll while dragging
@@ -21,6 +26,30 @@ constexpr int kDragScrollInterval = 20;  // ms between two ticks
 QIcon pageIcon(const QImage &img) {
     return QIcon(QPixmap::fromImage(img.scaled(1000, 1414, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
 }
+
+// One undo step from two functions. alreadyDone: the change has been made before the push,
+// the first redo (QUndoStack::push calls it) does nothing.
+class PageCommand : public QUndoCommand
+{
+public:
+    PageCommand(const QString &text, std::function<void()> undo, std::function<void()> redo,
+                bool alreadyDone)
+        : QUndoCommand(text), m_undo(std::move(undo)), m_redo(std::move(redo)), m_skipRedo(alreadyDone) {}
+
+    void undo() override { m_undo(); }
+    void redo() override {
+        if (m_skipRedo) {
+            m_skipRedo = false;
+            return;
+        }
+        m_redo();
+    }
+
+private:
+    std::function<void()> m_undo;
+    std::function<void()> m_redo;
+    bool m_skipRedo;
+};
 
 }
 
@@ -53,6 +82,20 @@ PageListWidget::PageListWidget(QWidget *parent) : QListWidget(parent) {
 
     m_delegate = new PageDelegate(this);
     setItemDelegate(m_delegate);
+
+    // Undo works in the whole main page; a shortcut of a hidden or disabled list does not fire
+    m_undoStack = new QUndoStack(this);
+    auto *undoShortcut = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Z), this);
+    undoShortcut->setContext(Qt::WindowShortcut);
+    connect(undoShortcut, &QShortcut::activated, this, &PageListWidget::undo);
+    auto *redoShortcut = new QShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Z), this);
+    redoShortcut->setContext(Qt::WindowShortcut);
+    connect(redoShortcut, &QShortcut::activated, this, &PageListWidget::redo);
+}
+
+// Taken out pages are not owned by the list any more
+PageListWidget::~PageListWidget() {
+    qDeleteAll(m_takenOut);
 }
 
 bool PageListWidget::addPage(const QString &filePath, int dpi, double straightenedBy) {
@@ -88,6 +131,9 @@ QList<PageListWidget::Page> PageListWidget::pages(bool selectedOnly) const {
 void PageListWidget::rotateSelectedPages() {
     const QList<QListWidgetItem *> selected = selectedItems();
     if (selected.isEmpty()) return;
+    QStringList paths;
+    for (QListWidgetItem *page : selected) paths.append(page->data(Qt::UserRole).toString());
+    QList<ImageCopy> copies = copyImages(paths);
     for (QListWidgetItem *page : selected) {
         const QString filePath = page->data(Qt::UserRole).toString();
         const QImage rotated = PageProcessing::rotatedImage(QImage(filePath));
@@ -97,15 +143,45 @@ void PageListWidget::rotateSelectedPages() {
         const QString original = PageProcessing::originalPath(filePath);
         if (QFile::exists(original)) PageProcessing::rotatedImage(QImage(original)).save(original, "PNG");
     }
+    copyImagesAfter(copies);
+    pushImageChange(tr("Rotate"), copies, paths);
     viewport()->update();
     emit pagesChanged();
     emit pageImagesChanged();
 }
 
+// Like rotating: the file itself is rewritten, list, preview and PDF follow without extra state
+bool PageListWidget::cropPage(const QString &filePath, const QRect &rect) {
+    QListWidgetItem *page = nullptr;
+    for (int row = 0; row < count() && !page; ++row) {
+        if (item(row)->data(Qt::UserRole).toString() == filePath) page = item(row);
+    }
+    if (!page) return false;   // removed meanwhile
+
+    QList<ImageCopy> copies = copyImages({filePath});
+    const QImage cropped = PageProcessing::croppedImage(QImage(filePath), rect);
+    if (cropped.isNull() || !cropped.save(filePath, "PNG")) {
+        for (const ImageCopy &copy : std::as_const(copies)) QFile::remove(copy.before);
+        return false;
+    }
+    page->setIcon(pageIcon(cropped));
+    // The gray original of a black/white page is cut the same (for a later new threshold)
+    const QString original = PageProcessing::originalPath(filePath);
+    if (QFile::exists(original)) {
+        PageProcessing::croppedImage(QImage(original), rect).save(original, "PNG");
+    }
+    copyImagesAfter(copies);
+    pushImageChange(tr("Crop"), copies, {filePath});
+    viewport()->update();
+    emit pagesChanged();
+    emit pageImagesChanged();
+    return true;
+}
+
 void PageListWidget::removeAllPages() {
     QList<int> rows;
     for (int row = 0; row < count(); ++row) rows.append(row);
-    removeRows(rows);
+    removeRows(rows, tr("Clear"));
 }
 
 void PageListWidget::resizeEvent(QResizeEvent *event) {
@@ -165,29 +241,35 @@ void PageListWidget::setCrossHoverRow(int row) {
     viewport()->update();
 }
 
-// Removes the pages and deletes their image files (a page cannot be brought back anyway)
-void PageListWidget::removeRows(QList<int> rows) {
+// Removes the pages as one undo step; their image files stay for an undo (the scan folders are
+// removed when the app closes). Afterwards the page at the place of the first removed one is
+// selected.
+void PageListWidget::removeRows(QList<int> rows, const QString &undoText) {
     if (rows.isEmpty()) return;
-    std::sort(rows.begin(), rows.end(), std::greater<int>());   // from the end: rows stay valid
+    const QStringList before = order();
+    QStringList removed;
     for (int row : std::as_const(rows)) {
-        QListWidgetItem *page = takeItem(row);
-        if (!page) continue;
-        const QString filePath = page->data(Qt::UserRole).toString();
-        QFile::remove(filePath);
-        QFile::remove(PageProcessing::originalPath(filePath));   // gray original, if any
-        delete page;
+        if (row >= 0 && row < before.size()) removed.append(before.at(row));
     }
+    if (removed.isEmpty()) return;
+    QStringList after = before;
+    for (const QString &path : std::as_const(removed)) after.removeAll(path);
+    const int first = *std::min_element(rows.begin(), rows.end());
+    const QStringList selectAfter = after.isEmpty() ? QStringList()
+                                                    : QStringList{after.at(qMin(first, after.size() - 1))};
+    m_undoStack->push(new PageCommand(
+        undoText,
+        [this, before, removed] { applyOrder(before, before, removed); },
+        [this, after, before, selectAfter] { applyOrder(after, before, selectAfter); },
+        false));
     setCrossHoverRow(-1);
-    renumber();
-    updateItemSizes();   // fewer pages may fit at full width again
-    emit pagesChanged();
 }
 
 void PageListWidget::removeSelectedPages() {
     QList<int> rows;
     const QList<QListWidgetItem *> pages = selectedItems();
     for (QListWidgetItem *page : pages) rows.append(row(page));
-    removeRows(rows);
+    removeRows(rows, tr("Remove pages"));
 }
 
 void PageListWidget::renumber() {
@@ -259,7 +341,7 @@ void PageListWidget::mouseReleaseEvent(QMouseEvent *event) {
     if (m_pressedCrossRow >= 0) {
         const int row = m_pressedCrossRow;
         m_pressedCrossRow = -1;
-        if (crossRowAt(event->position().toPoint()) == row) removeRows({row});
+        if (crossRowAt(event->position().toPoint()) == row) removeRows({row}, tr("Remove pages"));
         event->accept();
         return;
     }
@@ -280,18 +362,34 @@ void PageListWidget::keyPressEvent(QKeyEvent *event) {
     QListWidget::keyPressEvent(event);
 }
 
+// On a page: remove; everywhere (also in the empty list after "Clear"): undo / redo
 void PageListWidget::contextMenuEvent(QContextMenuEvent *event) {
     QListWidgetItem *page = itemAt(event->pos());
-    if (!page) return;
     // Right click on a page that is not selected: it alone becomes the selection
-    if (!page->isSelected()) {
+    if (page && !page->isSelected()) {
         clearSelection();
         page->setSelected(true);
         setCurrentItem(page);
     }
     QMenu menu(this);
-    QAction *remove = menu.addAction(tr("REMOVE_PAGES %n", nullptr, int(selectedItems().size())));
-    if (menu.exec(event->globalPos()) == remove) removeSelectedPages();
+    QAction *remove = nullptr;
+    if (page) {
+        remove = menu.addAction(tr("REMOVE_PAGES %n", nullptr, int(selectedItems().size())));
+        menu.addSeparator();
+    }
+    //: Context menu; %1 is the step, e.g. "Crop"
+    QAction *undoAction = menu.addAction(canUndo() ? tr("Undo %1").arg(m_undoStack->undoText()) : tr("Undo"));
+    undoAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Z));   // shown only, the shortcut is own
+    undoAction->setEnabled(canUndo());
+    //: Context menu; %1 is the step, e.g. "Crop"
+    QAction *redoAction = menu.addAction(canRedo() ? tr("Redo %1").arg(m_undoStack->redoText()) : tr("Redo"));
+    redoAction->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Z));
+    redoAction->setEnabled(canRedo());
+
+    QAction *chosen = menu.exec(event->globalPos());
+    if (chosen && chosen == remove) removeSelectedPages();
+    else if (chosen == undoAction) undo();
+    else if (chosen == redoAction) redo();
 }
 
 void PageListWidget::dragMoveEvent(QDragMoveEvent *event) {
@@ -311,7 +409,151 @@ void PageListWidget::dragLeaveEvent(QDragLeaveEvent *event) {
 
 void PageListWidget::dropEvent(QDropEvent *event) {
     m_dragScrollTimer->stop();
+    const QStringList before = order();
+    QStringList moved;
+    for (const QListWidgetItem *page : selectedItems()) moved.append(page->data(Qt::UserRole).toString());
     QListWidget::dropEvent(event);
     renumber();   // the labels follow the new order
+    const QStringList after = order();
+    if (after != before) {
+        m_undoStack->push(new PageCommand(
+            tr("Move pages"),
+            [this, before, moved] { applyOrder(before, before, moved); },
+            [this, after, moved] { applyOrder(after, after, moved); },
+            true));
+    }
     emit pagesChanged();
+}
+
+// ====== Undo ======
+
+void PageListWidget::undo() {
+    if (!canUndo()) return;
+    const QString text = m_undoStack->undoText();
+    m_undoStack->undo();
+    //: Status message after Ctrl+Z; %1 is the step, e.g. "Crop"
+    emit undoMessage(tr("Undone: %1").arg(text));
+}
+
+void PageListWidget::redo() {
+    if (!canRedo()) return;
+    const QString text = m_undoStack->redoText();
+    m_undoStack->redo();
+    //: Status message after Ctrl+Shift+Z; %1 is the step, e.g. "Crop"
+    emit undoMessage(tr("Redone: %1").arg(text));
+}
+
+bool PageListWidget::canUndo() const {
+    return m_undoAllowed && isEnabled() && m_undoStack->canUndo();
+}
+
+bool PageListWidget::canRedo() const {
+    return m_undoAllowed && isEnabled() && m_undoStack->canRedo();
+}
+
+QStringList PageListWidget::order() const {
+    QStringList paths;
+    for (int row = 0; row < count(); ++row) paths.append(item(row)->data(Qt::UserRole).toString());
+    return paths;
+}
+
+QListWidgetItem *PageListWidget::findPage(const QString &filePath) const {
+    for (int row = 0; row < count(); ++row) {
+        if (item(row)->data(Qt::UserRole).toString() == filePath) return item(row);
+    }
+    return m_takenOut.value(filePath, nullptr);
+}
+
+void PageListWidget::applyOrder(const QStringList &target, const QStringList &managed,
+                                const QStringList &select) {
+    // Take out what is not wanted any more (from the end: the rows stay valid)
+    for (int row = count() - 1; row >= 0; --row) {
+        const QString path = item(row)->data(Qt::UserRole).toString();
+        if (managed.contains(path) && !target.contains(path)) m_takenOut.insert(path, takeItem(row));
+    }
+    // Put the wanted pages in place, in front of pages scanned meanwhile
+    int place = 0;
+    for (const QString &path : target) {
+        QListWidgetItem *page = m_takenOut.take(path);
+        if (page) {
+            insertItem(place, page);
+        } else {
+            page = findPage(path);
+            if (!page) continue;
+            const int current = row(page);
+            if (current != place) insertItem(place, takeItem(current));
+        }
+        ++place;
+    }
+    setCrossHoverRow(-1);
+    renumber();
+    updateItemSizes();
+    selectPages(select);
+    emit pagesChanged();
+}
+
+// The pages become the selection, the first one the current (the preview shows it). None: the
+// current page stays selected.
+void PageListWidget::selectPages(const QStringList &pages) {
+    QList<QListWidgetItem *> items;
+    for (const QString &path : pages) {
+        QListWidgetItem *page = findPage(path);
+        if (page && row(page) >= 0 && !m_takenOut.contains(path)) items.append(page);
+    }
+    if (items.isEmpty()) {
+        if (currentItem()) currentItem()->setSelected(true);
+        return;
+    }
+    setCurrentItem(items.first(), QItemSelectionModel::ClearAndSelect);
+    for (QListWidgetItem *page : std::as_const(items)) page->setSelected(true);
+    scrollToItem(items.first());
+}
+
+// undo_<n>_b_page_001.png next to the page (not "page_*": the scan watches for those)
+QList<PageListWidget::ImageCopy> PageListWidget::copyImages(const QStringList &pages) {
+    ++m_copyCounter;
+    QList<ImageCopy> copies;
+    for (const QString &page : pages) {
+        for (const QString &file : {page, PageProcessing::originalPath(page)}) {
+            if (!QFile::exists(file)) continue;
+            const QFileInfo info(file);
+            ImageCopy copy;
+            copy.file = file;
+            copy.before = info.dir().filePath(QString("undo_%1_b_%2").arg(m_copyCounter).arg(info.fileName()));
+            copy.after = info.dir().filePath(QString("undo_%1_a_%2").arg(m_copyCounter).arg(info.fileName()));
+            QFile::remove(copy.before);
+            if (QFile::copy(file, copy.before)) copies.append(copy);
+        }
+    }
+    return copies;
+}
+
+void PageListWidget::copyImagesAfter(QList<ImageCopy> &copies) {
+    for (ImageCopy &copy : copies) {
+        QFile::remove(copy.after);
+        QFile::copy(copy.file, copy.after);
+    }
+}
+
+void PageListWidget::restoreImages(const QList<ImageCopy> &copies, bool after, const QStringList &pages) {
+    for (const ImageCopy &copy : copies) {
+        QFile::remove(copy.file);
+        QFile::copy(after ? copy.after : copy.before, copy.file);
+    }
+    for (const QString &path : pages) {
+        if (QListWidgetItem *page = findPage(path)) page->setIcon(pageIcon(QImage(path)));
+    }
+    selectPages(pages);
+    viewport()->update();
+    emit pagesChanged();
+    emit pageImagesChanged();
+}
+
+void PageListWidget::pushImageChange(const QString &text, const QList<ImageCopy> &copies,
+                                     const QStringList &pages) {
+    m_undoStack->push(new PageCommand(
+        text,
+        [this, copies, pages] { restoreImages(copies, false, pages); },
+        [this, copies, pages] { restoreImages(copies, true, pages); },
+        true));
 }

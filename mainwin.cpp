@@ -130,7 +130,7 @@ void MainWin::showSettingsOverlay() {
         int y = globalBtnPos.y();
 
         int width = 400;
-        int height = 445;
+        int height = 420;
 
         m_settingsOverlay->setGeometry(x, y, width, height);
         m_settingsOverlay->show();
@@ -856,11 +856,30 @@ void MainWin::rotatePages() {
     QApplication::restoreOverrideCursor();
 }
 
-// The image files are deleted too, so ask first
+// The crop button starts the frame in the preview for the selected page, a second click
+// cancels it (the button is checkable and follows the crop mode in updateButtons)
+void MainWin::toggleCrop() {
+    PreviewView *preview = ui->previewGraphicsView;
+    if (preview->isCropping()) {
+        preview->cancelCrop();
+    } else {
+        preview->startCrop();
+    }
+    updateButtons();
+}
+
+void MainWin::cropPage(const QString &filePath, const QRect &rect) {
+    QApplication::setOverrideCursor(Qt::WaitCursor);   // large scans take a moment
+    const bool cropped = ui->pagesListWidget->cropPage(filePath, rect);
+    QApplication::restoreOverrideCursor();
+    if (!cropped) m_statusOverlay->showMessage(tr("The page could not be cropped"), true, 3000);
+}
+
+// Ask first, even though Ctrl+Z brings the pages back
 void MainWin::clearPages() {
     if (ui->pagesListWidget->count() == 0) return;
     QMessageBox box(QMessageBox::Question, tr("Clear"),
-                    tr("Remove all pages? The scanned images are deleted."), QMessageBox::NoButton, this);
+                    tr("Remove all pages? Ctrl+Z brings them back."), QMessageBox::NoButton, this);
     QPushButton *remove = box.addButton(tr("Remove"), QMessageBox::DestructiveRole);
     box.addButton(tr("Cancel"), QMessageBox::RejectRole);
     box.exec();
@@ -887,10 +906,19 @@ void MainWin::updateButtons() {
 
     const bool hasPages = ui->pagesListWidget->count() > 0;
     const bool hasSelection = ui->pagesListWidget->hasSelection();
-    m_rotateBtn->setEnabled(!m_busy && hasSelection);
-    m_saveSelBtn->setEnabled(!m_busy && hasSelection);
-    m_saveAllBtn->setEnabled(!m_busy && hasPages);
-    m_clearBtn->setEnabled(!m_busy && hasPages);
+    // Crop: one page, the one in the preview; while its frame is shown the other page
+    // buttons wait
+    const bool cropping = ui->previewGraphicsView->isCropping();
+    const bool onePage = ui->pagesListWidget->selectedItems().size() == 1
+                         && ui->pagesListWidget->currentItem()
+                         && ui->pagesListWidget->currentItem()->isSelected();
+    m_cropBtn->setEnabled(cropping || (!m_busy && onePage));
+    m_cropBtn->setChecked(cropping);
+    ui->pagesListWidget->setUndoAllowed(!m_busy && !cropping);
+    m_rotateBtn->setEnabled(!m_busy && !cropping && hasSelection);
+    m_saveSelBtn->setEnabled(!m_busy && !cropping && hasSelection);
+    m_saveAllBtn->setEnabled(!m_busy && !cropping && hasPages);
+    m_clearBtn->setEnabled(!m_busy && !cropping && hasPages);
     updateScannerHint();
 }
 

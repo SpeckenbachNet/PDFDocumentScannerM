@@ -12,7 +12,7 @@ Ein Klick wählt eine Seite aus. Halte Strg oder Umschalt gedrückt, um mehrere 
 - Die Entf- oder Rücktaste entfernt die ausgewählten Seiten.
 - Klicke mit der rechten Maustaste auf eine Seite und wähle **Seite entfernen** (oder **n Seiten entfernen** bei einer Auswahl).
 
-> Eine entfernte Seite lässt sich nicht zurückholen: Ihr gescanntes Bild wird gelöscht.
+> Eine entfernte Seite holst du mit Strg+Z zurück (siehe Rückgängig).
 
 ## Umsortieren
 
@@ -22,9 +22,23 @@ Ziehe eine Seite an ihren neuen Platz. Am oberen oder unteren Rand rollt die Lis
 
 Der Knopf mit dem runden Pfeil dreht die ausgewählten Seiten um 90° im Uhrzeigersinn. Zweimal klicken stellt sie auf den Kopf, dreimal dreht um 90° nach links.
 
+## Beschneiden
+
+Für einen kleinen Zettel auf dem Flachbett, etwa einen Kassenbon: Die Seite ist danach nur so groß wie der Zettel.
+
+1. Wähle die Seite aus und klicke auf den Knopf zum Beschneiden neben dem Drehen-Knopf. Die Vorschau zeigt einen Rahmen, alles außerhalb ist abgedunkelt. Der Rahmen liegt schon um den Inhalt der Seite.
+2. Ziehe an einer Ecke oder Kante des Rahmens, um ihn zu ändern, oder ziehe innen, um ihn zu verschieben. Ziehen außerhalb des Rahmens zieht einen neuen auf. Zoomen geht wie gewohnt, so kannst du genau arbeiten.
+3. **Übernehmen** (oder Enter) schneidet die Seite auf den Rahmen zu. **Abbrechen**, Esc oder ein weiterer Klick auf den Knopf lässt die Seite, wie sie ist.
+
+> Falsch beschnitten? Strg+Z holt die ganze Seite zurück.
+
 ## Leeren
 
-**Leeren** entfernt alle Seiten. PDFDocumentScannerM fragt vorher nach, weil die gescannten Bilder gelöscht werden.
+**Leeren** entfernt alle Seiten. PDFDocumentScannerM fragt vorher nach; Strg+Z holt die Seiten zurück.
+
+## Rückgängig
+
+**Strg+Z** macht den letzten Schritt rückgängig, **Strg+Umschalt+Z** stellt ihn wieder her. Beides steht auch im Menü der rechten Maustaste in der Seitenliste. Rückgängig geht für Entfernen, Leeren, Umsortieren, Drehen und Beschneiden, mehrere Schritte zurück, bis du PDFDocumentScannerM schließt. Neu gescannte Seiten sind kein Schritt; sie entfernst du einfach.
 
 ## Vorschau und Zoom
 

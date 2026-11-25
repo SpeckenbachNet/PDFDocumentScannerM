@@ -72,6 +72,8 @@ private:
     bool writeOcrPdf(const QString &filePath, const QStringList &imagePaths, const QString &language);
     void cancelOcr();
     void rotatePages();
+    void toggleCrop();
+    void cropPage(const QString &filePath, const QRect &rect);
     void clearPages();
     void showPage(QWidget *page);
     bool confirmClose();
@@ -91,6 +93,7 @@ private:
     QToolButton *m_settingsBtn = nullptr;
     QToolButton *m_refreshBtn = nullptr;
     QToolButton *m_rotateBtn = nullptr;
+    QToolButton *m_cropBtn = nullptr;
     QToolButton *m_clearBtn = nullptr;
     QToolButton *m_fakeDplxBtn = nullptr;
     QToolButton *m_saveSelBtn = nullptr;
